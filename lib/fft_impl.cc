@@ -47,7 +47,7 @@ namespace gr {
 		// Make sure liquid complex type matches gnu radio complex type in size
 		assert (sizeof (float complex) == sizeof (gr_complex));
 
-		// Copy actual parameters to block variables
+//		 Copy actual parameters to block variables
 		d_forward = forward;
 		d_size = size;
 		d_flags = flags; // not used

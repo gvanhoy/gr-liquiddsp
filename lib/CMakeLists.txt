@@ -28,6 +28,8 @@ link_directories(${Boost_LIBRARY_DIRS})
 list(APPEND liquiddsp_sources
     fft_impl.cc
     iir_filter_ccf_impl.cc
+    flex_tx_bc_impl.cc
+    flex_rx_cb_impl.cc
 )
 
 add_library(gnuradio-liquiddsp SHARED ${liquiddsp_sources})

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<block>
+  <name>flex_tx_bc</name>
+  <key>liquiddsp_flex_tx_bc</key>
+  <category>liquiddsp</category>
+  <import>import liquiddsp</import>
+  <make>liquiddsp.flex_tx_bc()</make>
+  <sink>
+    <name>in</name>
+    <type>byte</type>
+  </sink>
+  <source>
+    <name>out</name>
+    <type>complex</type>
+  </source>
+</block>

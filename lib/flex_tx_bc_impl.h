@@ -32,6 +32,13 @@ namespace gr {
      private:
         flexframegenprops_s d_fgprops;
         flexframegen d_fg;
+        unsigned char *d_payload;
+        unsigned char *d_header;
+        static const unsigned int d_buf_len = 256;
+        gr_complex *d_outbuf;
+        static const unsigned int d_payload_len = 4096;
+        unsigned int d_frame_len;
+
 
      public:
       flex_tx_bc_impl();

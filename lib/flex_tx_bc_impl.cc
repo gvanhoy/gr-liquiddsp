@@ -48,8 +48,17 @@ namespace gr {
         d_fgprops.check = LIQUID_CRC_NONE;      // data validity check
         d_fgprops.fec0 = LIQUID_FEC_NONE;      // inner FEC scheme
         d_fgprops.fec1 = LIQUID_FEC_NONE;      // outer FEC scheme
-        d_fgprops.mod_scheme = LIQUID_MODEM_QAM256;
+        d_fgprops.mod_scheme = LIQUID_MODEM_QAM16;
         d_fg = flexframegen_create(&d_fgprops);
+        d_header = (unsigned char *)malloc(14*sizeof(unsigned char));
+        d_payload = (unsigned char *)malloc(d_payload_len*sizeof(unsigned char));
+        d_outbuf = (gr_complex *) malloc(d_buf_len*sizeof(gr_complex));
+        for(int i = 0; i < 14; i++) d_header[i] = i;
+        flexframegen_assemble(d_fg, d_header, d_payload, d_payload_len);
+        d_frame_len = flexframegen_getframelen(d_fg);
+        printf("Setting relative rate to: %.3f.\n", 1.0*d_payload_len/((double) d_frame_len));
+        set_relative_rate(1.0*d_payload_len/((double) d_frame_len));
+        set_output_multiple (d_frame_len);
     }
 
     /*
@@ -58,12 +67,16 @@ namespace gr {
     flex_tx_bc_impl::~flex_tx_bc_impl()
     {
         flexframegen_destroy(d_fg);
+        free(d_outbuf);
+        free(d_header);
+        free(d_payload);
     }
 
     void
     flex_tx_bc_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
     {
-      ninput_items_required[0] = noutput_items;
+        assert (noutput_items % d_frame_len == 0);
+        ninput_items_required[0] = (int)((double) d_payload_len/((double) d_frame_len)*noutput_items);
     }
 
     int
@@ -72,15 +85,11 @@ namespace gr {
                        gr_vector_const_void_star &input_items,
                        gr_vector_void_star &output_items)
     {
-        unsigned int buf_len = 1000;
-        unsigned int payload_len = 4096;
-        unsigned char header[14]; // Liquid hardcodes this as the length for the header
-        unsigned char payload[4096];
+        assert (noutput_items % d_frame_len == 0);
 
         unsigned char *in = (unsigned char *) input_items[0];
         unsigned char *inbuf = in;
         gr_complex *out = (gr_complex *) output_items[0];
-        gr_complex *outbuf = (gr_complex *) malloc(buf_len*sizeof(gr_complex));
         gr_complex *front = out;
         int byte_count = 0;
 
@@ -89,37 +98,38 @@ namespace gr {
         int frame_complete = 0;
 
         // Make header
-        for(int i = 1; i < 14; i++) header[i] = i;
-        while(byte_count < ((int) ninput_items[0]) - payload_len) {
-            printf("Input Items: %d Frame: %d Byte: %d\n", ninput_items[0], frame_count, byte_count);
-            header[0] = frame_count;
+        for(int i = 1; i < 14; i++) d_header[i] = i;
+        while(byte_count < ((int) ninput_items[0]) - d_payload_len && total_items < 32768/2) {
+//            printf("Input Items: %d Frame: %d Byte: %d\n", ninput_items[0], frame_count, byte_count);
+            d_header[0] = frame_count;
             frame_count > 255 ? frame_count = 0 : frame_count++;
-            memcpy(payload, inbuf, payload_len);
-            inbuf += payload_len;
-            byte_count += payload_len;
+            memcpy(d_payload, inbuf, d_payload_len);
+            inbuf += d_payload_len;
+            byte_count += d_payload_len;
             // Assemble the frame
             while (!flexframegen_is_assembled(d_fg)) {
-                flexframegen_assemble(d_fg, header, payload, payload_len);
+                flexframegen_assemble(d_fg, d_header, d_payload, d_payload_len);
             }
 //            printf("Frame assembled.\n");
 
             // Make the frame in blocks
             frame_complete = 0;
-            while (!frame_complete){
-                frame_complete = flexframegen_write_samples(d_fg, outbuf, buf_len);
-                memcpy(front, outbuf, buf_len*sizeof(gr_complex));
-                front += buf_len;
-                total_items += buf_len;
-                printf("Wrote a total of %d samples.\n", total_items);
+            while (!frame_complete && total_items < 32768/2){
+                frame_complete = flexframegen_write_samples(d_fg, d_outbuf, d_buf_len);
+                memcpy(front, d_outbuf, d_buf_len*sizeof(gr_complex));
+                front += d_buf_len;
+                total_items += d_buf_len;
+//                printf("Wrote a total of %d samples.\n", total_items);
             }
 //            printf("Frame written.\n");
 
             // Get frame length
         }
 
-        printf("%d items ready.\n", total_items);
-        free(outbuf);
+//        printf("%d items ready.\n", total_items);
+//        printf("Consuming Items.\n");
         consume_each (total_items);
+//        printf("Items Consumed.\n");
 
       // Tell runtime system how many output items we produced.
       return total_items;

@@ -30,6 +30,8 @@ struct packet_info{
     unsigned char *  _payload;
     unsigned int     _payload_len;
     framesyncstats_s _stats;
+    gr_complex *     _frame_symbols;
+    unsigned int     _num_frames;
     int              _payload_valid;
 };
 
@@ -40,10 +42,11 @@ namespace gr {
     {
      private:
       flexframesync d_fs;
-      void *d_outbuf;
       struct packet_info *d_info;
+      static const unsigned int d_inbuf_len = 256;
 
-     public:
+
+    public:
       flex_rx_cb_impl();
       ~flex_rx_cb_impl();
 

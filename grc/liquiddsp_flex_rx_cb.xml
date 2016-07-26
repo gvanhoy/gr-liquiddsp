@@ -9,8 +9,12 @@
     <name>in</name>
     <type>complex</type>
   </sink>
+  <!--<source>-->
+    <!--<name>out</name>-->
+    <!--<type>byte</type>-->
+  <!--</source>-->
   <source>
-    <name>out</name>
-    <type>byte</type>
+    <name>sym</name>
+    <type>complex</type>
   </source>
 </block>

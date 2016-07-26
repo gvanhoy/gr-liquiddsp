@@ -1,10 +1,98 @@
 <?xml version="1.0"?>
 <block>
-  <name>flex_tx_bc</name>
+  <name>Liquid Flexframe Generator</name>
   <key>liquiddsp_flex_tx_bc</key>
   <category>liquiddsp</category>
   <import>import liquiddsp</import>
   <make>liquiddsp.flex_tx_bc()</make>
+  <callback>set_modulation($modulation)</callback>
+  <callback>set_inner_code($inner_code)</callback>
+  <param>
+    <name>Modulation</name>
+    <key>modulation</key>
+    <type>int</type>
+    <option>
+      <name>BPSK</name>
+      <key>0</key>
+    </option>
+    <option>
+      <name>QPSK</name>
+      <key>1</key>
+    </option>
+    <option>
+      <name>8PSK</name>
+      <key>2</key>
+    </option>
+    <option>
+      <name>16PSK</name>
+      <key>3</key>
+    </option>
+    <option>
+      <name>DBPSK</name>
+      <key>4</key>
+    </option>
+    <option>
+      <name>DQPSK</name>
+      <key>5</key>
+    </option>
+    <option>
+      <name>D8PSK</name>
+      <key>6</key>
+    </option>
+    <option>
+      <name>4ASK</name>
+      <key>7</key>
+    </option>
+    <option>
+      <name>16QAM</name>
+      <key>8</key>
+    </option>
+    <option>
+      <name>32QAM</name>
+      <key>9</key>
+    </option>
+    <option>
+      <name>64QAM</name>
+      <key>10</key>
+    </option>
+  </param>
+  <param>
+    <name>Inner Code</name>
+    <key>inner_code</key>
+    <type>int</type>
+    <option>
+      <name>NONE</name>
+      <key>0</key>
+    </option>
+    <option>
+      <name>1/2</name>
+      <key>1</key>
+    </option>
+    <option>
+      <name>2/3</name>
+      <key>2</key>
+    </option>
+    <option>
+      <name>3/4</name>
+      <key>3</key>
+    </option>
+    <option>
+      <name>5/6</name>
+      <key>4</key>
+    </option>
+    <option>
+      <name>Hamming 7/4</name>
+      <key>5</key>
+    </option>
+    <option>
+      <name>Hamming 8/4</name>
+      <key>6</key>
+    </option>
+    <option>
+      <name>Hamming 12/8</name>
+      <key>7</key>
+    </option>
+  </param>
   <sink>
     <name>in</name>
     <type>byte</type>

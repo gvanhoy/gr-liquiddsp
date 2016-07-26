@@ -46,11 +46,15 @@ namespace gr {
     flex_rx_cb_impl::flex_rx_cb_impl()
       : gr::block("flex_rx_cb",
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
-              gr::io_signature::make(1, 1, sizeof(unsigned char)))
-    {
+//              gr::io_signature::makev(2, 2, iosig))
+              gr::io_signature::make(1, 1, sizeof(unsigned char *)))
+
+                  {
       d_info = (struct packet_info *) malloc(sizeof(struct packet_info));
-      d_info->_payload = (unsigned char *) malloc (sizeof(unsigned char) * 4096*8);
+      d_info->_payload_len = 4096;
+      d_info->_payload = (unsigned char *) malloc (sizeof(unsigned char) * d_info->_payload_len);
       d_fs = flexframesync_create(callback, (void *) d_info);
+      set_output_multiple(d_inbuf_len);
     }
 
     /*
@@ -58,6 +62,8 @@ namespace gr {
      */
     flex_rx_cb_impl::~flex_rx_cb_impl()
     {
+      free(d_info->_payload);
+      free(d_info);
       flexframesync_destroy(d_fs);
     }
 
@@ -73,10 +79,12 @@ namespace gr {
     {
       struct packet_info *info = (struct packet_info *) _userdata;
       info->_payload = _payload;
-      info->_payload_len = _payload_len;
       info->_header = _header;
       info->_header_valid = _header_valid;
       info->_stats = _stats;
+      info->_num_frames++;
+      memcpy(info->_frame_symbols, _stats.framesyms, _stats.num_framesyms*sizeof(gr_complex));
+      info->_frame_symbols += _stats.num_framesyms;
       info->_payload_valid = _payload_valid;
     }
 
@@ -84,6 +92,9 @@ namespace gr {
     void
     flex_rx_cb_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
     {
+      assert(noutput_items % d_inbuf_len == 0);
+//      printf("Rx: Need %.3f relative items\n", ((1.0 * d_info->_stats.num_framesyms )/((double) d_info->_payload_len)*noutput_items));
+//      ninput_items_required[0] = int ((1.0 * d_info->_stats.num_framesyms )/((double) d_info->_payload_len)*noutput_items);
       ninput_items_required[0] = noutput_items;
     }
 
@@ -93,27 +104,38 @@ namespace gr {
                        gr_vector_const_void_star &input_items,
                        gr_vector_void_star &output_items)
     {
+      assert (noutput_items % d_inbuf_len == 0);
       gr_complex *in = (gr_complex *) input_items[0];
-      unsigned char * out = (unsigned char *) output_items[0];
-//      gr_complex * out_symbols = (gr_complex *) output_items[1];
-//      gr_complex * out_symbols = (gr_complex *) output_items[0];
+      unsigned int num_items = 0;
+      gr_complex *out_symbols = (gr_complex *) output_items[0];
+      d_info->_frame_symbols = out_symbols;
+      d_info->_num_frames = 0;
 
-      static unsigned char previous_header;
-
-      flexframesync_execute(d_fs, in, (unsigned int) ninput_items[0]);
-//      printf("Working on %d items\n", (unsigned int) ninput_items[0]);
-      if (d_info->_payload_valid && d_info->_header_valid) {
-        previous_header = *d_info->_header;
-        printf("Header #%d : %s\n", *(d_info->_header), d_info->_header_valid ? "valid" : "INVALID!");
-        memmove(out, d_info->_payload, d_info->_payload_len*sizeof(unsigned char));
+//      printf("Got %d items. Producing %d\n", ninput_items[0], noutput_items);
+      while(num_items < noutput_items){
+        flexframesync_execute(d_fs, in, d_inbuf_len);
+        num_items += d_inbuf_len;
+        in += d_inbuf_len;
+//        printf("Processed %d items\n", num_items);
       }
+//      if (d_info->_payload_valid && d_info->_header_valid && (previous_header != *(d_info->_header))) {
+//        previous_header = *(d_info->_header);
+//        printf("Rx: Header #%d : %s\n", *(d_info->_header), d_info->_header_valid ? "valid" : "INVALID!");
+//        memcpy(out_bytes, d_info->_payload, d_info->_payload_len*sizeof(unsigned char));
+//        printf("Rx: Setting relative rate to: %.2f\n", (1.0 * d_info->_stats.num_framesyms)/((double) d_info->_payload_len));
+//        set_relative_rate((1.0 * d_info->_stats.num_framesyms)/((double) d_info->_payload_len));
+//        consume_each(noutput_items);
+//        return d_info->_payload_len;
+//      }
 
 //      printf("Produced %d symbols\n", d_info->_stats.num_framesyms);
 //      memmove(out_symbols, d_info->_stats.framesyms, d_info->_stats.num_framesyms);
       flexframesync_print(d_fs);
-      consume_each(d_info->_payload_len*sizeof(unsigned char));
       // Tell runtime system how many output items we produced.
-      return d_info->_payload_len*sizeof(unsigned char);
+      assert(num_items == noutput_items);
+      consume_each(noutput_items);
+//      printf("Consumed %d items.\n", num_items);
+      return noutput_items;
     }
 
   } /* namespace liquiddsp */

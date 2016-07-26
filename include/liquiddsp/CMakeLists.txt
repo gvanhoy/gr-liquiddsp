@@ -25,5 +25,6 @@ install(FILES
     fft.h
     iir_filter_ccf.h
     flex_tx_bc.h
-    flex_rx_cb.h DESTINATION include/liquiddsp
+    flex_rx_cb.h
+    flex_rx_c.h DESTINATION include/liquiddsp
 )

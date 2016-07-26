@@ -48,7 +48,8 @@ namespace gr {
         d_fgprops.check = LIQUID_CRC_NONE;      // data validity check
         d_fgprops.fec0 = LIQUID_FEC_NONE;      // inner FEC scheme
         d_fgprops.fec1 = LIQUID_FEC_NONE;      // outer FEC scheme
-        d_fgprops.mod_scheme = LIQUID_MODEM_QAM16;
+        d_fgprops.mod_scheme = LIQUID_MODEM_DPSK8;
+        d_modulation = LIQUID_MODEM_DPSK8;
         d_fg = flexframegen_create(&d_fgprops);
         d_header = (unsigned char *)malloc(14*sizeof(unsigned char));
         d_payload = (unsigned char *)malloc(d_payload_len*sizeof(unsigned char));
@@ -56,8 +57,8 @@ namespace gr {
         for(int i = 0; i < 14; i++) d_header[i] = i;
         flexframegen_assemble(d_fg, d_header, d_payload, d_payload_len);
         d_frame_len = flexframegen_getframelen(d_fg);
-        printf("Setting relative rate to: %.3f.\n", 1.0*d_payload_len/((double) d_frame_len));
-        set_relative_rate(1.0*d_payload_len/((double) d_frame_len));
+        printf("Tx: Setting relative rate to: %.3f.\n", 1.0*d_frame_len/((double) d_payload_len));
+        set_relative_rate(1.0*d_frame_len/((double) d_payload_len));
         set_output_multiple (d_frame_len);
     }
 
@@ -72,11 +73,88 @@ namespace gr {
         free(d_payload);
     }
 
+      void flex_tx_bc_impl::set_modulation(unsigned int modulation) {
+          switch(modulation){
+              case 0:
+                  d_modulation = LIQUID_MODEM_PSK2;
+              break;
+              case 1:
+                  d_modulation = LIQUID_MODEM_PSK4;
+              break;
+              case 2:
+                  d_modulation = LIQUID_MODEM_PSK8;
+              break;
+              case 3:
+                  d_modulation = LIQUID_MODEM_PSK16;
+              break;
+              case 4:
+                  d_modulation = LIQUID_MODEM_DPSK2;
+              break;
+              case 5:
+                  d_modulation = LIQUID_MODEM_DPSK4;
+              break;
+              case 6:
+                  d_modulation = LIQUID_MODEM_DPSK8;
+              break;
+              case 7:
+                  d_modulation = LIQUID_MODEM_ASK4;
+              break;
+              case 8:
+                  d_modulation = LIQUID_MODEM_QAM16;
+              break;
+              case 9:
+                  d_modulation = LIQUID_MODEM_QAM32;
+              break;
+              case 10:
+                  d_modulation = LIQUID_MODEM_QAM64;
+              break;
+          }
+          d_fgprops.mod_scheme = d_modulation;
+          flexframegen_reset(d_fg);
+          flexframegen_setprops(d_fg, &d_fgprops);
+          printf("Modulation set to %d\n", d_modulation);
+      }
+
+      void flex_tx_bc_impl::set_inner_code(unsigned int inner_code) {
+          switch(inner_code){
+              case 0:
+                  d_inner_code = LIQUID_FEC_NONE;
+              break;
+              case 1:
+                  d_inner_code = LIQUID_FEC_CONV_V27;
+              break;
+              case 2:
+                  d_inner_code = LIQUID_FEC_CONV_V27P23;
+              break;
+              case 3:
+                  d_inner_code = LIQUID_FEC_CONV_V27P45;
+              break;
+              case 4:
+                  d_inner_code = LIQUID_FEC_CONV_V27P56;
+              break;
+              case 5:
+                  d_inner_code = LIQUID_FEC_HAMMING74;
+              break;
+              case 6:
+                  d_inner_code = LIQUID_FEC_HAMMING84;
+              break;
+              case 7:
+                  d_inner_code = LIQUID_FEC_HAMMING128;
+              break;
+          }
+          d_fgprops.fec0 = d_inner_code;
+          flexframegen_reset(d_fg);
+          flexframegen_setprops(d_fg, &d_fgprops);
+          printf("Inner Code set to %d\n", d_modulation);
+      }
+
     void
     flex_tx_bc_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
     {
         assert (noutput_items % d_frame_len == 0);
-        ninput_items_required[0] = (int)((double) d_payload_len/((double) d_frame_len)*noutput_items);
+        int nblocks = noutput_items / d_frame_len;
+        int input_required = nblocks * d_payload_len;
+        ninput_items_required[0] = input_required;
     }
 
     int
@@ -86,11 +164,8 @@ namespace gr {
                        gr_vector_void_star &output_items)
     {
         assert (noutput_items % d_frame_len == 0);
-
-        unsigned char *in = (unsigned char *) input_items[0];
-        unsigned char *inbuf = in;
+        const unsigned char *in = (const unsigned char *) input_items[0];
         gr_complex *out = (gr_complex *) output_items[0];
-        gr_complex *front = out;
         int byte_count = 0;
 
         unsigned char frame_count;
@@ -98,41 +173,32 @@ namespace gr {
         int frame_complete = 0;
 
         // Make header
-        for(int i = 1; i < 14; i++) d_header[i] = i;
-        while(byte_count < ((int) ninput_items[0]) - d_payload_len && total_items < 32768/2) {
-//            printf("Input Items: %d Frame: %d Byte: %d\n", ninput_items[0], frame_count, byte_count);
+        while(total_items < noutput_items) {
             d_header[0] = frame_count;
             frame_count > 255 ? frame_count = 0 : frame_count++;
-            memcpy(d_payload, inbuf, d_payload_len);
-            inbuf += d_payload_len;
+            memcpy(d_payload, in, d_payload_len);
+            in += d_payload_len;
             byte_count += d_payload_len;
+
             // Assemble the frame
             while (!flexframegen_is_assembled(d_fg)) {
                 flexframegen_assemble(d_fg, d_header, d_payload, d_payload_len);
             }
-//            printf("Frame assembled.\n");
 
             // Make the frame in blocks
             frame_complete = 0;
-            while (!frame_complete && total_items < 32768/2){
+            while (!frame_complete && total_items < noutput_items){
                 frame_complete = flexframegen_write_samples(d_fg, d_outbuf, d_buf_len);
-                memcpy(front, d_outbuf, d_buf_len*sizeof(gr_complex));
-                front += d_buf_len;
+                memcpy(out, d_outbuf, d_buf_len*sizeof(gr_complex));
+                out += d_buf_len;
                 total_items += d_buf_len;
-//                printf("Wrote a total of %d samples.\n", total_items);
             }
-//            printf("Frame written.\n");
-
-            // Get frame length
         }
 
-//        printf("%d items ready.\n", total_items);
-//        printf("Consuming Items.\n");
-        consume_each (total_items);
-//        printf("Items Consumed.\n");
+        assert(total_items == noutput_items);
+        consume_each (d_payload_len*noutput_items/d_frame_len);
 
-      // Tell runtime system how many output items we produced.
-      return total_items;
+        return noutput_items;
     }
 
   } /* namespace liquiddsp */

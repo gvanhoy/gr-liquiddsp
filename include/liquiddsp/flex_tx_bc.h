@@ -38,6 +38,10 @@ namespace gr {
      public:
       typedef boost::shared_ptr<flex_tx_bc> sptr;
 
+
+        virtual void set_modulation(unsigned int modulation) = 0;
+        virtual void set_inner_code(unsigned int inner_code) = 0;
+
       /*!
        * \brief Return a shared_ptr to a new instance of liquiddsp::flex_tx_bc.
        *

@@ -38,12 +38,15 @@ namespace gr {
         gr_complex *d_outbuf;
         static const unsigned int d_payload_len = 4096;
         unsigned int d_frame_len;
+        unsigned int d_modulation;
+        unsigned int d_inner_code;
 
 
      public:
       flex_tx_bc_impl();
       ~flex_tx_bc_impl();
-
+      void set_modulation(unsigned int modulation);
+        void set_inner_code(unsigned int inner_code);
       // Where all the action really happens
       void forecast (int noutput_items, gr_vector_int &ninput_items_required);
 

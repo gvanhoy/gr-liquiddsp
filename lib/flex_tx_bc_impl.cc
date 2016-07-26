@@ -48,7 +48,7 @@ namespace gr {
         d_fgprops.check = LIQUID_CRC_NONE;      // data validity check
         d_fgprops.fec0 = LIQUID_FEC_NONE;      // inner FEC scheme
         d_fgprops.fec1 = LIQUID_FEC_NONE;      // outer FEC scheme
-        d_fgprops.mod_scheme = LIQUID_MODEM_QAM16;
+        d_fgprops.mod_scheme = LIQUID_MODEM_QAM256;
         d_fg = flexframegen_create(&d_fgprops);
     }
 
@@ -72,49 +72,54 @@ namespace gr {
                        gr_vector_const_void_star &input_items,
                        gr_vector_void_star &output_items)
     {
-        const unsigned char *in = (const unsigned char *) input_items[0];
-        gr_complex *out = (gr_complex *) output_items[0];
-
-
-        gr_complex *outbuf = new gr_complex[10000000];
-        unsigned int payload_len = 1024;
-        int byte_count = payload_len;
+        unsigned int buf_len = 1000;
+        unsigned int payload_len = 4096;
         unsigned char header[14]; // Liquid hardcodes this as the length for the header
-        unsigned char payload[1024];
-        static unsigned char frame_count;
-        unsigned int frame_len = 0;
+        unsigned char payload[4096];
+
+        unsigned char *in = (unsigned char *) input_items[0];
+        unsigned char *inbuf = in;
+        gr_complex *out = (gr_complex *) output_items[0];
+        gr_complex *outbuf = (gr_complex *) malloc(buf_len*sizeof(gr_complex));
+        gr_complex *front = out;
+        int byte_count = 0;
+
+        unsigned char frame_count;
         unsigned int total_items = 0;
         int frame_complete = 0;
-        for(int i = 1; i < 14; i++){
-            header[i] = i;
-        }
 
-        while(byte_count < ((int) ninput_items[0])) {
+        // Make header
+        for(int i = 1; i < 14; i++) header[i] = i;
+        while(byte_count < ((int) ninput_items[0]) - payload_len) {
+            printf("Input Items: %d Frame: %d Byte: %d\n", ninput_items[0], frame_count, byte_count);
             header[0] = frame_count;
             frame_count > 255 ? frame_count = 0 : frame_count++;
-            for (int i = 0; i < payload_len; i++) {
-                payload[i] = in[i + byte_count];
-            }
-
-
-            while(!flexframegen_is_assembled(d_fg)) {
-                printf("Frame assembled.\n");
+            memcpy(payload, inbuf, payload_len);
+            inbuf += payload_len;
+            byte_count += payload_len;
+            // Assemble the frame
+            while (!flexframegen_is_assembled(d_fg)) {
                 flexframegen_assemble(d_fg, header, payload, payload_len);
             }
-            frame_len = flexframegen_getframelen(d_fg);
-            printf("Input Items: %d Frame: %d Byte: %d Frame_len: %d\n", ninput_items[0], frame_count, byte_count, frame_len);
+//            printf("Frame assembled.\n");
 
-            flexframegen_write_samples(d_fg, outbuf, payload_len);
-            printf("Frame written.\n");
+            // Make the frame in blocks
+            frame_complete = 0;
+            while (!frame_complete){
+                frame_complete = flexframegen_write_samples(d_fg, outbuf, buf_len);
+                memcpy(front, outbuf, buf_len*sizeof(gr_complex));
+                front += buf_len;
+                total_items += buf_len;
+                printf("Wrote a total of %d samples.\n", total_items);
+            }
+//            printf("Frame written.\n");
 
-            byte_count += payload_len;
-            total_items += frame_len;
+            // Get frame length
         }
 
         printf("%d items ready.\n", total_items);
-        memcpy(out, outbuf, noutput_items);
-        delete[] outbuf;
-        consume_each (noutput_items);
+        free(outbuf);
+        consume_each (total_items);
 
       // Tell runtime system how many output items we produced.
       return total_items;

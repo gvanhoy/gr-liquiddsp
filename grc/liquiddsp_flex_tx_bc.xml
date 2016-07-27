@@ -7,6 +7,7 @@
   <make>liquiddsp.flex_tx_bc()</make>
   <callback>set_modulation($modulation)</callback>
   <callback>set_inner_code($inner_code)</callback>
+  <callback>set_outer_code($outer_code)</callback>
   <param>
     <name>Modulation</name>
     <key>modulation</key>
@@ -81,15 +82,48 @@
       <key>4</key>
     </option>
     <option>
-      <name>Hamming 7/4</name>
+      <name>6/7</name>
       <key>5</key>
     </option>
     <option>
-      <name>Hamming 8/4</name>
+      <name>7/8</name>
       <key>6</key>
+    </option>
+  </param>
+  <param>
+    <name>Outer Code</name>
+    <key>outer_code</key>
+    <type>int</type>
+    <option>
+      <name>NONE</name>
+      <key>0</key>
+    </option>
+    <option>
+      <name>Golay</name>
+      <key>1</key>
+    </option>
+    <option>
+      <name>Reed-Solomon</name>
+      <key>2</key>
+    </option>
+    <option>
+      <name>Hamming 7/4</name>
+      <key>3</key>
     </option>
     <option>
       <name>Hamming 12/8</name>
+      <key>4</key>
+    </option>
+    <option>
+      <name>SECDED 22/16</name>
+      <key>5</key>
+    </option>
+    <option>
+      <name>SECDED 39/32</name>
+      <key>6</key>
+    </option>
+    <option>
+      <name>SECDED 72/64</name>
       <key>7</key>
     </option>
   </param>

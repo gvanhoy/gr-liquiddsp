@@ -45,7 +45,7 @@ namespace gr {
                             gr::io_signature::make(1, -1, sizeof(gr_complex)))
     {
         flexframegenprops_init_default(&d_fgprops);
-        d_fgprops.check = LIQUID_CRC_NONE;      // data validity check
+        d_fgprops.check = LIQUID_CRC_24;      // data validity check
         d_fgprops.fec0 = LIQUID_FEC_NONE;      // inner FEC scheme
         d_fgprops.fec1 = LIQUID_FEC_NONE;      // outer FEC scheme
         d_fgprops.mod_scheme = LIQUID_MODEM_DPSK8;
@@ -112,7 +112,10 @@ namespace gr {
           d_fgprops.mod_scheme = d_modulation;
           flexframegen_reset(d_fg);
           flexframegen_setprops(d_fg, &d_fgprops);
-          printf("Modulation set to %d\n", d_modulation);
+          d_frame_len = flexframegen_getframelen(d_fg);
+          printf("Modulation set to %d and has %d symbols\n", d_modulation, d_frame_len);
+          flexframegen_print(d_fg);
+          set_relative_rate(1.0*d_frame_len/((double) d_payload_len));
       }
 
       void flex_tx_bc_impl::set_inner_code(unsigned int inner_code) {
@@ -133,19 +136,55 @@ namespace gr {
                   d_inner_code = LIQUID_FEC_CONV_V27P56;
               break;
               case 5:
-                  d_inner_code = LIQUID_FEC_HAMMING74;
+                  d_inner_code = LIQUID_FEC_CONV_V27P67;
               break;
               case 6:
-                  d_inner_code = LIQUID_FEC_HAMMING84;
-              break;
-              case 7:
-                  d_inner_code = LIQUID_FEC_HAMMING128;
+                  d_inner_code = LIQUID_FEC_CONV_V27P78;
               break;
           }
           d_fgprops.fec0 = d_inner_code;
           flexframegen_reset(d_fg);
           flexframegen_setprops(d_fg, &d_fgprops);
-          printf("Inner Code set to %d\n", d_modulation);
+          d_frame_len = flexframegen_getframelen(d_fg);
+          printf("Modulation set to %d and has %d symbols\n", d_inner_code, d_frame_len);
+          flexframegen_print(d_fg);
+          set_relative_rate(1.0*d_frame_len/((double) d_payload_len));
+      }
+
+      void flex_tx_bc_impl::set_outer_code(unsigned int outer_code) {
+          switch(outer_code){
+              case 0:
+                  d_outer_code = LIQUID_FEC_NONE;
+              break;
+              case 1:
+                  d_outer_code = LIQUID_FEC_GOLAY2412;
+              break;
+              case 2:
+                  d_outer_code = LIQUID_FEC_RS_M8;
+              break;
+              case 3:
+                  d_outer_code = LIQUID_FEC_HAMMING74;
+              break;
+              case 4:
+                  d_outer_code = LIQUID_FEC_HAMMING128;
+              break;
+              case 5:
+                  d_outer_code = LIQUID_FEC_SECDED2216;
+              break;
+              case 6:
+                  d_outer_code = LIQUID_FEC_SECDED3932;
+              break;
+              case 7:
+                  d_outer_code = LIQUID_FEC_SECDED7264;
+              break;
+          }
+          d_fgprops.fec1 = d_outer_code;
+          flexframegen_reset(d_fg);
+          flexframegen_setprops(d_fg, &d_fgprops);
+          d_frame_len = flexframegen_getframelen(d_fg);
+          printf("Modulation set to %d and has %d symbols\n", d_outer_code, d_frame_len);
+          flexframegen_print(d_fg);
+          set_relative_rate(1.0*d_frame_len/((double) d_payload_len));
       }
 
     void

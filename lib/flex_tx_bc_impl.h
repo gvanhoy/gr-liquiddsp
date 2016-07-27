@@ -40,13 +40,14 @@ namespace gr {
         unsigned int d_frame_len;
         unsigned int d_modulation;
         unsigned int d_inner_code;
-
+        unsigned int d_outer_code;
 
      public:
       flex_tx_bc_impl();
       ~flex_tx_bc_impl();
       void set_modulation(unsigned int modulation);
         void set_inner_code(unsigned int inner_code);
+        void set_outer_code(unsigned int outer_code);
       // Where all the action really happens
       void forecast (int noutput_items, gr_vector_int &ninput_items_required);
 

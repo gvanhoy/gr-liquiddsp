@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<block>
+  <name>flex_rx_c</name>
+  <key>liquiddsp_flex_rx_c</key>
+  <category>liquiddsp</category>
+  <import>import liquiddsp</import>
+  <make>liquiddsp.flex_rx_c()</make>
+  <sink>
+    <name>in</name>
+    <type>complex</type>
+  </sink>
+</block>

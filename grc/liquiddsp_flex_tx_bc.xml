@@ -4,7 +4,7 @@
   <key>liquiddsp_flex_tx_bc</key>
   <category>liquiddsp</category>
   <import>import liquiddsp</import>
-  <make>liquiddsp.flex_tx_bc()</make>
+  <make>liquiddsp.flex_tx_bc($modulation, $payload_len, $inner_code, $outer_code)</make>
   <callback>set_modulation($modulation)</callback>
   <callback>set_inner_code($inner_code)</callback>
   <callback>set_outer_code($outer_code)</callback>
@@ -91,6 +91,11 @@
     </option>
   </param>
   <param>
+    <name>Payload Length</name>
+    <key>payload_len</key>
+    <type>int</type>
+  </param>
+  <param>
     <name>Outer Code</name>
     <key>outer_code</key>
     <type>int</type>
@@ -115,15 +120,15 @@
       <key>4</key>
     </option>
     <option>
-      <name>SECDED 22/16</name>
+      <name>SECDEC 22/16</name>
       <key>5</key>
     </option>
     <option>
-      <name>SECDED 39/32</name>
+      <name>SECDEC 39/32</name>
       <key>6</key>
     </option>
     <option>
-      <name>SECDED 72/64</name>
+      <name>SECDEC 72/64</name>
       <key>7</key>
     </option>
   </param>

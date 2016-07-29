@@ -30,35 +30,31 @@ namespace gr {
   namespace liquiddsp {
 
     flex_tx_bc::sptr
-    flex_tx_bc::make()
+    flex_tx_bc::make(unsigned int modulation, unsigned int payload_len, unsigned int inner_code, unsigned int outer_code)
     {
       return gnuradio::get_initial_sptr
-        (new flex_tx_bc_impl());
+        (new flex_tx_bc_impl(modulation, payload_len, inner_code, outer_code));
     }
 
     /*
      * The private constructor
      */
-    flex_tx_bc_impl::flex_tx_bc_impl()
+    flex_tx_bc_impl::flex_tx_bc_impl(unsigned int modulation, unsigned int payload_len, unsigned int inner_code, unsigned int outer_code)
       : gr::block("flex_tx_bc",
-                            gr::io_signature::make(1, -1, sizeof(char)),
-                            gr::io_signature::make(1, -1, sizeof(gr_complex)))
+                            gr::io_signature::make(1, 1, sizeof(unsigned char)),
+                            gr::io_signature::make(1, 1, sizeof(gr_complex))),
+        d_payload_len(payload_len)
     {
         flexframegenprops_init_default(&d_fgprops);
         d_fgprops.check = LIQUID_CRC_24;      // data validity check
-        d_fgprops.fec0 = LIQUID_FEC_NONE;      // inner FEC scheme
-        d_fgprops.fec1 = LIQUID_FEC_NONE;      // outer FEC scheme
-        d_fgprops.mod_scheme = LIQUID_MODEM_DPSK8;
-        d_modulation = LIQUID_MODEM_DPSK8;
         d_fg = flexframegen_create(&d_fgprops);
         d_header = (unsigned char *)malloc(14*sizeof(unsigned char));
         d_payload = (unsigned char *)malloc(d_payload_len*sizeof(unsigned char));
         d_outbuf = (gr_complex *) malloc(d_buf_len*sizeof(gr_complex));
-        for(int i = 0; i < 14; i++) d_header[i] = i;
-        flexframegen_assemble(d_fg, d_header, d_payload, d_payload_len);
-        d_frame_len = flexframegen_getframelen(d_fg);
-        printf("Tx: Setting relative rate to: %.3f.\n", 1.0*d_frame_len/((double) d_payload_len));
-        set_relative_rate(1.0*d_frame_len/((double) d_payload_len));
+        memset(d_header + sizeof(unsigned int), 0, 14 - sizeof(unsigned int));
+        set_inner_code(inner_code);
+        set_outer_code(outer_code);
+        set_modulation(modulation);
         set_output_multiple (d_frame_len);
     }
 
@@ -112,10 +108,13 @@ namespace gr {
           d_fgprops.mod_scheme = d_modulation;
           flexframegen_reset(d_fg);
           flexframegen_setprops(d_fg, &d_fgprops);
-          d_frame_len = flexframegen_getframelen(d_fg);
-          printf("Modulation set to %d and has %d symbols\n", d_modulation, d_frame_len);
-          flexframegen_print(d_fg);
+          printf("Modulation set to %d\n", d_modulation);
+          while (!flexframegen_is_assembled(d_fg)) {
+              flexframegen_assemble(d_fg, d_header, d_payload, d_payload_len);
+              d_frame_len = flexframegen_getframelen(d_fg);
+          }
           set_relative_rate(1.0*d_frame_len/((double) d_payload_len));
+          flexframegen_print(d_fg);
       }
 
       void flex_tx_bc_impl::set_inner_code(unsigned int inner_code) {
@@ -145,10 +144,13 @@ namespace gr {
           d_fgprops.fec0 = d_inner_code;
           flexframegen_reset(d_fg);
           flexframegen_setprops(d_fg, &d_fgprops);
-          d_frame_len = flexframegen_getframelen(d_fg);
-          printf("Modulation set to %d and has %d symbols\n", d_inner_code, d_frame_len);
-          flexframegen_print(d_fg);
+          printf("Modulation set to %d\n", d_inner_code);
+          while (!flexframegen_is_assembled(d_fg)) {
+              flexframegen_assemble(d_fg, d_header, d_payload, d_payload_len);
+              d_frame_len = flexframegen_getframelen(d_fg);
+          }
           set_relative_rate(1.0*d_frame_len/((double) d_payload_len));
+          flexframegen_print(d_fg);
       }
 
       void flex_tx_bc_impl::set_outer_code(unsigned int outer_code) {
@@ -181,10 +183,13 @@ namespace gr {
           d_fgprops.fec1 = d_outer_code;
           flexframegen_reset(d_fg);
           flexframegen_setprops(d_fg, &d_fgprops);
-          d_frame_len = flexframegen_getframelen(d_fg);
-          printf("Modulation set to %d and has %d symbols\n", d_outer_code, d_frame_len);
-          flexframegen_print(d_fg);
+          printf("Modulation set to %d", d_outer_code);
+          while (!flexframegen_is_assembled(d_fg)) {
+              flexframegen_assemble(d_fg, d_header, d_payload, d_payload_len);
+              d_frame_len = flexframegen_getframelen(d_fg);
+          }
           set_relative_rate(1.0*d_frame_len/((double) d_payload_len));
+          flexframegen_print(d_fg);
       }
 
     void
@@ -207,14 +212,14 @@ namespace gr {
         gr_complex *out = (gr_complex *) output_items[0];
         int byte_count = 0;
 
-        unsigned char frame_count;
+        static unsigned int frame_count = 0;
         unsigned int total_items = 0;
         int frame_complete = 0;
 
         // Make header
         while(total_items < noutput_items) {
-            d_header[0] = frame_count;
-            frame_count > 255 ? frame_count = 0 : frame_count++;
+            memcpy(d_header, &frame_count, sizeof(unsigned int));
+            frame_count++;
             memcpy(d_payload, in, d_payload_len);
             in += d_payload_len;
             byte_count += d_payload_len;

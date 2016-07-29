@@ -23,6 +23,7 @@
 
 #include <liquiddsp/flex_rx_c.h>
 #include <liquid/liquid.h>
+#include <deque>
 
 struct packet_info{
     unsigned char *  _header;
@@ -31,6 +32,8 @@ struct packet_info{
     unsigned int     _payload_len;
     framesyncstats_s _stats;
     int              _payload_valid;
+    bool *           _packet_history;
+    bool             _print_debug;
 };
 
 namespace gr {

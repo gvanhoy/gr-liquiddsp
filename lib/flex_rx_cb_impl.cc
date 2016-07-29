@@ -46,10 +46,8 @@ namespace gr {
     flex_rx_cb_impl::flex_rx_cb_impl()
       : gr::block("flex_rx_cb",
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
-//              gr::io_signature::makev(2, 2, iosig))
-              gr::io_signature::make(1, 1, sizeof(unsigned char *)))
-
-                  {
+              gr::io_signature::make(1, 1, sizeof(gr_complex)))
+    {
       d_info = (struct packet_info *) malloc(sizeof(struct packet_info));
       d_info->_payload_len = 4096;
       d_info->_payload = (unsigned char *) malloc (sizeof(unsigned char) * d_info->_payload_len);
@@ -84,7 +82,6 @@ namespace gr {
       info->_stats = _stats;
       info->_num_frames++;
       memcpy(info->_frame_symbols, _stats.framesyms, _stats.num_framesyms*sizeof(gr_complex));
-      info->_frame_symbols += _stats.num_framesyms;
       info->_payload_valid = _payload_valid;
     }
 
@@ -93,9 +90,8 @@ namespace gr {
     flex_rx_cb_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
     {
       assert(noutput_items % d_inbuf_len == 0);
-//      printf("Rx: Need %.3f relative items\n", ((1.0 * d_info->_stats.num_framesyms )/((double) d_info->_payload_len)*noutput_items));
-//      ninput_items_required[0] = int ((1.0 * d_info->_stats.num_framesyms )/((double) d_info->_payload_len)*noutput_items);
-      ninput_items_required[0] = noutput_items;
+      int nblocks = noutput_items / d_inbuf_len;
+      ninput_items_required[0] = nblocks*d_inbuf_len;
     }
 
     int
@@ -111,31 +107,18 @@ namespace gr {
       d_info->_frame_symbols = out_symbols;
       d_info->_num_frames = 0;
 
-//      printf("Got %d items. Producing %d\n", ninput_items[0], noutput_items);
       while(num_items < noutput_items){
         flexframesync_execute(d_fs, in, d_inbuf_len);
         num_items += d_inbuf_len;
         in += d_inbuf_len;
-//        printf("Processed %d items\n", num_items);
       }
-//      if (d_info->_payload_valid && d_info->_header_valid && (previous_header != *(d_info->_header))) {
-//        previous_header = *(d_info->_header);
-//        printf("Rx: Header #%d : %s\n", *(d_info->_header), d_info->_header_valid ? "valid" : "INVALID!");
-//        memcpy(out_bytes, d_info->_payload, d_info->_payload_len*sizeof(unsigned char));
-//        printf("Rx: Setting relative rate to: %.2f\n", (1.0 * d_info->_stats.num_framesyms)/((double) d_info->_payload_len));
-//        set_relative_rate((1.0 * d_info->_stats.num_framesyms)/((double) d_info->_payload_len));
-//        consume_each(noutput_items);
-//        return d_info->_payload_len;
-//      }
 
-//      printf("Produced %d symbols\n", d_info->_stats.num_framesyms);
-//      memmove(out_symbols, d_info->_stats.framesyms, d_info->_stats.num_framesyms);
-      flexframesync_print(d_fs);
-      // Tell runtime system how many output items we produced.
+//      flexframesync_print(d_fs);
       assert(num_items == noutput_items);
+      printf("Produced %d items\n", d_info->_num_frames*d_info->_stats.num_framesyms);
+
       consume_each(noutput_items);
-//      printf("Consumed %d items.\n", num_items);
-      return noutput_items;
+      return d_info->_num_frames*d_info->_stats.num_framesyms;
     }
 
   } /* namespace liquiddsp */

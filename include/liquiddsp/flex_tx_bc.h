@@ -52,7 +52,7 @@ namespace gr {
        * class. liquiddsp::flex_tx_bc::make is the public interface for
        * creating new instances.
        */
-      static sptr make();
+      static sptr make(unsigned int modulation, unsigned int payload_len, unsigned int inner_code, unsigned int outer_code);
     };
 
   } // namespace liquiddsp

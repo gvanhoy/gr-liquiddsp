@@ -48,7 +48,6 @@ namespace gr {
     {
       d_info = (struct packet_info *) malloc(sizeof(struct packet_info));
       d_info->_payload = (unsigned char *) malloc (sizeof(unsigned char) * 5000);
-      d_info->_queue = d_target_queue;
       d_fs = flexframesync_create(callback, (void *) d_info);
       set_output_multiple(d_inbuf_len);
     }
@@ -76,6 +75,8 @@ namespace gr {
       info->_header_valid = _header_valid;
       info->_stats = _stats;
       info->_payload_valid = _payload_valid;
+      info->_payload_len = _payload_len;
+      info->_new_payload = true;
       message::sptr msg = message::make(0, 0, 0, _payload_len);
       memcpy(msg->msg(), _payload, _payload_len);
       info->_queue->insert_tail(msg);	// send it

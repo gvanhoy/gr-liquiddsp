@@ -4,7 +4,12 @@
   <key>liquiddsp_flex_rx_c</key>
   <category>liquiddsp</category>
   <import>import liquiddsp</import>
-  <make>liquiddsp.flex_rx_c()</make>
+  <make>liquiddsp.flex_rx_c($target_queue)</make>
+  <param>
+    <name>Target Message Queue</name>
+    <key>target_queue</key>
+    <type>raw</type>
+  </param>
   <sink>
     <name>in</name>
     <type>complex</type>

@@ -37,8 +37,6 @@ namespace gr {
     {
      public:
       typedef boost::shared_ptr<flex_tx_bc> sptr;
-
-
         virtual void set_modulation(unsigned int modulation) = 0;
         virtual void set_inner_code(unsigned int inner_code) = 0;
         virtual void set_outer_code(unsigned int outer_code) = 0;
@@ -52,7 +50,7 @@ namespace gr {
        * class. liquiddsp::flex_tx_bc::make is the public interface for
        * creating new instances.
        */
-      static sptr make(unsigned int modulation, unsigned int payload_len, unsigned int inner_code, unsigned int outer_code);
+      static sptr make();
     };
 
   } // namespace liquiddsp

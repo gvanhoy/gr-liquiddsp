@@ -41,7 +41,8 @@ namespace gr {
     flex_tx_bc_impl::flex_tx_bc_impl()
             : gr::block("flex_tx_bc",
                         gr::io_signature::make(1, 1, sizeof(char)),
-                        gr::io_signature::make(1, 1, sizeof(gr_complex))) {
+                        gr::io_signature::make(1, 1, sizeof(gr_complex)))
+    {
       flexframegenprops_init_default(&d_fgprops);
       d_fgprops.check = LIQUID_CRC_24;      // data validity check
       d_fgprops.fec0 = LIQUID_FEC_HAMMING74;      // inner FEC scheme

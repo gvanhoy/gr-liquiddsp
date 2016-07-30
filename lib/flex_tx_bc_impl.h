@@ -44,7 +44,7 @@ namespace gr {
 
 
     public:
-      flex_tx_bc_impl(unsigned int modulation, unsigned int payload_len, unsigned int inner_code, unsigned int outer_code);
+      flex_tx_bc_impl();
       ~flex_tx_bc_impl();
       void set_modulation(unsigned int modulation);
         void set_inner_code(unsigned int inner_code);

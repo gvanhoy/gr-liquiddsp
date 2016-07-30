@@ -24,29 +24,31 @@
 
 #include <gnuradio/io_signature.h>
 #include "flex_rx_c_impl.h"
+#include <gnuradio/msg_queue.h>
 #include <liquid/liquid.h>
 
 namespace gr {
   namespace liquiddsp {
 
     flex_rx_c::sptr
-    flex_rx_c::make()
+    flex_rx_c::make(gr::msg_queue::sptr target_queue)
     {
       return gnuradio::get_initial_sptr
-        (new flex_rx_c_impl());
+        (new flex_rx_c_impl(target_queue));
     }
 
     /*
      * The private constructor
      */
-    flex_rx_c_impl::flex_rx_c_impl()
+    flex_rx_c_impl::flex_rx_c_impl(gr::msg_queue::sptr target_queue)
       : gr::sync_block("flex_rx_c",
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
-              gr::io_signature::make(0, 0, 0))
+              gr::io_signature::make(0, 0, 0)),
+        d_target_queue(target_queue)
     {
-      message_port_register_in(pmt::mp("symbols"));
       d_info = (struct packet_info *) malloc(sizeof(struct packet_info));
       d_info->_payload = (unsigned char *) malloc (sizeof(unsigned char) * 5000);
+      d_info->_queue = d_target_queue;
       d_fs = flexframesync_create(callback, (void *) d_info);
       set_output_multiple(d_inbuf_len);
     }
@@ -74,13 +76,11 @@ namespace gr {
       info->_header_valid = _header_valid;
       info->_stats = _stats;
       info->_payload_valid = _payload_valid;
-      if(_payload_valid && _header_valid){
-        printf("Message Length %d: ", _payload_len);
-        for(int i = 0; i < _payload_len; i++){
-          printf("%c", _payload[i]);
-        }
-        printf("\n");
-      }
+      message::sptr msg = message::make(0, 0, 0, _payload_len);
+      memcpy(msg->msg(), _payload, _payload_len);
+      info->_queue->insert_tail(msg);	// send it
+      msg.reset();  				// free it up
+
 //      framesyncstats_print(&_stats);
     }
 
@@ -92,16 +92,15 @@ namespace gr {
       gr_complex *in = (gr_complex *) input_items[0];
 
       assert (noutput_items % d_inbuf_len == 0);
+
       unsigned int num_items = 0;
-      framedatastats_s stats = flexframesync_get_framedatastats(d_fs);
-//      printf("Dropped Packet Rate: %.4f\n", 1.0 - ((double) stats.num_payloads_valid)/((double) stats.num_frames_detected));
       while(num_items < noutput_items){
         flexframesync_execute(d_fs, in, d_inbuf_len);
         num_items += d_inbuf_len;
         in += d_inbuf_len;
-//        flexframesync_print(d_fs);
       }
 
+      flexframesync_print(d_fs);
       assert(num_items == noutput_items);
       return noutput_items;
     }

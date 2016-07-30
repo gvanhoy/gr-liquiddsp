@@ -24,6 +24,7 @@
 
 #include <liquiddsp/api.h>
 #include <gnuradio/sync_block.h>
+#include <gnuradio/msg_queue.h>
 
 namespace gr {
   namespace liquiddsp {
@@ -46,7 +47,7 @@ namespace gr {
        * class. liquiddsp::flex_rx_c::make is the public interface for
        * creating new instances.
        */
-      static sptr make();
+      static sptr make(gr::msg_queue::sptr target_queue);
     };
 
   } // namespace liquiddsp

@@ -48,6 +48,7 @@ namespace gr {
       void set_modulation(unsigned int modulation);
         void set_inner_code(unsigned int inner_code);
         void set_outer_code(unsigned int outer_code);
+        void reconfigure();
       // Where all the action really happens
       void forecast (int noutput_items, gr_vector_int &ninput_items_required);
 

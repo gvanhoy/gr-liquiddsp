@@ -23,14 +23,16 @@
 
 #include <liquiddsp/flex_rx_c.h>
 #include <liquid/liquid.h>
+#include <gnuradio/msg_queue.h>
 
 struct packet_info{
-    unsigned char *  _header;
-    int              _header_valid;
-    unsigned char *  _payload;
-    unsigned int     _payload_len;
-    framesyncstats_s _stats;
-    int              _payload_valid;
+    unsigned char *     _header;
+    int                 _header_valid;
+    unsigned char *     _payload;
+    unsigned int        _payload_len;
+    framesyncstats_s    _stats;
+    int                 _payload_valid;
+    gr::msg_queue::sptr _queue;
 };
 
 namespace gr {
@@ -42,9 +44,10 @@ namespace gr {
         flexframesync d_fs;
         struct packet_info *d_info;
         static const unsigned int d_inbuf_len = 256;
+        gr::msg_queue::sptr  d_target_queue;
 
      public:
-      flex_rx_c_impl();
+      flex_rx_c_impl(gr::msg_queue::sptr target_queue);
       ~flex_rx_c_impl();
       static int callback(
               unsigned char *  _header,

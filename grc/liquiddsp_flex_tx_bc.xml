@@ -115,15 +115,15 @@
       <key>4</key>
     </option>
     <option>
-      <name>SECDED 22/16</name>
+      <name>SECDEC 22/16</name>
       <key>5</key>
     </option>
     <option>
-      <name>SECDED 39/32</name>
+      <name>SECDEC 39/32</name>
       <key>6</key>
     </option>
     <option>
-      <name>SECDED 72/64</name>
+      <name>SECDEC 72/64</name>
       <key>7</key>
     </option>
   </param>

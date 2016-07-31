@@ -30,7 +30,7 @@ list(APPEND liquiddsp_sources
     flex_tx_bc_impl.cc
     flex_rx_cb_impl.cc
     flex_rx_c_impl.cc
-    )
+    flex_tx_c_impl.cc )
 
 add_library(gnuradio-liquiddsp SHARED ${liquiddsp_sources})
 target_link_libraries(gnuradio-liquiddsp ${Boost_LIBRARIES} ${GNURADIO_RUNTIME_LIBRARIES} liquid)
@@ -51,11 +51,11 @@ install(TARGETS gnuradio-liquiddsp
 include(GrTest)
 
 include_directories(${CPPUNIT_INCLUDE_DIRS})
-
 list(APPEND test_liquiddsp_sources
     ${CMAKE_CURRENT_SOURCE_DIR}/test_liquiddsp.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/qa_liquiddsp.cc
-)
+    ${CMAKE_CURRENT_SOURCE_DIR}/qa_flex_tx_c.cc
+    )
 
 add_executable(test-liquiddsp ${test_liquiddsp_sources})
 

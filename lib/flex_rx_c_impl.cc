@@ -48,7 +48,6 @@ namespace gr {
     {
       d_info = (struct packet_info *) malloc(sizeof(struct packet_info));
       d_info->_payload = (unsigned char *) malloc (sizeof(unsigned char) * 5000);
-      if(!target_queue) printf("Warning!!! queue is null\n");
       d_fs = flexframesync_create(callback, (void *) d_info);
     }
 
@@ -80,6 +79,7 @@ namespace gr {
       info->_payload_valid = _payload_valid;
       info->_payload_len = _payload_len;
       info->_new_payload = true;
+
 //      framesyncstats_print(&_stats);
     }
 
@@ -97,18 +97,18 @@ namespace gr {
         flexframesync_execute(d_fs, in, d_inbuf_len);
         num_items += d_inbuf_len;
         in += d_inbuf_len;
-      }
 
-      if(d_info->_new_payload){
-        message::sptr msg = message::make(0, sizeof(unsigned char), 4 + d_info->_payload_len, sizeof(unsigned char)*(4 + d_info->_payload_len));
-        memcpy(msg->msg(), d_info->_header, 4);
-        memcpy(msg->msg() + 4, d_info->_payload, d_info->_payload_len);
-        d_target_queue->insert_tail(msg);
-        msg.reset();
-        d_info->_new_payload = false;
-        flexframesync_print(d_fs);
+        if(d_info->_new_payload){
+          message::sptr msg = message::make(0, sizeof(unsigned char), 4 + d_info->_payload_len, sizeof(unsigned char)*(4 + d_info->_payload_len));
+          memcpy(msg->msg(), d_info->_header, 4);
+          memcpy(msg->msg() + 4, d_info->_payload, d_info->_payload_len);
+          d_target_queue->insert_tail(msg);
+          msg.reset();
+          d_info->_new_payload = false;
+          flexframesync_print(d_fs);
+        }
       }
-
+      
       assert(num_items == noutput_items);
       return noutput_items;
     }

@@ -12,6 +12,7 @@
 #include "liquiddsp/flex_tx_bc.h"
 #include "liquiddsp/flex_rx_cb.h"
 #include "liquiddsp/flex_rx_c.h"
+#include "liquiddsp/flex_tx_c.h"
 %}
 
 
@@ -24,3 +25,5 @@ GR_SWIG_BLOCK_MAGIC2(liquiddsp, flex_rx_cb);
 %include "liquiddsp/flex_rx_c.h"
 GR_SWIG_BLOCK_MAGIC2(liquiddsp, flex_rx_c);
 
+%include "liquiddsp/flex_tx_c.h"
+GR_SWIG_BLOCK_MAGIC2(liquiddsp, flex_tx_c);

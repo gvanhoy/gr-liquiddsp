@@ -22,5 +22,5 @@ install(FILES
     liquiddsp_flex_tx_bc.xml
     liquiddsp_flex_rx_cb.xml
     liquiddsp_flex_rx_c.xml
-    DESTINATION share/gnuradio/grc/blocks
+    liquiddsp_flex_tx_c.xml DESTINATION share/gnuradio/grc/blocks
 )

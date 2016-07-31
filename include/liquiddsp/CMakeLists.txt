@@ -27,5 +27,5 @@ install(FILES
     flex_tx_bc.h
     flex_rx_cb.h
     flex_rx_c.h
-    DESTINATION include/liquiddsp
+    flex_tx_c.h DESTINATION include/liquiddsp
 )

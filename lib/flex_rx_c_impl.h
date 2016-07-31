@@ -32,7 +32,7 @@ struct packet_info{
     unsigned int        _payload_len;
     framesyncstats_s    _stats;
     int                 _payload_valid;
-    gr::msg_queue::sptr _queue;
+    bool                _new_payload;
 };
 
 namespace gr {

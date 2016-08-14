@@ -25,6 +25,7 @@
 #include <gnuradio/io_signature.h>
 #include "flex_rx_cb_impl.h"
 #include <liquid/liquid.h>
+#include <stdio.h>
 
 namespace gr {
   namespace liquiddsp {

@@ -79,8 +79,114 @@ namespace gr {
       info->_payload_valid = _payload_valid;
       info->_payload_len = _payload_len;
       info->_new_payload = true;
-
 //      framesyncstats_print(&_stats);
+    }
+
+    void
+    flex_rx_c_impl::get_outer_code(unsigned int outer_code) {
+      switch (outer_code) {
+        case LIQUID_FEC_NONE:
+          d_rx_outer_code = 0;
+          break;
+        case LIQUID_FEC_GOLAY2412:
+          d_rx_outer_code = 1;
+          break;
+        case LIQUID_FEC_RS_M8:
+          d_rx_outer_code = 2;
+          break;
+        case LIQUID_FEC_HAMMING74:
+          d_rx_outer_code = 3;
+          break;
+        case LIQUID_FEC_HAMMING128:
+          d_rx_outer_code = 4;
+          break;
+        case LIQUID_FEC_SECDED2216:
+          d_rx_outer_code = 5;
+          break;
+        case LIQUID_FEC_SECDED3932:
+          d_rx_outer_code = 6;
+          break;
+        case LIQUID_FEC_SECDED7264:
+          d_rx_outer_code = 7;
+          break;
+        default:
+          printf("Unsupported FEC received defaulting to none.\n");
+          d_rx_outer_code = 0;
+      }
+    }
+
+    void
+    flex_rx_c_impl::get_inner_code(unsigned int inner_code) {
+      switch (inner_code) {
+        case LIQUID_FEC_NONE:
+          d_rx_inner_code = 0;
+          break;
+        case LIQUID_FEC_CONV_V27:
+          d_rx_inner_code = 1;
+          break;
+        case LIQUID_FEC_CONV_V27P23:
+          d_rx_inner_code = 2;
+          break;
+        case LIQUID_FEC_CONV_V27P45:
+          d_rx_inner_code = 3;
+          break;
+        case LIQUID_FEC_CONV_V27P56:
+          d_rx_inner_code = 4;
+          break;
+        case LIQUID_FEC_CONV_V27P67:
+          d_rx_inner_code = 5;
+          break;
+        case LIQUID_FEC_CONV_V27P78:
+          d_rx_inner_code = 6;
+          break;
+        default:
+          printf("Unsupported Received FEC Defaulting to none.\n");
+          d_rx_inner_code = 0;
+          break;
+      }
+    }
+
+    void
+    flex_rx_c_impl::get_mod_scheme(unsigned int mod_scheme) {
+      switch (mod_scheme) {
+        case LIQUID_MODEM_PSK2:
+          d_rx_mod_scheme = 0;
+          break;
+        case LIQUID_MODEM_PSK4:
+          d_rx_mod_scheme = 1;
+          break;
+        case LIQUID_MODEM_PSK8:
+          d_rx_mod_scheme = 2;
+          break;
+        case LIQUID_MODEM_PSK16:
+          d_rx_mod_scheme = 3;
+          break;
+        case LIQUID_MODEM_DPSK2:
+          d_rx_mod_scheme = 4;
+          break;
+        case LIQUID_MODEM_DPSK4:
+          d_rx_mod_scheme = 5;
+          break;
+        case LIQUID_MODEM_DPSK8:
+          d_rx_mod_scheme = 6;
+          break;
+        case LIQUID_MODEM_ASK4:
+          d_rx_mod_scheme = 7;
+          break;
+        case LIQUID_MODEM_QAM16:
+          d_rx_mod_scheme = 8;
+          break;
+        case LIQUID_MODEM_QAM32:
+          d_rx_mod_scheme = 9;
+          break;
+        case LIQUID_MODEM_QAM64:
+          d_rx_mod_scheme = 10;
+          break;
+        default:
+          printf("Unsupported Received Modulation Defaulting to BPSK.\n");
+          d_rx_mod_scheme = 0;
+          break;
+      }
     }
 
     int
@@ -99,12 +205,18 @@ namespace gr {
         in += d_inbuf_len;
 
         if(d_info->_new_payload){
-          message::sptr msg = message::make(0, sizeof(unsigned char), 21 + d_info->_payload_len, sizeof(unsigned char)*(21 + d_info->_payload_len));
+          get_outer_code(d_info->_stats.fec1);
+          get_inner_code(d_info->_stats.fec0);
+          get_mod_scheme(d_info->_stats.mod_scheme);
+          message::sptr msg = message::make(0, sizeof(unsigned char), 24 + d_info->_payload_len, sizeof(unsigned char)*(24 + d_info->_payload_len));
           memcpy(msg->msg(), &d_info->_header_valid, 1);
           memcpy(msg->msg() + 1, &d_info->_payload_valid, 1);
-          memcpy(msg->msg() + 2, &d_info->_stats.evm, 4);
-          memcpy(msg->msg() + 6, d_info->_header, 14);
-          memcpy(msg->msg() + 21, d_info->_payload, d_info->_payload_len);
+          memcpy(msg->msg() + 2, &d_rx_mod_scheme, 1);
+          memcpy(msg->msg() + 3, &d_rx_inner_code, 1);
+          memcpy(msg->msg() + 4, &d_rx_outer_code, 1);
+          memcpy(msg->msg() + 5, &d_info->_stats.evm, 4);
+          memcpy(msg->msg() + 9, d_info->_header, 14);
+          memcpy(msg->msg() + 24, d_info->_payload, d_info->_payload_len);
           d_target_queue->insert_tail(msg);
           msg.reset();
           d_info->_new_payload = false;

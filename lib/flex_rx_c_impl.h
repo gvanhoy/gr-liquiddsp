@@ -25,43 +25,52 @@
 #include <liquid/liquid.h>
 #include <gnuradio/msg_queue.h>
 
-struct packet_info{
-    unsigned char *     _header;
-    int                 _header_valid;
-    unsigned char *     _payload;
-    unsigned int        _payload_len;
-    framesyncstats_s    _stats;
-    int                 _payload_valid;
-    bool                _new_payload;
+struct packet_info {
+    unsigned char *_header;
+    int _header_valid;
+    unsigned char *_payload;
+    unsigned int _payload_len;
+    framesyncstats_s _stats;
+    int _payload_valid;
+    bool _new_payload;
 };
 
 namespace gr {
   namespace liquiddsp {
 
-    class flex_rx_c_impl : public flex_rx_c
-    {
-     private:
+    class flex_rx_c_impl : public flex_rx_c {
+    private:
         flexframesync d_fs;
         struct packet_info *d_info;
         static const unsigned int d_inbuf_len = 256;
-        gr::msg_queue::sptr  d_target_queue;
+        gr::msg_queue::sptr d_target_queue;
+        int d_rx_mod_scheme;
+        int d_rx_outer_code;
+        int d_rx_inner_code;
 
-     public:
-      flex_rx_c_impl(gr::msg_queue::sptr target_queue);
-      ~flex_rx_c_impl();
-      static int callback(
-              unsigned char *  _header,
-              int              _header_valid,
-              unsigned char *  _payload,
-              unsigned int     _payload_len,
-              int              _payload_valid,
-              framesyncstats_s _stats,
-              void *           _userdata);
+        void get_mod_scheme(unsigned int mod_scheme);
 
-      // Where all the action really happens
-      int work(int noutput_items,
-         gr_vector_const_void_star &input_items,
-         gr_vector_void_star &output_items);
+        void get_outer_code(unsigned int outer_code);
+
+        void get_inner_code(unsigned int inner_code);
+
+    public:
+
+        flex_rx_c_impl(gr::msg_queue::sptr target_queue);
+        ~flex_rx_c_impl();
+        static int callback(
+                unsigned char *_header,
+                int _header_valid,
+                unsigned char *_payload,
+                unsigned int _payload_len,
+                int _payload_valid,
+                framesyncstats_s _stats,
+                void *_userdata);
+
+        // Where all the action really happens
+        int work(int noutput_items,
+                 gr_vector_const_void_star &input_items,
+                 gr_vector_void_star &output_items);
     };
 
   } // namespace liquiddsp

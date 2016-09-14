@@ -38,14 +38,17 @@ class QueueWatcherThread(_threading.Thread):
             message = msg.to_string()
             header_valid = struct.unpack("<B", message[0])
             payload_valid = struct.unpack("<B", message[1])
-            evm = struct.unpack("f", message[2:6])[0]
-            header = message[6:21]
-            payload = message[21:]
+            mod_scheme = struct.unpack("<B", message[2])
+            inner_code = struct.unpack("<B", message[3])
+            outer_code = struct.unpack("<B", message[4])
+            evm = struct.unpack("f", message[5:9])[0]
+            header = message[9:24]
+            payload = message[24:]
             print "test"
             # print("Received Header ", header_num)
             # print("Length ", msg.length() - 4, " Received Payload ", payload, )
             if self.callback:
-                self.callback(header_valid, payload_valid, evm, header, payload)
+                self.callback(header_valid, payload_valid, mod_scheme, inner_code, outer_code, evm, header, payload)
         print("Watcher stopped")
 
 
@@ -127,7 +130,7 @@ class TopBlock(gr.top_block):
         self.samp_rate = samp_rate
         self.blocks_throttle_0.set_sample_rate(self.samp_rate)
 
-    def callback(self, header_valid, payload_valid, evm, header, payload):
+    def callback(self, header_valid, payload_valid, mod_scheme, inner_code, outer_code, evm, header, payload):
         '''
         :param header_valid: 1 if CRC check passes, 0 otherwise
         :param payload_valid: 1 if CRC check passes, 0 otherwise
@@ -138,8 +141,8 @@ class TopBlock(gr.top_block):
         '''
         #TODO: How to parse header and payload as bitstrings
         packet_num = struct.unpack("<L", header[:4])
-        print "Header Valid", header_valid, "Payload valid", payload_valid, "EVM ", evm, "Packet Num", packet_num
-
+        print "Header Valid", header_valid, "Payload valid", payload_valid, "Mod Scheme", mod_scheme, \
+            "Inner Code", inner_code, "Outer Code", outer_code, "EVM", evm, "Packet Num", packet_num
 
     def cleanup(self):
         print "Stopping Watcher"
@@ -152,7 +155,6 @@ def main(top_block_cls=TopBlock, options=None):
     tb.start()
     num_packets = 0
     while True:
-        tb.send_packet(m, i, o, range(9), random_bits)
         for m in range(10):
             for i in range(6):
                 for o in range(7):

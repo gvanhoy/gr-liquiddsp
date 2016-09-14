@@ -99,9 +99,12 @@ namespace gr {
         in += d_inbuf_len;
 
         if(d_info->_new_payload){
-          message::sptr msg = message::make(0, sizeof(unsigned char), 4 + d_info->_payload_len, sizeof(unsigned char)*(4 + d_info->_payload_len));
-          memcpy(msg->msg(), d_info->_header, 4);
-          memcpy(msg->msg() + 4, d_info->_payload, d_info->_payload_len);
+          message::sptr msg = message::make(0, sizeof(unsigned char), 21 + d_info->_payload_len, sizeof(unsigned char)*(21 + d_info->_payload_len));
+          memcpy(msg->msg(), &d_info->_header_valid, 1);
+          memcpy(msg->msg() + 1, &d_info->_payload_valid, 1);
+          memcpy(msg->msg() + 2, &d_info->_stats.evm, 4);
+          memcpy(msg->msg() + 6, d_info->_header, 14);
+          memcpy(msg->msg() + 21, d_info->_payload, d_info->_payload_len);
           d_target_queue->insert_tail(msg);
           msg.reset();
           d_info->_new_payload = false;

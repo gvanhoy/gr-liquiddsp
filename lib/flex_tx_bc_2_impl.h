@@ -18,16 +18,16 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef INCLUDED_LIQUIDDSP_FLEX_TX_BC_IMPL_H
-#define INCLUDED_LIQUIDDSP_FLEX_TX_BC_IMPL_H
+#ifndef INCLUDED_LIQUIDDSP_FLEX_TX_BC_2_IMPL_H
+#define INCLUDED_LIQUIDDSP_FLEX_TX_BC_2_IMPL_H
 
-#include <liquiddsp/flex_tx_bc.h>
+#include <liquiddsp/flex_tx_bc_2.h>
 #include <liquid/liquid.h>
 
 namespace gr {
   namespace liquiddsp {
 
-    class flex_tx_bc_impl : public flex_tx_bc
+    class flex_tx_bc_2_impl : public flex_tx_bc_2
     {
      private:
         flexframegenprops_s d_fgprops;
@@ -37,20 +37,15 @@ namespace gr {
         static const unsigned int d_buf_len = 256;
         gr_complex *d_outbuf;
         unsigned int d_frame_len;
-        unsigned int d_modulation;
-        unsigned int d_inner_code;
-        unsigned int d_outer_code;
         unsigned int d_payload_len;
-
-
-    public:
-      flex_tx_bc_impl();
-      ~flex_tx_bc_impl();
-      void set_modulation(unsigned int modulation);
+        void set_modulation(unsigned int modulation);
         void set_inner_code(unsigned int inner_code);
         void set_outer_code(unsigned int outer_code);
-        void reconfigure();
-      // Where all the action really happens
+
+     public:
+      flex_tx_bc_2_impl(int mod, int inner, int outer, int payload_size);
+      ~flex_tx_bc_2_impl();
+
       void forecast (int noutput_items, gr_vector_int &ninput_items_required);
 
       int general_work(int noutput_items,
@@ -62,5 +57,5 @@ namespace gr {
   } // namespace liquiddsp
 } // namespace gr
 
-#endif /* INCLUDED_LIQUIDDSP_FLEX_TX_BC_IMPL_H */
+#endif /* INCLUDED_LIQUIDDSP_FLEX_TX_BC_2_IMPL_H */
 

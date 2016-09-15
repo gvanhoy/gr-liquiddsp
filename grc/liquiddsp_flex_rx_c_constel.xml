@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <block>
-  <name>flex_rx_c</name>
-  <key>liquiddsp_flex_rx_c</key>
+  <name>flex_rx_c_constel</name>
+  <key>liquiddsp_flex_rx_c_constel</key>
   <category>liquiddsp</category>
   <import>import liquiddsp</import>
-  <make>liquiddsp.flex_rx_c($(id)_msgq_out)</make>
+  <make>liquiddsp.flex_rx_c_constel($(id)_msgq_out)</make>
   <sink>
     <name>in</name>
     <type>complex</type>

@@ -24,8 +24,6 @@
 
 #include <gnuradio/io_signature.h>
 #include "flex_rx_c_impl.h"
-#include <gnuradio/msg_queue.h>
-#include <liquid/liquid.h>
 
 namespace gr {
   namespace liquiddsp {
@@ -56,6 +54,7 @@ namespace gr {
      */
     flex_rx_c_impl::~flex_rx_c_impl()
     {
+      flexframesync_destroy(d_fs);
     }
 
     int

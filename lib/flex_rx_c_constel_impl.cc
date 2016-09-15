@@ -23,31 +23,27 @@
 #endif
 
 #include <gnuradio/io_signature.h>
-#include "flex_rx_cb_impl.h"
 #include <liquid/liquid.h>
-#include <stdio.h>
+#include "flex_rx_c_constel_impl.h"
 
 namespace gr {
   namespace liquiddsp {
 
-    flex_rx_cb::sptr
-    flex_rx_cb::make()
+    flex_rx_c_constel::sptr
+    flex_rx_c_constel::make(gr::msg_queue::sptr target_queue)
     {
       return gnuradio::get_initial_sptr
-        (new flex_rx_cb_impl());
+        (new flex_rx_c_constel_impl(target_queue));
     }
 
-
-
-//      static int ios[] = {sizeof(char), sizeof(gr_complex)};
-//      static std::vector<int> iosig(ios, ios+sizeof(ios)/sizeof(int));
     /*
      * The private constructor
      */
-    flex_rx_cb_impl::flex_rx_cb_impl()
-      : gr::block("flex_rx_cb",
+    flex_rx_c_constel_impl::flex_rx_c_constel_impl(gr::msg_queue::sptr target_queue)
+            : gr::sync_block("flex_rx_c_constel",
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
-              gr::io_signature::make(1, 1, sizeof(gr_complex)))
+              gr::io_signature::make(0, 0, 0)),
+        d_target_queue(target_queue)
     {
       d_info = (struct packet_info *) malloc(sizeof(struct packet_info));
       d_info->_payload = (unsigned char *) malloc (sizeof(unsigned char) * 5000);
@@ -57,15 +53,13 @@ namespace gr {
     /*
      * Our virtual destructor.
      */
-    flex_rx_cb_impl::~flex_rx_cb_impl()
+    flex_rx_c_constel_impl::~flex_rx_c_constel_impl()
     {
-      free(d_info->_payload);
-      free(d_info);
       flexframesync_destroy(d_fs);
     }
 
     int
-    flex_rx_cb_impl::callback(
+    flex_rx_c_constel_impl::callback(
             unsigned char *  _header,
             int              _header_valid,
             unsigned char *  _payload,
@@ -74,55 +68,47 @@ namespace gr {
             framesyncstats_s _stats,
             void *           _userdata)
     {
+      static unsigned int current_frame = 0;
+      unsigned int header_number = 0;
+      double average_fer = 0;
       struct packet_info *info = (struct packet_info *) _userdata;
       info->_payload = _payload;
       info->_header = _header;
       info->_header_valid = _header_valid;
       info->_stats = _stats;
-      info->_num_frames++;
-      memcpy(info->_frame_symbols, _stats.framesyms, _stats.num_framesyms*sizeof(gr_complex));
       info->_payload_valid = _payload_valid;
-    }
-
-
-    void
-    flex_rx_cb_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
-    {
-      assert(noutput_items % d_inbuf_len == 0);
-      int nblocks = noutput_items / d_inbuf_len;
-      ninput_items_required[0] = nblocks*d_inbuf_len;
+      info->_payload_len = _payload_len;
+      info->_frame_symbols = _stats.framesyms;
+      info->_num_frames++;
+//      framesyncstats_print(&_stats);
     }
 
     int
-    flex_rx_cb_impl::general_work (int noutput_items,
-                       gr_vector_int &ninput_items,
-                       gr_vector_const_void_star &input_items,
-                       gr_vector_void_star &output_items)
+    flex_rx_c_constel_impl::work(int noutput_items,
+        gr_vector_const_void_star &input_items,
+        gr_vector_void_star &output_items)
     {
-      assert (noutput_items % d_inbuf_len == 0);
       gr_complex *in = (gr_complex *) input_items[0];
-      unsigned int num_items = 0;
-
-      int nItemsFromSync = 0;
-      gr_complex *out_symbols = (gr_complex *) output_items[0];
-      d_info->_frame_symbols = out_symbols;
       d_info->_num_frames = 0;
+      unsigned int num_items = 0;
+      int nItemsFromSync = 0;
 
-      printf("Requesting %d items\n", noutput_items);
+//      printf("Requesting %d items\n", noutput_items);
       while(num_items < noutput_items){
         flexframesync_execute(d_fs, in, d_inbuf_len);
         num_items += d_inbuf_len;
         in += d_inbuf_len;
       }
 
-//      flexframesync_print(d_fs);
-      assert(num_items == noutput_items);
       nItemsFromSync = d_info->_num_frames*d_info->_stats.num_framesyms;
-      printf("Produced %d items from framesync\n", nItemsFromSync);
-      memcpy(out_symbols + nItemsFromSync, in + nItemsFromSync, noutput_items - nItemsFromSync);
-      printf("After allocation execution\n");
-      consume_each(noutput_items); // input items consumed
-      return noutput_items; //output items produced
+//      printf("Produced %d items from framesync\n", nItemsFromSync);
+      if (nItemsFromSync != 0){
+        message::sptr msg = message::make(0, sizeof(gr_complex), noutput_items, sizeof(gr_complex)*(noutput_items));
+        memcpy(msg->msg(), d_info->_frame_symbols, noutput_items);
+        d_target_queue->insert_tail(msg);
+      }
+
+      return noutput_items;
     }
 
   } /* namespace liquiddsp */

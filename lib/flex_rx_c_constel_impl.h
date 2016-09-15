@@ -18,10 +18,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef INCLUDED_LIQUIDDSP_FLEX_RX_C_IMPL_H
-#define INCLUDED_LIQUIDDSP_FLEX_RX_C_IMPL_H
+#ifndef INCLUDED_LIQUIDDSP_FLEX_RX_C_CONSTEL_IMPL_H
+#define INCLUDED_LIQUIDDSP_FLEX_RX_C_CONSTEL_IMPL_H
 
-#include <liquiddsp/flex_rx_c.h>
+#include <liquiddsp/flex_rx_c_constel.h>
 #include <liquid/liquid.h>
 #include <gnuradio/msg_queue.h>
 
@@ -31,36 +31,24 @@ struct packet_info {
     unsigned char *_payload;
     unsigned int _payload_len;
     framesyncstats_s _stats;
+    gr_complex *_frame_symbols;
+    unsigned int _num_frames;
     int _payload_valid;
-    bool _new_payload;
 };
 
 namespace gr {
   namespace liquiddsp {
 
-    class flex_rx_c_impl : public flex_rx_c {
+    class flex_rx_c_constel_impl : public flex_rx_c_constel {
     private:
         flexframesync d_fs;
         struct packet_info *d_info;
         static const unsigned int d_inbuf_len = 256;
         gr::msg_queue::sptr d_target_queue;
-        int d_rx_mod_scheme;
-        int d_rx_outer_code;
-        int d_rx_inner_code;
-
-        void get_mod_scheme(unsigned int mod_scheme);
-
-        void get_outer_code(unsigned int outer_code);
-
-        void get_inner_code(unsigned int inner_code);
 
     public:
-
-        flex_rx_c_impl(gr::msg_queue::sptr target_queue);
-
-        ~flex_rx_c_impl();
-
-        msg_queue::sptr msgq() const { return d_target_queue; }
+        flex_rx_c_constel_impl(gr::msg_queue::sptr target_queue);
+        ~flex_rx_c_constel_impl();
 
         static int callback(
                 unsigned char *_header,
@@ -80,5 +68,5 @@ namespace gr {
   } // namespace liquiddsp
 } // namespace gr
 
-#endif /* INCLUDED_LIQUIDDSP_FLEX_RX_C_IMPL_H */
+#endif /* INCLUDED_LIQUIDDSP_FLEX_RX_C_CONSTEL_IMPL_H */
 

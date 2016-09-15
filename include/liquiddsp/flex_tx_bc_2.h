@@ -19,12 +19,11 @@
  */
 
 
-#ifndef INCLUDED_LIQUIDDSP_FLEX_RX_C_H
-#define INCLUDED_LIQUIDDSP_FLEX_RX_C_H
+#ifndef INCLUDED_LIQUIDDSP_FLEX_TX_BC_2_H
+#define INCLUDED_LIQUIDDSP_FLEX_TX_BC_2_H
 
 #include <liquiddsp/api.h>
-#include <gnuradio/sync_block.h>
-#include <gnuradio/msg_queue.h>
+#include <gnuradio/block.h>
 
 namespace gr {
   namespace liquiddsp {
@@ -34,26 +33,24 @@ namespace gr {
      * \ingroup liquiddsp
      *
      */
-    class LIQUIDDSP_API flex_rx_c : virtual public gr::sync_block
+    class LIQUIDDSP_API flex_tx_bc_2 : virtual public gr::block
     {
      public:
-      typedef boost::shared_ptr<flex_rx_c> sptr;
+      typedef boost::shared_ptr<flex_tx_bc_2> sptr;
 
       /*!
-       * \brief Return a shared_ptr to a new instance of liquiddsp::flex_rx_c.
+       * \brief Return a shared_ptr to a new instance of liquiddsp::flex_tx_bc_2.
        *
-       * To avoid accidental use of raw pointers, liquiddsp::flex_rx_c's
+       * To avoid accidental use of raw pointers, liquiddsp::flex_tx_bc_2's
        * constructor is in a private implementation
-       * class. liquiddsp::flex_rx_c::make is the public interface for
+       * class. liquiddsp::flex_tx_bc_2::make is the public interface for
        * creating new instances.
        */
-      virtual gr::msg_queue::sptr msgq() const = 0;
-
-        static sptr make(gr::msg_queue::sptr target_queue);
+      static sptr make(int mod, int inner, int outer, int payload_size);
     };
 
   } // namespace liquiddsp
 } // namespace gr
 
-#endif /* INCLUDED_LIQUIDDSP_FLEX_RX_C_H */
+#endif /* INCLUDED_LIQUIDDSP_FLEX_TX_BC_2_H */
 

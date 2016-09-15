@@ -155,22 +155,17 @@ def main(top_block_cls=TopBlock, options=None):
     tb.start()
     num_packets = 0
     while True:
-        for m in range(10):
-            for i in range(6):
-                for o in range(7):
-                    random_bits = numpy.random.randint(2, size=(1000,))
-                    tb.send_packet(m, i, o, range(9), random_bits)
-                    num_packets += 1
-
-
-                    ##        random_bits = numpy.random.randint(0x10000, size=(1024 + 3,))
-                    ##        random_bits[0] = 0
-                    ##        random_bits[1] = 0
-                    ##        random_bits[2] = 0
-                    ##        bit_string = random_bits.astype(numpy.uint8).tostring()
-                    ##        tb.insert_message(bit_string)
-                    ##        num_packets += 1
-
+        if (tb.num_packets % 20) == 0:
+            print "CE Decision is "
+            epsilon = 0.01
+            BW = tb.samp_rate
+            Conf = EGreedy(num_packets, epsilon, BW)
+            new_Conf = Conf[0]
+            m = new_Conf.modulation
+            i = new_Conf.innercode
+            o = new_Conf.outercode
+            config_map = Conf_map(m, i, o)
+        tb.send_packet(m, i, o, range(9), random_bits)
     time.sleep(5)
     print "Transmission is done **********************************"
     print "Transmission is done **********************************"

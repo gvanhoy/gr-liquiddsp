@@ -5,15 +5,10 @@
 ## PLEASE DO "NOT" EDIT THIS FILE!
 ############################################################################
 
-import time
-import numpy as np
-import random
-import math
-import sqlite3
-from gittinsNormal import *
-from ConfidenceInterval import *
 from CI import *
+from ConfidenceInterval import *
 from Configuration_map import *
+from gittinsNormal import *
 
 confidence = 0.9
 PSR_Threshold = 0.8

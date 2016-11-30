@@ -1,6 +1,5 @@
-from CE import *
-from Reset_databases import *
-
+from apps.CE import *
+from apps.Reset_databases import *
 
 i=1
 BW=200000

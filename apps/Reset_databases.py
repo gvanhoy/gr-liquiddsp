@@ -1,9 +1,8 @@
-import time
-import numpy as np
-import random
 import math
 import sqlite3
+
 from Configuration_map import *
+
 
 def RESET_Tables(BW):
     connection = sqlite3.connect('config.db')

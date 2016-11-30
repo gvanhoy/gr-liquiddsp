@@ -6,20 +6,19 @@
 # Generated: Sat Jul 30 13:04:17 2016
 ##################################################
 
-import gnuradio.gr.gr_threading as _threading
-import time
+import numpy
+import sip
 import struct
 from PyQt4 import Qt
+
+import gnuradio.gr.gr_threading as _threading
+import liquiddsp
 from gnuradio import blocks
 from gnuradio import channels
 from gnuradio import gr
 from gnuradio import qtgui
-import liquiddsp
-import numpy
-import sip
-from CE import *
+
 from Database_Control import *
-from Configuration_map import *
 from Reset_databases import *
 
 

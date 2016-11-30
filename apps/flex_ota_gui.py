@@ -1,9 +1,6 @@
 from PyQt4 import Qt
 from gnuradio import digital, gr, qtgui
 from gnuradio.filter import firdes
-from math import pi
-from gnuradio.eng_option import eng_option
-from optparse import OptionParser
 import PyQt4.Qwt5 as Qwt
 import sip
 from apps.flex_ota import *
@@ -108,7 +105,6 @@ class TopBlockGui(FlexOTA, Qt.QWidget):
 
         return qtgui_freq_sink_layout
 
-
     def _qt_make_noise_knob(self):
         self._noise_layout = Qt.QVBoxLayout()
         self._noise_label = Qt.QLabel("Noise (mV)")
@@ -122,13 +118,11 @@ class TopBlockGui(FlexOTA, Qt.QWidget):
         self._noise_layout.addWidget(self._noise_knob)
 
     def closeEvent(self, event):
-        global running
-
         self.settings = Qt.QSettings("GNU Radio", "rx_transceiver_gui")
         self.settings.setValue("geometry", self.saveGeometry())
         event.accept()
-
-        running = False
+        self.watcher.keep_running = False
+        self.watcher.join()
 
     def get_noise(self):
         return self.noise
@@ -137,6 +131,7 @@ class TopBlockGui(FlexOTA, Qt.QWidget):
         self.noise = noise
         Qt.QMetaObject.invokeMethod(self._noise_knob, "setValue", Qt.Q_ARG("double", self.noise))
         #self.awgn_source.set_amplitude(self.noise/10000.0)
+        self.channels_channel_model_0.set_noise_voltage(self.noise)
 
 if __name__ == '__main__':
     import ctypes

@@ -10,8 +10,8 @@ import numpy
 import struct
 import gnuradio.gr.gr_threading as _threading
 import liquiddsp
+from gnuradio import uhd
 from gnuradio import blocks
-from gnuradio import channels
 from gnuradio import gr
 
 from Database_Control import *
@@ -59,7 +59,7 @@ class FlexOTA(gr.top_block):
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate = 100000
+        self.samp_rate = samp_rate = 1000000
         self.num_transmitted_payloads = 0
         self.num_received_payloads = 0
         self.transmitted_payloads = numpy.empty((1024, 1000))
@@ -81,14 +81,36 @@ class FlexOTA(gr.top_block):
         self.liquiddsp_flex_rx_c_constel_0 = liquiddsp.flex_rx_c_constel(self.constellation_queue)
         self.blocks_message_source_0 = blocks.message_source(gr.sizeof_gr_complex*1, self.constellation_queue)
 
-        self.channels_channel_model_0 = channels.channel_model(
-            noise_voltage=0.1,
-            frequency_offset=0.00001,
-            epsilon=1.000001,
-            taps= (numpy.random.rand(2) + 1j*numpy.random.rand(2)).tolist(),
-            noise_seed=0,
-            block_tags=False
+        self.transmitter_uhd = uhd.usrp_sink(
+            ",".join(("addr=192.168.10.6", "")),
+            uhd.stream_args(
+                cpu_format="fc32",
+                channels=range(1),
+            ),
         )
+        self.transmitter_uhd.set_samp_rate(samp_rate)
+        self.transmitter_uhd.set_center_freq(14000000, 0)
+        self.transmitter_uhd.set_gain(40, 0)
+
+        self.receiver_uhd = uhd.usrp_source(
+            ",".join(("addr=192.168.10.4", "")),
+            uhd.stream_args(
+                cpu_format="fc32",
+                channels=range(1),
+            ),
+        )
+        self.receiver_uhd.set_samp_rate(samp_rate)
+        self.receiver_uhd.set_center_freq(14000000, 0)
+        self.receiver_uhd.set_gain(20, 0)
+
+        # self.channels_channel_model_0 = channels.channel_model(
+        #     noise_voltage=0.1,
+        #     frequency_offset=0.00001,
+        #     epsilon=1.000001,
+        #     taps= (numpy.random.rand(2) + 1j*numpy.random.rand(2)).tolist(),
+        #     noise_seed=0,
+        #     block_tags=False
+        # )
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex, self.samp_rate, True)
         self.watcher = QueueWatcherThread(self.receive_queue, self.callback)
         self.null_sink = blocks.null_sink(gr.sizeof_gr_complex)
@@ -96,11 +118,11 @@ class FlexOTA(gr.top_block):
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.liquiddsp_flex_tx_c_0, 0), (self.blocks_throttle_0, 0))
-        self.connect((self.blocks_throttle_0, 0), (self.channels_channel_model_0, 0))
-        self.connect((self.channels_channel_model_0, 0), (self.liquiddsp_flex_rx_c_0, 0))
+        self.connect((self.liquiddsp_flex_tx_c_0, 0), (self.transmitter_uhd, 0))
+        # self.connect((self.blocks_throttle_0, 0), (self.channels_channel_model_0, 0))
+        self.connect((self.receiver_uhd, 0), (self.liquiddsp_flex_rx_c_0, 0))
         #self.connect((self.channels_channel_model_0, 0), (self.null_sink, 0))
-        self.connect((self.channels_channel_model_0, 0), (self.liquiddsp_flex_rx_c_constel_0, 0))
+        # self.connect((self.channels_channel_model_0, 0), (self.liquiddsp_flex_rx_c_constel_0, 0))
 
     def get_samp_rate(self):
         return self.samp_rate

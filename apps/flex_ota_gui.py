@@ -131,7 +131,7 @@ class TopBlockGui(FlexOTA, Qt.QWidget):
         self.noise = noise
         Qt.QMetaObject.invokeMethod(self._noise_knob, "setValue", Qt.Q_ARG("double", self.noise))
         #self.awgn_source.set_amplitude(self.noise/10000.0)
-        self.channels_channel_model_0.set_noise_voltage(self.noise)
+        # self.channels_channel_model_0.set_noise_voltage(self.noise)
 
 if __name__ == '__main__':
     import ctypes

@@ -76,9 +76,10 @@ class FlexOTA(gr.top_block):
         ##################################################
         # Blocks
         ##################################################
+        self.liquiddsp_flex_rx_msgq_0 = liquiddsp.flex_rx_msgq(self.receive_queue, self.constellation_queue)
         self.liquiddsp_flex_tx_c_0 = liquiddsp.flex_tx_c(1, self.transmit_queue)
-        self.liquiddsp_flex_rx_c_0 = liquiddsp.flex_rx_c(self.receive_queue)
-        self.liquiddsp_flex_rx_c_constel_0 = liquiddsp.flex_rx_c_constel(self.constellation_queue)
+        # self.liquiddsp_flex_rx_c_0 = liquiddsp.flex_rx_c(self.receive_queue)
+        # self.liquiddsp_flex_rx_c_constel_0 = liquiddsp.flex_rx_c_constel(self.constellation_queue)
         self.blocks_message_source_0 = blocks.message_source(gr.sizeof_gr_complex*1, self.constellation_queue)
 
         self.transmitter_uhd = uhd.usrp_sink(

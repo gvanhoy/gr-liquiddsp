@@ -80,7 +80,6 @@ namespace gr {
       info->_payload_len = _payload_len;
       info->_frame_symbols = _stats.framesyms;
       info->_num_frames++;
-//      framesyncstats_print(&_stats);
     }
 
     int

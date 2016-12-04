@@ -21,7 +21,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
+#include <stdio.h>
 #include <gnuradio/io_signature.h>
 #include "flex_rx_c_impl.h"
 

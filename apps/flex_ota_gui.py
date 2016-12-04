@@ -5,12 +5,15 @@ import PyQt4.Qwt5 as Qwt
 import sip
 from apps.flex_ota import *
 
+from Database_Control import *
+from Reset_databases import *
+import sys
+
 
 class TopBlockGui(FlexOTA, Qt.QWidget):
     def __init__(self):
         Qt.QWidget.__init__(self)
         FlexOTA.__init__(self)
-
         gr.enable_realtime_scheduling()
 
         self._qt_init()
@@ -134,36 +137,58 @@ class TopBlockGui(FlexOTA, Qt.QWidget):
         # self.channels_channel_model_0.set_noise_voltage(self.noise)
 
 if __name__ == '__main__':
-    import ctypes
-    import sys
-    if sys.platform.startswith('linux'):
-        try:
-            x11 = ctypes.cdll.LoadLibrary('libX11.so')
-            x11.XInitThreads()
-        except:
-            print "Warning: failed to XInitThreads()"
-    #parser = OptionParser(option_class=eng_option, usage="%prog: [options]")
-    #(options, args) = parser.parse_args()
-    Qt.QApplication.setGraphicsSystem(gr.prefs().get_string('qtgui', 'style', 'raster'))
+    from distutils.version import StrictVersion
+
+    if StrictVersion(Qt.qVersion()) >= StrictVersion("4.5.0"):
+        style = gr.prefs().get_string('qtgui', 'style', 'raster')
+        Qt.QApplication.setGraphicsSystem(style)
     qapp = Qt.QApplication(sys.argv)
 
     top_block = TopBlockGui()
     top_block.start()
     top_block.show()
+    inner_code = 0
+    outer_code = 0
+    modulation = 0
+    queue_full = False
 
+    def quitting():
+        top_block.watcher.keep_running = False
+        top_block.stop()
+        top_block.wait()
+
+    qapp.connect(qapp, Qt.SIGNAL("aboutToQuit()"), quitting)
+    RESET_Tables(top_block.samp_rate)
     num_packets = 0
-
-    print "Top block started."
-    while True:
+    while num_packets < 11 * 8 * 2:
+    # while True:
         qapp.processEvents()
-        # rx_transceiver.pr_tx.switch_costas_loop()
         for m in range(11):
             for o in range(8):
-                random_bits = numpy.random.randint(255, size=(2000,))
-                if not top_block.liquiddsp_flex_tx_c_0.msgq().full_p():
-                    top_block.send_packet(m, 0, o, range(9), random_bits)
-                    num_packets += 1
-        time.sleep(0.1)
+                random_bits = numpy.random.randint(255, size=(1024,))
+                while top_block.liquiddsp_flex_tx_c_0.msgq().full_p():
+                    qapp.processEvents()
+                    pass
+                top_block.send_packet(m, 0, o, range(9), random_bits)
+                num_packets += 1
+
+    while True:
+        qapp.processEvents()
+        if (num_packets % 20) == 0:
+            print "CE Decision is "
+            ce_configuration = EGreedy(num_packets, .01, top_block.samp_rate)
+            random_bits = numpy.random.randint(255, size=(1024,))
+            if ce_configuration is not None:
+                new_ce_configuration = ce_configuration[0]
+                modulation = new_ce_configuration.modulation
+                inner_code = new_ce_configuration.innercode
+                outer_code = new_ce_configuration.outercode
+                Conf_map(modulation, inner_code, outer_code)  # prints configuration
+        while top_block.liquiddsp_flex_tx_c_0.msgq().full_p():
+            qapp.processEvents()
+            pass
+        top_block.send_packet(modulation, inner_code, outer_code, range(9), random_bits)
+        num_packets += 1
 
     print "Stopping top block..."
     top_block.stop()

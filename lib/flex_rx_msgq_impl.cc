@@ -26,6 +26,7 @@
 #include <liquid/liquid.h>
 #include <gnuradio/msg_queue.h>
 #include "flex_rx_msgq_impl.h"
+#include <stdio.h>
 
 namespace gr {
   namespace liquiddsp {
@@ -47,6 +48,7 @@ namespace gr {
       d_info = (struct packet_info *) malloc(sizeof(struct packet_info));
       d_info->_payload = (unsigned char *) malloc(sizeof(unsigned char) * 5000);
       d_fs = flexframesync_create(callback, (void *) d_info);
+      set_output_multiple(d_inbuf_len);
     }
 
     /*
@@ -192,6 +194,8 @@ namespace gr {
       d_info->_num_frames = 0;
       unsigned int num_items = 0;
       int num_symbols_from_sync = 0;
+      message::sptr bit_msg;
+      message::sptr symbol_msg;
       assert (noutput_items % d_inbuf_len == 0);
 
       while (num_items < noutput_items) {
@@ -203,27 +207,27 @@ namespace gr {
           get_outer_code(d_info->_stats.fec1);
           get_inner_code(d_info->_stats.fec0);
           get_mod_scheme(d_info->_stats.mod_scheme);
-          message::sptr msg = message::make(0, sizeof(unsigned char), 24 + d_info->_payload_len, sizeof(unsigned char)*(24 + d_info->_payload_len));
-          memcpy(msg->msg(), &d_info->_header_valid, 1);
-          memcpy(msg->msg() + 1, &d_info->_payload_valid, 1);
-          memcpy(msg->msg() + 2, &d_rx_mod_scheme, 1);
-          memcpy(msg->msg() + 3, &d_rx_inner_code, 1);
-          memcpy(msg->msg() + 4, &d_rx_outer_code, 1);
-          memcpy(msg->msg() + 5, &d_info->_stats.evm, 4);
-          memcpy(msg->msg() + 9, d_info->_header, 14);
-          memcpy(msg->msg() + 24, d_info->_payload, d_info->_payload_len);
-          d_bit_queue->insert_tail(msg);
-          msg.reset();
+          bit_msg = message::make(0, sizeof(unsigned char), 24 + d_info->_payload_len, sizeof(unsigned char)*(24 + d_info->_payload_len));
+          memcpy(bit_msg->msg(), &d_info->_header_valid, 1);
+          memcpy(bit_msg->msg() + 1, &d_info->_payload_valid, 1);
+          memcpy(bit_msg->msg() + 2, &d_rx_mod_scheme, 1);
+          memcpy(bit_msg->msg() + 3, &d_rx_inner_code, 1);
+          memcpy(bit_msg->msg() + 4, &d_rx_outer_code, 1);
+          memcpy(bit_msg->msg() + 5, &d_info->_stats.evm, 4);
+          memcpy(bit_msg->msg() + 9, d_info->_header, 14);
+          memcpy(bit_msg->msg() + 24, d_info->_payload, d_info->_payload_len);
+          d_bit_queue->insert_tail(bit_msg);
+          bit_msg.reset();
           d_info->_new_payload = false;
         }
       }
 
       num_symbols_from_sync = d_info->_num_frames * d_info->_stats.num_framesyms;
       if (num_symbols_from_sync != 0) {
-        message::sptr msg = message::make(0, sizeof(gr_complex), num_symbols_from_sync,
+        symbol_msg = message::make(0, sizeof(gr_complex), num_symbols_from_sync,
                                           sizeof(gr_complex) * (num_symbols_from_sync));
-        memcpy(msg->msg(), d_info->_frame_symbols, num_symbols_from_sync);
-        d_symbol_queue->insert_tail(msg);
+        memcpy(symbol_msg->msg(), d_info->_frame_symbols, num_symbols_from_sync);
+        d_symbol_queue->insert_tail(symbol_msg);
       }
 
       assert(num_items == noutput_items);

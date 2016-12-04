@@ -13,6 +13,8 @@ import liquiddsp
 from gnuradio import uhd
 from gnuradio import blocks
 from gnuradio import gr
+from gnuradio import channels
+import time
 
 from Database_Control import *
 from Reset_databases import *
@@ -29,9 +31,8 @@ class QueueWatcherThread(_threading.Thread):
     def run(self):
         print("Watcher started")
         while self.keep_running:
-            if self.receive_queue.empty_p():
-                time.sleep(0.01)
-                continue
+            while self.receive_queue.empty_p():
+                pass
             msg = self.receive_queue.delete_head_nowait()
             if msg.__deref__() is None or msg.length() <= 0:
                 if msg.length() <= 0:
@@ -59,12 +60,13 @@ class FlexOTA(gr.top_block):
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate = 1000000
+        self.samp_rate = samp_rate = 200000
         self.num_transmitted_payloads = 0
         self.num_received_payloads = 0
         self.transmitted_payloads = numpy.empty((1024, 1000))
         self.received_payloads = numpy.empty((1024, 1000))
         self.num_packets = 0
+        self.database = DatabaseControl()
 
         ##################################################
         # Message Queues
@@ -78,9 +80,11 @@ class FlexOTA(gr.top_block):
         ##################################################
         self.liquiddsp_flex_rx_msgq_0 = liquiddsp.flex_rx_msgq(self.receive_queue, self.constellation_queue)
         self.liquiddsp_flex_tx_c_0 = liquiddsp.flex_tx_c(1, self.transmit_queue)
+        self.blocks_multiply_const_vxx_0 = blocks.multiply_const_vcc((.25, ))
         # self.liquiddsp_flex_rx_c_0 = liquiddsp.flex_rx_c(self.receive_queue)
         # self.liquiddsp_flex_rx_c_constel_0 = liquiddsp.flex_rx_c_constel(self.constellation_queue)
         self.blocks_message_source_0 = blocks.message_source(gr.sizeof_gr_complex*1, self.constellation_queue)
+        self.null_sink = blocks.null_sink(gr.sizeof_gr_complex);
 
         self.transmitter_uhd = uhd.usrp_sink(
             ",".join(("addr=192.168.10.6", "")),
@@ -91,10 +95,10 @@ class FlexOTA(gr.top_block):
         )
         self.transmitter_uhd.set_samp_rate(samp_rate)
         self.transmitter_uhd.set_center_freq(14000000, 0)
-        self.transmitter_uhd.set_gain(40, 0)
+        self.transmitter_uhd.set_gain(10, 0)
 
         self.receiver_uhd = uhd.usrp_source(
-            ",".join(("addr=192.168.10.4", "")),
+            ",".join(("addr=192.168.10.5", "")),
             uhd.stream_args(
                 cpu_format="fc32",
                 channels=range(1),
@@ -104,14 +108,14 @@ class FlexOTA(gr.top_block):
         self.receiver_uhd.set_center_freq(14000000, 0)
         self.receiver_uhd.set_gain(20, 0)
 
-        # self.channels_channel_model_0 = channels.channel_model(
-        #     noise_voltage=0.1,
-        #     frequency_offset=0.00001,
-        #     epsilon=1.000001,
-        #     taps= (numpy.random.rand(2) + 1j*numpy.random.rand(2)).tolist(),
-        #     noise_seed=0,
-        #     block_tags=False
-        # )
+        self.channels_channel_model_0 = channels.channel_model(
+            noise_voltage=0.0001,
+            frequency_offset=0.00000,
+            epsilon=1.000000,
+            taps= ((numpy.random.rand(2) + 1j*numpy.random.rand(2))/10).tolist(),
+            noise_seed=0,
+            block_tags=False
+        )
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex, self.samp_rate, True)
         self.watcher = QueueWatcherThread(self.receive_queue, self.callback)
         self.null_sink = blocks.null_sink(gr.sizeof_gr_complex)
@@ -119,9 +123,12 @@ class FlexOTA(gr.top_block):
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.liquiddsp_flex_tx_c_0, 0), (self.transmitter_uhd, 0))
+        self.connect((self.liquiddsp_flex_tx_c_0, 0), (self.blocks_multiply_const_vxx_0, 0))
+        self.connect((self.blocks_multiply_const_vxx_0, 0), (self.transmitter_uhd, 0))
         # self.connect((self.blocks_throttle_0, 0), (self.channels_channel_model_0, 0))
-        self.connect((self.receiver_uhd, 0), (self.liquiddsp_flex_rx_c_0, 0))
+        self.connect((self.receiver_uhd, 0), (self.channels_channel_model_0, 0))
+        self.connect((self.channels_channel_model_0, 0), (self.liquiddsp_flex_rx_msgq_0, 0))
+        # self.connect((self.blocks_message_source_0, 0), (self.null_sink, 0))
         #self.connect((self.channels_channel_model_0, 0), (self.null_sink, 0))
         # self.connect((self.channels_channel_model_0, 0), (self.liquiddsp_flex_rx_c_constel_0, 0))
 
@@ -145,6 +152,7 @@ class FlexOTA(gr.top_block):
         packet.extend(payload)
         bit_string = numpy.array(packet).astype(numpy.uint8).tostring()
         # TODO: Not sure if this helps at all...
+        # This is a blocking call. If it blocks, it blocks all the things. Including the GUI
         self.liquiddsp_flex_tx_c_0.msgq().insert_tail(gr.message_from_string(bit_string))
 
     def insert_message(self, msg):
@@ -167,29 +175,23 @@ class FlexOTA(gr.top_block):
         :return:
         '''
         #TODO: How to parse header and payload as bitstrings
-        packet_num = struct.unpack("<L", header[:4])
-        c1 = header_valid[0]
-        c2 = payload_valid[0]
-        c3 = packet_num[0]
-        c4 = mod_scheme[0]
-        c5 = inner_code[0]
-        c6 = outer_code[0]
-        #print "============== RECEIVED =================="
-        #print "Header Valid", c1, "Payload valid", c2, "Mod Scheme", c4, \
-        #    "Inner Code", c5, "Outer Code", c6, "EVM", evm, "Packet Num", c3
-        ID = c4*8+c6+1
-        configuration = make_Conf(ID, c4, c5, c6)
-        config11 = Conf_map(c4, c5, c6)
-        if c1 > 0:
-            packet_success_rate = float(c2)/float(c1)
+        # packet_num = struct.unpack("<L", header[:4])
+        # print "============== RECEIVED =================="
+        # print "Header Valid", header_valid[0], "Payload valid", payload_valid[0], "Mod Scheme", mod_scheme[0], \
+        #    "Inner Code", inner_code[0], "Outer Code", outer_code[0], "EVM", evm, "Packet Num", packet_num[0]
+        ID = mod_scheme[0]*8+outer_code[0]+1
+        configuration = make_Conf(ID, mod_scheme[0], inner_code[0], outer_code[0])
+        config11 = Conf_map(mod_scheme[0], inner_code[0], outer_code[0])
+        if header_valid[0]:
+            packet_success_rate = float(payload_valid[0])/float(header_valid[0])
         else:
             packet_success_rate = 0
 
         goodput = packet_success_rate * self.samp_rate * math.log(config11.constellationN, 2) * (float(config11.outercodingrate)) * (float(config11.innercodingrate))
         #print "goodput is ", goodput
-        WRITE_Conf(configuration, c1, c2, goodput)
+        self.database.write_configuration(configuration, header_valid[0], payload_valid[0], goodput)
         self.num_packets += 1
-        #print "Packets received number: ", self.num_packets
+        print "Packets received number: ", self.num_packets
 
     def cleanup(self):
         print "Stopping Watcher"
@@ -219,35 +221,35 @@ def main(top_block_cls=FlexOTA, options=None):
     qapp.connect(qapp, Qt.SIGNAL("aboutToQuit()"), quitting)
     RESET_Tables(tb.samp_rate)
     num_packets = 0
-    while num_packets < 11 * 8 * 2:
-        qapp.processEvents()
-        for m in range(11):
-            for o in range(8):
-                random_bits = numpy.random.randint(255, size=(2000,))
-                if not tb.liquiddsp_flex_rx_c_0.msgq().full_p():
-                    tb.send_packet(m, 0, o, range(9), random_bits)
-                    num_packets += 1
-
+    # while num_packets < 11 * 8 * 5 * 2:
     while True:
         qapp.processEvents()
-        if tb.liquiddsp_flex_rx_c_0.msgq().full_p():
-            print "queue full"
-
-        if (num_packets % 20) == 0:
-            print "CE Decision is "
-            epsilon = 0.01
-            bandwidth = tb.samp_rate
-            ce_configuration = EGreedy(num_packets, epsilon, bandwidth)
-            random_bits = numpy.random.randint(255, size=(2000,))
-            if ce_configuration is not None:
-                new_ce_configuration = ce_configuration[0]
-                modulation = new_ce_configuration.modulation
-                inner_code = new_ce_configuration.innercode
-                outer_code = new_ce_configuration.outercode
-                Conf_map(modulation, inner_code, outer_code)  # prints configuration
-        if not tb.liquiddsp_flex_rx_c_0.msgq().full_p():
-            tb.send_packet(modulation, inner_code, outer_code, range(9), random_bits)
-            num_packets += 1
+        for m in range(11):
+            for i in range(5):
+                for o in range(8):
+                    random_bits = numpy.random.randint(255, size=(32,))
+                    if not tb.liquiddsp_flex_tx_c_0.msgq().full_p():
+                        tb.send_packet(m, i, o, range(9), random_bits)
+                        num_packets += 1
+    #
+    # while True:
+    #     qapp.processEvents()
+    #
+    #     if (num_packets % 20) == 0:
+    #         print "CE Decision is "
+    #         epsilon = 0.01
+    #         bandwidth = tb.samp_rate
+    #         ce_configuration = EGreedy(num_packets, epsilon, bandwidth)
+    #         random_bits = numpy.random.randint(255, size=(32,))
+    #         if ce_configuration is not None:
+    #             new_ce_configuration = ce_configuration[0]
+    #             modulation = new_ce_configuration.modulation
+    #             inner_code = new_ce_configuration.innercode
+    #             outer_code = new_ce_configuration.outercode
+    #             Conf_map(modulation, inner_code, outer_code)  # prints configuration
+    #     if not tb.liquiddsp_flex_tx_c_0.msgq().full_p():
+    #         tb.send_packet(modulation, inner_code, outer_code, range(9), random_bits)
+    #         num_packets += 1
 
 
     time.sleep(5)

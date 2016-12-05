@@ -14,6 +14,7 @@ from gnuradio import uhd
 from gnuradio import blocks
 from gnuradio import gr
 from gnuradio import channels
+from collections import deque
 import time
 
 from Database_Control import *
@@ -67,6 +68,9 @@ class FlexOTA(gr.top_block):
         self.received_payloads = numpy.empty((1024, 1000))
         self.num_packets = 0
         self.database = DatabaseControl()
+        self.burst_number = 0
+        self.packet_history = deque(maxlen=250)
+        self.goodput = 0
 
         ##################################################
         # Message Queues
@@ -81,32 +85,30 @@ class FlexOTA(gr.top_block):
         self.liquiddsp_flex_rx_msgq_0 = liquiddsp.flex_rx_msgq(self.receive_queue, self.constellation_queue)
         self.liquiddsp_flex_tx_c_0 = liquiddsp.flex_tx_c(1, self.transmit_queue)
         self.blocks_multiply_const_vxx_0 = blocks.multiply_const_vcc((.25, ))
-        # self.liquiddsp_flex_rx_c_0 = liquiddsp.flex_rx_c(self.receive_queue)
-        # self.liquiddsp_flex_rx_c_constel_0 = liquiddsp.flex_rx_c_constel(self.constellation_queue)
         self.blocks_message_source_0 = blocks.message_source(gr.sizeof_gr_complex*1, self.constellation_queue)
         self.null_sink = blocks.null_sink(gr.sizeof_gr_complex);
 
-        self.transmitter_uhd = uhd.usrp_sink(
-            ",".join(("addr=192.168.10.6", "")),
-            uhd.stream_args(
-                cpu_format="fc32",
-                channels=range(1),
-            ),
-        )
-        self.transmitter_uhd.set_samp_rate(samp_rate)
-        self.transmitter_uhd.set_center_freq(14000000, 0)
-        self.transmitter_uhd.set_gain(10, 0)
-
-        self.receiver_uhd = uhd.usrp_source(
-            ",".join(("addr=192.168.10.5", "")),
-            uhd.stream_args(
-                cpu_format="fc32",
-                channels=range(1),
-            ),
-        )
-        self.receiver_uhd.set_samp_rate(samp_rate)
-        self.receiver_uhd.set_center_freq(14000000, 0)
-        self.receiver_uhd.set_gain(20, 0)
+        # self.transmitter_uhd = uhd.usrp_sink(
+        #     ",".join(("addr=192.168.10.6", "")),
+        #     uhd.stream_args(
+        #         cpu_format="fc32",
+        #         channels=range(1),
+        #     ),
+        # )
+        # self.transmitter_uhd.set_samp_rate(samp_rate)
+        # self.transmitter_uhd.set_center_freq(14000000, 0)
+        # self.transmitter_uhd.set_gain(10, 0)
+        #
+        # self.receiver_uhd = uhd.usrp_source(
+        #     ",".join(("addr=192.168.10.5", "")),
+        #     uhd.stream_args(
+        #         cpu_format="fc32",
+        #         channels=range(1),
+        #     ),
+        # )
+        # self.receiver_uhd.set_samp_rate(samp_rate)
+        # self.receiver_uhd.set_center_freq(14000000, 0)
+        # self.receiver_uhd.set_gain(20, 0)
 
         self.channels_channel_model_0 = channels.channel_model(
             noise_voltage=0.0001,
@@ -123,14 +125,15 @@ class FlexOTA(gr.top_block):
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.liquiddsp_flex_tx_c_0, 0), (self.blocks_multiply_const_vxx_0, 0))
-        self.connect((self.blocks_multiply_const_vxx_0, 0), (self.transmitter_uhd, 0))
-        # self.connect((self.blocks_throttle_0, 0), (self.channels_channel_model_0, 0))
-        self.connect((self.receiver_uhd, 0), (self.channels_channel_model_0, 0))
+        # UHD Mode
+        # self.connect((self.liquiddsp_flex_tx_c_0, 0), (self.blocks_multiply_const_vxx_0, 0))
+        # self.connect((self.blocks_multiply_const_vxx_0, 0), (self.transmitter_uhd, 0))
+        # self.connect((self.receiver_uhd, 0), (self.channels_channel_model_0, 0))
+        # self.connect((self.channels_channel_model_0, 0), (self.liquiddsp_flex_rx_msgq_0, 0))
+        # Loopback Mode
+        self.connect((self.liquiddsp_flex_tx_c_0, 0), (self.blocks_throttle_0, 0))
+        self.connect((self.blocks_throttle_0, 0), (self.channels_channel_model_0, 0))
         self.connect((self.channels_channel_model_0, 0), (self.liquiddsp_flex_rx_msgq_0, 0))
-        # self.connect((self.blocks_message_source_0, 0), (self.null_sink, 0))
-        #self.connect((self.channels_channel_model_0, 0), (self.null_sink, 0))
-        # self.connect((self.channels_channel_model_0, 0), (self.liquiddsp_flex_rx_c_constel_0, 0))
 
     def get_samp_rate(self):
         return self.samp_rate
@@ -175,7 +178,7 @@ class FlexOTA(gr.top_block):
         :return:
         '''
         #TODO: How to parse header and payload as bitstrings
-        # packet_num = struct.unpack("<L", header[:4])
+        packet_num = struct.unpack("<L", header[:4])
         # print "============== RECEIVED =================="
         # print "Header Valid", header_valid[0], "Payload valid", payload_valid[0], "Mod Scheme", mod_scheme[0], \
         #    "Inner Code", inner_code[0], "Outer Code", outer_code[0], "EVM", evm, "Packet Num", packet_num[0]
@@ -186,12 +189,19 @@ class FlexOTA(gr.top_block):
             packet_success_rate = float(payload_valid[0])/float(header_valid[0])
         else:
             packet_success_rate = 0
+        goodput = self.samp_rate * math.log(config11.constellationN, 2) * (float(config11.outercodingrate)) * (
+            float(config11.innercodingrate))
+        if header_valid[0] and payload_valid[0]:
+            self.packet_history.append(goodput)
+        else:
+            self.packet_history.append(0.0)
 
-        goodput = packet_success_rate * self.samp_rate * math.log(config11.constellationN, 2) * (float(config11.outercodingrate)) * (float(config11.innercodingrate))
+        if header_valid[0]:
+            self.burst_number = packet_num[0]
+
         #print "goodput is ", goodput
         self.database.write_configuration(configuration, header_valid[0], payload_valid[0], goodput)
         self.num_packets += 1
-        print "Packets received number: ", self.num_packets
 
     def cleanup(self):
         print "Stopping Watcher"

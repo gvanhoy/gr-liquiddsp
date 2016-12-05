@@ -4,10 +4,83 @@ from gnuradio.filter import firdes
 import PyQt4.Qwt5 as Qwt
 import sip
 from apps.flex_ota import *
-
+import numpy as np
 from Database_Control import *
 from Reset_databases import *
 import sys
+
+NUM_THROUGHPUT_SAMPLES = 250
+
+
+class ThroughputPlot(Qwt.QwtPlot):
+    def __init__(self, *args):
+        Qwt.QwtPlot.__init__(self, *args)
+
+        self.data_burst_no = np.zeros(NUM_THROUGHPUT_SAMPLES, dtype=float)
+        self.data_good_acks = np.zeros(NUM_THROUGHPUT_SAMPLES, dtype=float)
+        self.data_bad_acks = np.zeros(NUM_THROUGHPUT_SAMPLES, dtype=float)
+
+        # self.setMinimumSize(800, 600)
+
+        self.setCanvasBackground(Qt.Qt.white)
+        self._alignScales()
+
+        self.setTitle("")
+        self.insertLegend(Qwt.QwtLegend(), Qwt.QwtPlot.RightLegend)
+
+        self.curve_good_acks = Qwt.QwtPlotCurve("Throughput")
+        self.curve_good_acks.attach(self)
+        self.curve_good_acks.setPen(Qt.QPen(Qt.Qt.blue, 4, Qt.Qt.SolidLine, Qt.Qt.SquareCap, Qt.Qt.RoundJoin))
+        self.curve_good_acks.setData(self.data_burst_no, self.data_good_acks)
+        self.curve_good_acks.setRenderHint(Qwt.QwtPlotItem.RenderAntialiased)
+
+        self.setAxisTitle(Qwt.QwtPlot.xBottom, "Burst No.")
+        self.setAxisTitle(Qwt.QwtPlot.yLeft, "Data Throughput (kbps)")
+        # self.setAxisScale(Qwt.QwtPlot.xBottom, 0, 100, 25)
+        # self.setAxisScale(Qwt.QwtPlot.yLeft, 0, 600, 100)
+        self.setAxisAutoScale(Qwt.QwtPlot.yLeft)
+
+    def _alignScales(self):
+        self.canvas().setFrameStyle(Qt.QFrame.Box | Qt.QFrame.Plain)
+        self.canvas().setLineWidth(1)
+        for i in range(Qwt.QwtPlot.axisCnt):
+            scaleWidget = self.axisWidget(i)
+            if scaleWidget:
+                scaleWidget.setMargin(0)
+            scaleDraw = self.axisScaleDraw(i)
+            if scaleDraw:
+                scaleDraw.enableComponent(
+                    Qwt.QwtAbstractScaleDraw.Backbone, False)
+
+    def add_data_point(self, burst_no, good_acks):
+        self.data_burst_no = np.concatenate((self.data_burst_no[1:],
+                                             self.data_burst_no[:1]), 1)
+        self.data_burst_no[-1] = burst_no
+
+        self.data_good_acks = np.concatenate((self.data_good_acks[1:],
+                                              self.data_good_acks[:1]), 1)
+        self.data_good_acks[-1] = good_acks
+        self.curve_good_acks.setData(self.data_burst_no, self.data_good_acks)
+
+        self.replot()
+
+    def add_marker(self, burst_num, throughput, text):
+        m = Qwt.QwtPlotMarker()
+        m.setValue(burst_num, throughput)
+        m.setLabelAlignment(Qt.Qt.AlignRight | Qt.Qt.AlignTop)
+        m.setLinePen(Qt.QPen(Qt.Qt.red, 2, Qt.Qt.DashDotLine))
+        text = Qwt.QwtText(text)
+        text.setColor(Qt.Qt.red)
+        text.setBackgroundBrush(Qt.QBrush(self.canvasBackground()))
+        text.setFont(Qt.QFont(self.fontInfo().family(), 12, Qt.QFont.Bold))
+
+        m.setLabel(text)
+        m.setSymbol(Qwt.QwtSymbol(Qwt.QwtSymbol.Diamond,
+                                  Qt.QBrush(Qt.Qt.red),
+                                  Qt.QPen(Qt.Qt.red),
+                                  Qt.QSize(10, 10)))
+
+        m.attach(self)
 
 
 class TopBlockGui(FlexOTA, Qt.QWidget):
@@ -23,18 +96,24 @@ class TopBlockGui(FlexOTA, Qt.QWidget):
 
         # constellation plot
         self.qtgui_const_sink = self._qt_make_constellation_sink()
-        self.top_grid_layout.addLayout(self.qtgui_const_sink, 0, 1, 1, 1)
+        self.top_grid_layout.addLayout(self.qtgui_const_sink, 1, 1, 1, 1)
 
-        # frequency sink
-        self.qtgui_freq_sink = self._qt_make_frequency_sink()
-        self.top_grid_layout.addLayout(self.qtgui_freq_sink, 1, 1, 3, 1)
+        # # frequency sink
+        # self.qtgui_freq_sink = self._qt_make_frequency_sink()
+        # self.top_grid_layout.addLayout(self.qtgui_freq_sink, 1, 1, 1, 1)
+
+        # Create a Vertical Box layout in Qt, and add a large title in lieu of the
+        # small automatically added via the Qwt plot.
+        self.throughput_plot = ThroughputPlot()
+        self.throughput_plot_layout = self._qt_make_throughput_plot(self.throughput_plot)
+        self.top_grid_layout.addLayout(self.throughput_plot_layout, 0, 0, 1, 1)
 
         self.connect(self.blocks_message_source_0, self.qtgui_const_sink_plot)
-        self.connect(self.blocks_message_source_0, self.qtgui_freq_sink_plot)
+        # self.connect(self.blocks_message_source_0, self.qtgui_freq_sink_plot)
 
         # noise knob
-        self._qt_make_noise_knob()
-        self.top_grid_layout.addLayout(self._noise_layout, 1, 0, 1, 1)
+        # self._qt_make_noise_knob()
+        # self.top_grid_layout.addLayout(self._noise_layout, 1, 0, 1, 1)
 
     def _qt_init(self):
         self.setWindowTitle("RX Transceiver")
@@ -108,6 +187,15 @@ class TopBlockGui(FlexOTA, Qt.QWidget):
 
         return qtgui_freq_sink_layout
 
+    def _qt_make_throughput_plot(self, throughput_plot):
+        throughput_plot_layout = Qt.QVBoxLayout()
+        throughput_plot_title = Qt.QLabel('Round Trip Packet Throughput')
+        throughput_plot_title.setAlignment(Qt.Qt.AlignHCenter | Qt.Qt.AlignTop)
+        throughput_plot_layout.addWidget(throughput_plot_title)
+        throughput_plot_layout.addWidget(throughput_plot)
+
+        return throughput_plot_layout
+
     def _qt_make_noise_knob(self):
         self._noise_layout = Qt.QVBoxLayout()
         self._noise_label = Qt.QLabel("Noise (mV)")
@@ -175,6 +263,9 @@ if __name__ == '__main__':
     while True:
         qapp.processEvents()
         if (num_packets % 20) == 0:
+            # print top_block.burst_number, top_block.packet_history.count(True)
+            print numpy.mean(top_block.packet_history)
+            top_block.throughput_plot.add_data_point(top_block.burst_number, numpy.mean(top_block.packet_history))
             print "CE Decision is "
             ce_configuration = EGreedy(num_packets, .01, top_block.samp_rate)
             random_bits = numpy.random.randint(255, size=(1024,))

@@ -190,7 +190,7 @@ class FlexOTA(gr.top_block):
         else:
             packet_success_rate = 0
         goodput = self.samp_rate * math.log(config11.constellationN, 2) * (float(config11.outercodingrate)) * (
-            float(config11.innercodingrate))
+            float(config11.innercodingrate)) * packet_success_rate
         if header_valid[0] and payload_valid[0]:
             self.packet_history.append(goodput)
         else:
@@ -202,6 +202,8 @@ class FlexOTA(gr.top_block):
         #print "goodput is ", goodput
         self.database.write_configuration(configuration, header_valid[0], payload_valid[0], goodput)
         self.num_packets += 1
+        # if (self.num_packets % 20) == 0:
+        #     self.database.__del__()
 
     def cleanup(self):
         print "Stopping Watcher"
@@ -262,7 +264,7 @@ def main(top_block_cls=FlexOTA, options=None):
     #         num_packets += 1
 
 
-    time.sleep(5)
+    #time.sleep(5)
     tb.watcher.keep_running = False
     tb.stop()
     tb.wait()

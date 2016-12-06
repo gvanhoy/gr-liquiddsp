@@ -248,7 +248,7 @@ if __name__ == '__main__':
     qapp.connect(qapp, Qt.SIGNAL("aboutToQuit()"), quitting)
     RESET_Tables(top_block.samp_rate)
     num_packets = 0
-    while num_packets < 11 * 8 * 2:
+    while num_packets < 11 * 8 * 4:
     # while True:
         qapp.processEvents()
         for m in range(11):
@@ -262,10 +262,12 @@ if __name__ == '__main__':
 
     while True:
         qapp.processEvents()
+        print "Throughput plotted is = "
+        print numpy.mean(top_block.packet_history)
+        top_block.throughput_plot.add_data_point(top_block.burst_number, numpy.mean(top_block.packet_history))
         if (num_packets % 20) == 0:
             # print top_block.burst_number, top_block.packet_history.count(True)
-            print numpy.mean(top_block.packet_history)
-            top_block.throughput_plot.add_data_point(top_block.burst_number, numpy.mean(top_block.packet_history))
+
             print "CE Decision is "
             ce_configuration = EGreedy(num_packets, .01, top_block.samp_rate)
             random_bits = numpy.random.randint(255, size=(1024,))

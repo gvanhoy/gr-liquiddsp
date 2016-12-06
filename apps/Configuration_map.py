@@ -14,6 +14,7 @@ class Config_map (object):
         self.outercodingrate=outercodingrate
         self.outercodingtype=outercodingtype
 
+
 def make_Config_map(constellationN,modulationtype,innercodingrate,innercodingtype,outercodingrate,outercodingtype):
     Confiuration_map=Config_map(constellationN,modulationtype,innercodingrate,innercodingtype,outercodingrate,outercodingtype)
     return Confiuration_map   

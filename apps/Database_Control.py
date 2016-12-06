@@ -3,14 +3,15 @@ import numpy as np
 import random
 import math
 import sqlite3
+import sys
 from CE import *
 
 
 class DatabaseControl:
     def __init__(self):
-        self.config_connection = sqlite3.connect('config.db')
+        self.config_connection = sqlite3.connect('config.db', check_same_thread=False)
         self.config_cursor = self.config_connection.cursor()
-        self.rules_connection = sqlite3.connect('rules.db')
+        self.rules_connection = sqlite3.connect('rules.db', check_same_thread=False)
         self.rules_cursor = self.rules_connection.cursor()
 
     def __del__(self):
@@ -44,10 +45,14 @@ class DatabaseControl:
             newSuccess = SUCCESSPacket + success
             newThroughput = OLDThroughput + Throughput
             newSQTh = OLDSQTh + math.pow(Throughput, 2)
-            cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
+            self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
                            [newTrialN, newTotal, newSuccess, newThroughput, newSQTh, Conf.ID])
             self.config_connection.commit()
-        except:
-            pass
+        except Exception as e:
+            print e
+
+        # except sqlite3.ProgrammingError as e:
+        #     print sys.exc_info()[0]
+        #     pass
 
 

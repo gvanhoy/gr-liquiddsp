@@ -9,9 +9,9 @@ from CE import *
 
 class DatabaseControl:
     def __init__(self):
-        self.config_connection = sqlite3.connect('config.db', check_same_thread=False)
+        self.config_connection = sqlite3.connect('config.db')
         self.config_cursor = self.config_connection.cursor()
-        self.rules_connection = sqlite3.connect('rules.db', check_same_thread=False)
+        self.rules_connection = sqlite3.connect('rules.db')
         self.rules_cursor = self.rules_connection.cursor()
 
     def __del__(self):

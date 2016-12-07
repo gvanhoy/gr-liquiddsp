@@ -204,9 +204,11 @@ namespace gr {
         in += d_inbuf_len;
 
         if(d_info->_new_payload){
-          get_outer_code(d_info->_stats.fec1);
-          get_inner_code(d_info->_stats.fec0);
-          get_mod_scheme(d_info->_stats.mod_scheme);
+          if(d_info->_header_valid){
+            get_outer_code(d_info->_stats.fec1);
+            get_inner_code(d_info->_stats.fec0);
+            get_mod_scheme(d_info->_stats.mod_scheme);
+          }
           bit_msg = message::make(0, sizeof(unsigned char), 24 + d_info->_payload_len, sizeof(unsigned char)*(24 + d_info->_payload_len));
           memcpy(bit_msg->msg(), &d_info->_header_valid, 1);
           memcpy(bit_msg->msg() + 1, &d_info->_payload_valid, 1);

@@ -15,6 +15,7 @@ from gnuradio import blocks
 from gnuradio import gr
 from gnuradio import channels
 from collections import deque
+import Queue
 import time
 
 from Database_Control import *
@@ -71,6 +72,7 @@ class FlexOTA(gr.top_block):
         self.burst_number = 0
         self.packet_history = deque(maxlen=250)
         self.goodput = 0
+        self.packet_info_queue = Queue.Queue()
 
         ##################################################
         # Message Queues
@@ -84,7 +86,7 @@ class FlexOTA(gr.top_block):
         ##################################################
         self.liquiddsp_flex_rx_msgq_0 = liquiddsp.flex_rx_msgq(self.receive_queue, self.constellation_queue)
         self.liquiddsp_flex_tx_c_0 = liquiddsp.flex_tx_c(1, self.transmit_queue)
-        self.blocks_multiply_const_vxx_0 = blocks.multiply_const_vcc((.25, ))
+        self.blocks_multiply_const_vxx_0 = blocks.multiply_const_vcc((1, ))
         self.blocks_message_source_0 = blocks.message_source(gr.sizeof_gr_complex*1, self.constellation_queue)
         self.null_sink = blocks.null_sink(gr.sizeof_gr_complex);
 
@@ -114,7 +116,7 @@ class FlexOTA(gr.top_block):
             noise_voltage=0.0001,
             frequency_offset=0.00000,
             epsilon=1.000000,
-            taps= ((numpy.random.rand(2) + 1j*numpy.random.rand(2))/10).tolist(),
+            taps= ((numpy.random.rand(2) + 1j*numpy.random.rand(2))/2).tolist(),
             noise_seed=0,
             block_tags=False
         )
@@ -185,12 +187,8 @@ class FlexOTA(gr.top_block):
         ID = mod_scheme[0]*8+outer_code[0]+1
         configuration = make_Conf(ID, mod_scheme[0], inner_code[0], outer_code[0])
         config11 = Conf_map(mod_scheme[0], inner_code[0], outer_code[0])
-        if header_valid[0]:
-            packet_success_rate = float(payload_valid[0])/float(header_valid[0])
-        else:
-            packet_success_rate = 0
-        goodput = self.samp_rate * math.log(config11.constellationN, 2) * (float(config11.outercodingrate)) * (
-            float(config11.innercodingrate)) * packet_success_rate
+        goodput = self.samp_rate/2.0 * math.log(config11.constellationN, 2) * (float(config11.outercodingrate)) * (
+            float(config11.innercodingrate)) * payload_valid[0]
         if header_valid[0] and payload_valid[0]:
             self.packet_history.append(goodput)
         else:
@@ -199,11 +197,15 @@ class FlexOTA(gr.top_block):
         if header_valid[0]:
             self.burst_number = packet_num[0]
 
+
         #print "goodput is ", goodput
-        self.database.write_configuration(configuration, header_valid[0], payload_valid[0], goodput)
+        packet_info_dict = {'config': configuration,
+                            'header_valid': header_valid[0],
+                            'payload_valid': payload_valid[0],
+                            'goodput': goodput}
+        self.packet_info_queue.put(packet_info_dict)
+        # self.database.write_configuration(configuration, header_valid[0], payload_valid[0], goodput)
         self.num_packets += 1
-        # if (self.num_packets % 20) == 0:
-        #     self.database.__del__()
 
     def cleanup(self):
         print "Stopping Watcher"

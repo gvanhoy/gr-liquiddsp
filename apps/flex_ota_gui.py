@@ -238,11 +238,12 @@ class TopBlockGui(FlexOTA, Qt.QWidget):
     def get_noise(self):
         return self.noise
 
-    def set_noise(self, noise):
-        self.noise = noise
-        Qt.QMetaObject.invokeMethod(self._noise_knob, "setValue", Qt.Q_ARG("double", self.noise))
-        #self.awgn_source.set_amplitude(self.noise/10000.0)
-        # self.channels_channel_model_0.set_noise_voltage(self.noise)
+    def set_noise(self, noise_db):
+
+        self.noise = math.pow(10, noise_db/40.0)
+        # Qt.QMetaObject.invokeMethod(self._noise_knob, "setValue", Qt.Q_ARG("double", self.noise))
+        # self.awgn_source.set_amplitude(self.noise/10000.0)
+        self.channels_channel_model_0.set_noise_voltage(self.noise)
 
     def process_queue(self):
         while not self.packet_info_queue.empty():
@@ -254,7 +255,6 @@ class TopBlockGui(FlexOTA, Qt.QWidget):
 
 if __name__ == '__main__':
     from distutils.version import StrictVersion
-
     if StrictVersion(Qt.qVersion()) >= StrictVersion("4.5.0"):
         style = gr.prefs().get_string('qtgui', 'style', 'raster')
         Qt.QApplication.setGraphicsSystem(style)
@@ -272,44 +272,66 @@ if __name__ == '__main__':
         top_block.stop()
         top_block.wait()
 
+    results = np.zeros((440, 4), dtype=np.float64)
     qapp.connect(qapp, Qt.SIGNAL("aboutToQuit()"), quitting)
-    RESET_Tables(top_block.samp_rate)
+    # RESET_Tables(top_block.samp_rate)
     num_packets = 0
-    while num_packets < 11 * 8 * 4:
-        qapp.processEvents()
-        for m in range(11):
-            for o in range(8):
-                random_bits = numpy.random.randint(255, size=(1024,))
-                while top_block.liquiddsp_flex_tx_c_0.msgq().full_p():
-                    qapp.processEvents()
-                    pass
-                top_block.send_packet(m, 0, o, range(9), random_bits)
-                num_packets += 1
+    # while True:
+    #     qapp.processEvents()
+    #     random_bits = numpy.random.randint(255, size=(16,))
+    #     while top_block.liquiddsp_flex_tx_c_0.msgq().full_p():
+    #         qapp.processEvents()
+    #         pass
+    #     top_block.send_packet(3, 1, 1, range(9), random_bits)
+    #     num_packets += 1
 
-    while True:
+    # while num_packets < 11 * 8 * 4:
+    for x in range(3):
         qapp.processEvents()
         top_block.process_queue()
-        top_block.throughput_plot.add_data_point(top_block.burst_number - 249, numpy.mean(top_block.packet_history)/1000.0)
-        if (num_packets % 50) == 0:
-            ce_configuration = EGreedy(num_packets, .01, top_block.samp_rate/2) # using half total bandwidth
-            random_bits = numpy.random.randint(255, size=(1024,))
-            if ce_configuration is not None:
-                new_ce_configuration = ce_configuration[0]
-                modulation = new_ce_configuration.modulation
-                inner_code = new_ce_configuration.innercode
-                outer_code = new_ce_configuration.outercode
-                map = Conf_map(modulation, inner_code, outer_code)  # prints configuration
-                top_block.throughput_plot.add_marker(top_block.burst_number - 249,
-                                                     numpy.mean(top_block.packet_history) / 1000.0,
-                                                     map.modulationtype +
-                                                     str(map.innercodingrate *
-                                                         map.outercodingrate))
-        while top_block.liquiddsp_flex_tx_c_0.msgq().full_p():
-            qapp.processEvents()
-            top_block.process_queue()
-            pass
-        top_block.send_packet(modulation, inner_code, outer_code, range(9), random_bits)
-        num_packets += 1
+        for s in range(1, 50, 1):
+            top_block.set_noise(-s)
+            t = time.time()
+            for m in range(11):
+                for i in range(5):
+                    for o in range(8):
+                        random_bits = numpy.random.randint(255, size=(32,))
+                        while top_block.liquiddsp_flex_tx_c_0.msgq().full_p():
+                            qapp.processEvents()
+                            top_block.process_queue()
+                            pass
+                        top_block.send_packet(m, i, o, range(9), random_bits)
+                        num_packets += 1
+            elapsed = time.time() - t
+            print "About {0} hours left in the simulation.".format((((300 - x)*50 + (50 - s))*elapsed)/3600.0)
+
+    top_block.write_performance()
+
+    # while True:
+    #     qapp.processEvents()
+    #     top_block.process_queue()
+    #     top_block.throughput_plot.add_data_point(top_block.burst_number, numpy.mean(top_block.packet_history)/1000.0)
+    #     if (num_packets % 50) == 0:
+    #         ce_configuration = EGreedy(num_packets, .01, top_block.samp_rate/2) # using half total bandwidth
+    #         random_bits = numpy.random.randint(255, size=(64,))
+    #         print "CE Config", ce_configuration
+    #         if ce_configuration is not None:
+    #             new_ce_configuration = ce_configuration[0]
+    #             modulation = new_ce_configuration.modulation
+    #             inner_code = new_ce_configuration.innercode
+    #             outer_code = new_ce_configuration.outercode
+    #             map = Conf_map(modulation, inner_code, outer_code)  # prints configuration
+    #             top_block.throughput_plot.add_marker(top_block.burst_number,
+    #                                                  numpy.mean(top_block.packet_history) / 1000.0,
+    #                                                  map.modulationtype +
+    #                                                  str(map.innercodingrate *
+    #                                                      map.outercodingrate))
+    #     while top_block.liquiddsp_flex_tx_c_0.msgq().full_p():
+    #         qapp.processEvents()
+    #         top_block.process_queue()
+    #         pass
+    #     top_block.send_packet(modulation, inner_code, outer_code, range(9), random_bits)
+    #     num_packets += 1
 
     print "Stopping top block..."
     top_block.stop()

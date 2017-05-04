@@ -9,6 +9,7 @@ from CI import *
 from ConfidenceInterval import *
 from Configuration_map import *
 from gittinsNormal import *
+import sys
 
 confidence = 0.9
 PSR_Threshold = 0.8
@@ -55,12 +56,14 @@ def EGreedy(i,epsilon,BW):
         if trialN > 0:
             mean = throughput/trialN
             variance = (sqth/trialN)-(math.pow(mean, 2))
+            if variance < 0:
+                variance = 0
             C_map=Conf_map(Modulation,InnerCode,OuterCode)
             maxp = BW * math.log(C_map.constellationN,2) * (float(C_map.outercodingrate)) * (float(C_map.innercodingrate))
             unsuccess = total - success
             PSR = float(success)/total
             cursor.execute('UPDATE Egreedy set TrialNumber=? ,Mean=? WHERE ID=?',[trialN,mean,j])
-        if trialN>1:
+        if trialN > 1:
             RCI = CI(mean, variance, maxp, confidence, trialN)
             lower = RCI[0]
             upper = RCI[1]
@@ -129,10 +132,11 @@ def EGreedy(i,epsilon,BW):
 
     cursor.close()
     connection.close()
-    return NextConf1,NextConf2
+    return NextConf1, NextConf2
   except:
-    cursor.close()
-    connection.close()
+      print "Error with database.", sys.exc_info()[0]
+      cursor.close()
+      connection.close()
 
 ############################################################################
 ## Boltzmann Strategy
@@ -271,7 +275,8 @@ def Gittins(i,DiscountFactor):
             sqth = row[8]
         if trialN > 1:
             mean = throughput/trialN
-            variance = (sqth/trialN)-(math.pow(mean,2))
+            variance = (sqth/trialN)-(math.pow(mean, 2))
+            print "Variance", variance
             stdV = math.sqrt(variance)
             indexx = mean + (stdV*GittinsIndexNormalUnitVar(trialN,a))
             cursor.execute('UPDATE Gittins set TrialNumber=? ,Mean=? ,Stdv=? ,Indexx=? WHERE ID=?',[trialN,mean,stdV,indexx,j])

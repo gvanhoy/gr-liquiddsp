@@ -49,7 +49,6 @@ class QueueWatcherThread(_threading.Thread):
             evm = struct.unpack("f", message[5:9])[0]
             header = message[9:24]
             payload = message[24:]
-            #print "test"
             if self.callback:
                 self.callback(header_valid, payload_valid, mod_scheme, inner_code, outer_code, evm, header, payload)
         print "Watcher stopped"
@@ -70,7 +69,8 @@ class FlexOTA(gr.top_block):
         self.num_packets = 0
         self.database = DatabaseControl()
         self.burst_number = 0
-        self.packet_history = deque(maxlen=250)
+        self.packet_history = deque(maxlen=1000)
+        self.performance_matrix = np.zeros((11*5*8*50, 6), dtype=np.float64)
         self.goodput = 0
         self.packet_info_queue = Queue.Queue()
 
@@ -113,10 +113,10 @@ class FlexOTA(gr.top_block):
         # self.receiver_uhd.set_gain(20, 0)
 
         self.channels_channel_model_0 = channels.channel_model(
-            noise_voltage=0.0001,
+            noise_voltage=math.pow(10, -4.0/20.0),
             frequency_offset=0.00000,
             epsilon=1.000000,
-            taps= ((numpy.random.rand(2) + 1j*numpy.random.rand(2))/2).tolist(),
+            taps=[1],
             noise_seed=0,
             block_tags=False
         )
@@ -181,31 +181,49 @@ class FlexOTA(gr.top_block):
         '''
         #TODO: How to parse header and payload as bitstrings
         packet_num = struct.unpack("<L", header[:4])
-        # print "============== RECEIVED =================="
-        # print "Header Valid", header_valid[0], "Payload valid", payload_valid[0], "Mod Scheme", mod_scheme[0], \
-        #    "Inner Code", inner_code[0], "Outer Code", outer_code[0], "EVM", evm, "Packet Num", packet_num[0]
-        ID = mod_scheme[0]*8+outer_code[0]+1
-        configuration = make_Conf(ID, mod_scheme[0], inner_code[0], outer_code[0])
-        config11 = Conf_map(mod_scheme[0], inner_code[0], outer_code[0])
-        goodput = self.samp_rate/2.0 * math.log(config11.constellationN, 2) * (float(config11.outercodingrate)) * (
-            float(config11.innercodingrate)) * payload_valid[0]
-        if header_valid[0] and payload_valid[0]:
-            self.packet_history.append(goodput)
-        else:
-            self.packet_history.append(0.0)
+        # if packet_num[0] == 11*8*4 + 1 + 1000:
+        #     print "Average Throughput (kbps)", numpy.mean(self.packet_history)/1000.0
+        # if payload_valid[0]:
+            # print "============== RECEIVED =================="
+            # print "Header Valid", header_valid[0], "Payload valid", payload_valid[0], "Mod Scheme", mod_scheme[0], \
+            #    "Inner Code", inner_code[0], "Outer Code", outer_code[0], "EVM", evm, "Packet Num", packet_num[0]
+        # ID = mod_scheme[0]*8+outer_code[0]+1
+        # configuration = make_Conf(ID, mod_scheme[0], inner_code[0], outer_code[0])
+        # config11 = Conf_map(mod_scheme[0], inner_code[0], outer_code[0])
+        # goodput = self.samp_rate/2.0 * math.log(config11.constellationN, 2) * (float(config11.outercodingrate)) * (
+        #     float(config11.innercodingrate)) * payload_valid[0]
+        # if header_valid[0] and payload_valid[0]:
+        #     self.packet_history.append(goodput)
+        # else:
+        #     self.packet_history.append(0.0)
 
         if header_valid[0]:
-            self.burst_number = packet_num[0]
+            mc_index = mod_scheme[0] + inner_code[0]*11 + outer_code[0]*11*5 + 11*5*8*(int(packet_num[0])/(11*5*8*10))
+            self.performance_matrix[mc_index, 0] = mod_scheme[0]
+            self.performance_matrix[mc_index, 1] = inner_code[0]
+            self.performance_matrix[mc_index, 2] = outer_code[0]
+            self.performance_matrix[mc_index, 3] = (int(packet_num[0])/(11*5*8*10))
+            self.performance_matrix[mc_index, 4] += 1 if header_valid[0] and payload_valid[0] else 0
+            self.performance_matrix[mc_index, 5] += 1
 
+        # if header_valid[0]:
+        #     self.burst_number = packet_num[0]
 
         #print "goodput is ", goodput
-        packet_info_dict = {'config': configuration,
-                            'header_valid': header_valid[0],
-                            'payload_valid': payload_valid[0],
-                            'goodput': goodput}
-        self.packet_info_queue.put(packet_info_dict)
+        # packet_info_dict = {'config': configuration,
+        #                     'header_valid': header_valid[0],
+        #                     'payload_valid': payload_valid[0],
+        #                     'goodput': goodput}
+        # self.packet_info_queue.put(packet_info_dict)
         # self.database.write_configuration(configuration, header_valid[0], payload_valid[0], goodput)
         self.num_packets += 1
+
+    def write_performance(self):
+        with open('performance.csv', 'w') as file:
+            for x in self.performance_matrix:
+                for p in x:
+                    file.write(str(p) + ',')
+                file.write('\n')
 
     def cleanup(self):
         print "Stopping Watcher"
@@ -214,15 +232,15 @@ class FlexOTA(gr.top_block):
 
 
 def main(top_block_cls=FlexOTA, options=None):
-    from distutils.version import StrictVersion
-    if StrictVersion(Qt.qVersion()) >= StrictVersion("4.5.0"):
-        style = gr.prefs().get_string('qtgui', 'style', 'raster')
-        Qt.QApplication.setGraphicsSystem(style)
-    qapp = Qt.QApplication(sys.argv)
+    # from distutils.version import StrictVersion
+    # if StrictVersion(Qt.qVersion()) >= StrictVersion("4.5.0"):
+    #     style = gr.prefs().get_string('qtgui', 'style', 'raster')
+    #     Qt.QApplication.setGraphicsSystem(style)
+    # qapp = Qt.QApplication(sys.argv)
 
     tb = top_block_cls()
     tb.start()
-    tb.show()
+    # tb.show()
     inner_code = 0
     outer_code = 0
     modulation = 0
@@ -232,19 +250,21 @@ def main(top_block_cls=FlexOTA, options=None):
         tb.stop()
         tb.wait()
 
-    qapp.connect(qapp, Qt.SIGNAL("aboutToQuit()"), quitting)
+    # qapp.connect(qapp, Qt.SIGNAL("aboutToQuit()"), quitting)
     RESET_Tables(tb.samp_rate)
     num_packets = 0
     # while num_packets < 11 * 8 * 5 * 2:
     while True:
-        qapp.processEvents()
-        for m in range(11):
-            for i in range(5):
-                for o in range(8):
-                    random_bits = numpy.random.randint(255, size=(32,))
-                    if not tb.liquiddsp_flex_tx_c_0.msgq().full_p():
-                        tb.send_packet(m, i, o, range(9), random_bits)
-                        num_packets += 1
+        # qapp.processEvents()
+        for x in range(10):
+            for m in range(11):
+                for i in range(5):
+                    for o in range(8):
+                        random_bits = numpy.random.randint(255, size=(15,))
+                        if not tb.liquiddsp_flex_tx_c_0.msgq().full_p():
+                            tb.send_packet(m, i, o, range(9), random_bits)
+                            num_packets += 1
+
     #
     # while True:
     #     qapp.processEvents()

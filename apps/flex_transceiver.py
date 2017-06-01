@@ -6,14 +6,12 @@
 # Generated: Sat Jul 30 13:04:17 2016
 ##################################################
 
-from gnuradio import blocks
-from gnuradio import channels
-from gnuradio import gr
+import numpy
+import struct
 import gnuradio.gr.gr_threading as _threading
 import liquiddsp
-import numpy
-import time
-import struct
+from gnuradio import blocks
+from gnuradio import gr
 
 
 class QueueWatcherThread(_threading.Thread):
@@ -27,9 +25,8 @@ class QueueWatcherThread(_threading.Thread):
     def run(self):
         print("Watcher started")
         while self.keep_running:
-            if self.receive_queue.empty_p():
-                time.sleep(0.001)
-                continue
+            while self.receive_queue.empty_p():
+                pass
             msg = self.receive_queue.delete_head_nowait()
             if msg.__deref__() is None or msg.length() <= 0:
                 if msg.length() <= 0:
@@ -44,57 +41,44 @@ class QueueWatcherThread(_threading.Thread):
             evm = struct.unpack("f", message[5:9])[0]
             header = message[9:24]
             payload = message[24:]
-            print "test"
-            # print("Received Header ", header_num)
-            # print("Length ", msg.length() - 4, " Received Payload ", payload, )
             if self.callback:
                 self.callback(header_valid, payload_valid, mod_scheme, inner_code, outer_code, evm, header, payload)
-        print("Watcher stopped")
+        print "Watcher stopped"
 
 
-class TopBlock(gr.top_block):
-    def __init__(self):
-        gr.top_block.__init__(self, "Top Block")
+class FlexTransceiver(gr.hier_block2):
+    def __init__(self, samp_rate=200000):
+        gr.hier_block2.__init__(self,
+                              "Flex Transceiver",
+                              gr.io_signature(1, 1, gr.sizeof_gr_complex),
+                              gr.io_signature(1, 1, gr.sizeof_gr_complex))
 
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate = 200000
-        self.num_transmitted_payloads = 0
-        self.num_received_payloads = 0
-        self.transmitted_payloads = numpy.empty((1024, 1000))
-        self.received_payloads = numpy.empty((1024, 1000))
+        self.samp_rate = samp_rate
 
         ##################################################
         # Message Queues
         ##################################################
-        self.transmit_queue = gr.msg_queue()
-        self.receive_queue = gr.msg_queue()
+        self.transmit_queue = gr.msg_queue(100)
+        self.receive_queue = gr.msg_queue(100)
+        self.constellation_queue = gr.msg_queue(100)
 
         ##################################################
         # Blocks
         ##################################################
+        self.liquiddsp_flex_rx_msgq_0 = liquiddsp.flex_rx_msgq(self.receive_queue, self.constellation_queue)
         self.liquiddsp_flex_tx_c_0 = liquiddsp.flex_tx_c(1, self.transmit_queue)
-        self.liquiddsp_flex_rx_c_0 = liquiddsp.flex_rx_c(self.receive_queue)
+        self.blocks_message_source_0 = blocks.message_source(gr.sizeof_gr_complex*1, self.constellation_queue)
 
-        self.channels_channel_model_0 = channels.channel_model(
-            noise_voltage=0.1,
-            frequency_offset=0.00000,
-            epsilon=1.000000,
-            taps=(1.0,),
-            noise_seed=0,
-            block_tags=False
-        )
-        self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex, samp_rate, True)
         self.watcher = QueueWatcherThread(self.receive_queue, self.callback)
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.liquiddsp_flex_tx_c_0, 0), (self.blocks_throttle_0, 0))
-        self.connect((self.blocks_throttle_0, 0), (self.channels_channel_model_0, 0))
-        self.connect((self.channels_channel_model_0, 0), (self.liquiddsp_flex_rx_c_0, 0))
-        # self.connect((self.blocks_throttle_0, 0), (self.liquiddsp_flex_rx_c_0, 0))
+        self.connect((self.liquiddsp_flex_tx_c_0, 0), (self, 0))
+        self.connect((self, 0), (self.liquiddsp_flex_rx_msgq_0, 0))
 
     def get_samp_rate(self):
         return self.samp_rate
@@ -115,9 +99,6 @@ class TopBlock(gr.top_block):
         packet.extend(header)
         packet.extend(payload)
         bit_string = numpy.array(packet).astype(numpy.uint8).tostring()
-        # TODO: Not sure if this helps at all...
-        while self.liquiddsp_flex_tx_c_0.msgq().full_p():
-            pass
         self.liquiddsp_flex_tx_c_0.msgq().insert_tail(gr.message_from_string(bit_string))
 
     def insert_message(self, msg):
@@ -139,43 +120,11 @@ class TopBlock(gr.top_block):
         :param payload: Bitstring with payload
         :return:
         '''
-        #TODO: How to parse header and payload as bitstrings
         packet_num = struct.unpack("<L", header[:4])
-        print "Header Valid", header_valid, "Payload valid", payload_valid, "Mod Scheme", mod_scheme, \
-            "Inner Code", inner_code, "Outer Code", outer_code, "EVM", evm, "Packet Num", packet_num
+        self.num_packets += 1
 
     def cleanup(self):
         print "Stopping Watcher"
-        self._watcher.keep_running = False
-        self._watcher.join()
-
-
-def main(top_block_cls=TopBlock, options=None):
-    tb = top_block_cls()
-    tb.start()
-    num_packets = 0
-    while True:
-        if (tb.num_packets % 20) == 0:
-            print "CE Decision is "
-            epsilon = 0.01
-            BW = tb.samp_rate
-            Conf = EGreedy(num_packets, epsilon, BW)
-            new_Conf = Conf[0]
-            m = new_Conf.modulation
-            i = new_Conf.innercode
-            o = new_Conf.outercode
-            config_map = Conf_map(m, i, o)
-        tb.send_packet(m, i, o, range(9), random_bits)
-    time.sleep(5)
-    print "Transmission is done **********************************"
-    print "Transmission is done **********************************"
-    tb.watcher.keep_running = False
-    tb.stop()
-    tb.wait()
-
-
-if __name__ == '__main__':
-    main()
-
-
+        self.watcher.keep_running = False
+        self.watcher.join()
 

@@ -56,6 +56,7 @@ namespace gr {
       d_outbuf = (gr_complex *) malloc(d_buf_len * sizeof(gr_complex));
       d_header = (unsigned char *) malloc(14 * sizeof(unsigned char));
       set_output_multiple(d_buf_len);
+      std::cout << "Created flex_tx_c block." << std::endl;
     }
 
     flex_tx_c_impl::flex_tx_c_impl(size_t item_size, int msgq_limit)
@@ -69,6 +70,7 @@ namespace gr {
       d_outbuf = (gr_complex *) malloc(d_buf_len * sizeof(gr_complex));
       d_header = (unsigned char *) malloc(14 * sizeof(unsigned char));
       set_output_multiple(d_buf_len);
+      std::cout << "Created flex_tx_c block with default queue" << std::endl;
     }
 
     /*
@@ -232,6 +234,7 @@ namespace gr {
       static int frame_complete = 0;
 
       while(num_items < noutput_items){
+        std::cout << noutput_items << " requested." << std::endl;
         //Have message in queue
         if (d_msg) {
           std::cout << "Got message." << std::endl;

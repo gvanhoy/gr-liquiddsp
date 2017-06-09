@@ -150,7 +150,7 @@ namespace gr {
           d_inner_code = LIQUID_FEC_CONV_V27P78;
           break;
         default:
-          std::cout << "Unsupported FEC Defaulting to none." << std:endl;
+          std::cout << "Unsupported FEC Defaulting to none." << std::endl;
           d_inner_code = LIQUID_FEC_NONE;
           break;
       }

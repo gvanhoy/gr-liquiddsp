@@ -41,6 +41,5 @@ include(GrTest)
 
 set(GR_TEST_TARGET_DEPS gnuradio-liquiddsp)
 set(GR_TEST_PYTHON_DIRS ${CMAKE_BINARY_DIR}/swig)
-GR_ADD_TEST(qa_fft ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_fft.py)
 GR_ADD_TEST(qa_iir_filter_ccf ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_iir_filter_ccf.py)
 GR_ADD_TEST(qa_flex_tx_c ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_flex_tx_c.py)

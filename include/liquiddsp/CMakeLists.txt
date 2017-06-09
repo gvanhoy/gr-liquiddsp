@@ -22,7 +22,6 @@
 ########################################################################
 install(FILES
     api.h
-    fft.h
     iir_filter_ccf.h
     flex_rx_cb.h
     flex_rx_c.h

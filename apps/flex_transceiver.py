@@ -80,9 +80,6 @@ class FlexTransceiver(gr.hier_block2):
         self.connect((self.liquiddsp_flex_tx_c_0, 0), (self, 0))
         self.connect((self, 0), (self.liquiddsp_flex_rx_msgq_0, 0))
 
-    def get_samp_rate(self):
-        return self.samp_rate
-
     def send_packet(self, modulation, inner_code, outer_code, header, payload):
         '''
         :param modulation: integer from 0 to 10
@@ -101,16 +98,6 @@ class FlexTransceiver(gr.hier_block2):
         bit_string = numpy.array(packet).astype(numpy.uint8).tostring()
         self.liquiddsp_flex_tx_c_0.msgq().insert_tail(gr.message_from_string(bit_string))
 
-    def insert_message(self, msg):
-        for index in range(len(msg) - 3):
-            self.transmitted_payloads[index, self.num_transmitted_payloads] = struct.unpack('B', msg[index + 3])[0]
-        self.liquiddsp_flex_tx_c_0.msgq().insert_tail(gr.message_from_string(msg))
-        self.num_transmitted_payloads += 1
-
-    def set_samp_rate(self, samp_rate):
-        self.samp_rate = samp_rate
-        self.blocks_throttle_0.set_sample_rate(self.samp_rate)
-
     def callback(self, header_valid, payload_valid, mod_scheme, inner_code, outer_code, evm, header, payload):
         '''
         :param header_valid: 1 if CRC check passes, 0 otherwise
@@ -120,8 +107,9 @@ class FlexTransceiver(gr.hier_block2):
         :param payload: Bitstring with payload
         :return:
         '''
-        packet_num = struct.unpack("<L", header[:4])
-        self.num_packets += 1
+        packet_num = struct.unpack("<L", header[:4]) # interprets first four bytes as long integer little endian
+        if header_valid[0] and payload_valid[0]:
+            print "Got packet {0}.".format(packet_num)
 
     def cleanup(self):
         print "Stopping Watcher"

@@ -17,7 +17,6 @@
 # the Free Software Foundation, Inc., 51 Franklin Street,
 # Boston, MA 02110-1301, USA.
 install(FILES
-    liquiddsp_fft.xml
     liquiddsp_iir_filter_ccf.xml
     liquiddsp_flex_rx_cb.xml
     liquiddsp_flex_rx_c.xml

@@ -24,7 +24,7 @@
 
 #include <gnuradio/io_signature.h>
 #include "flex_tx_c_impl.h"
-#include <stdio.h>
+#include <iostream>
 
 namespace gr {
   namespace liquiddsp {
@@ -234,6 +234,7 @@ namespace gr {
       while(num_items < noutput_items){
         //Have message in queue
         if (d_msg) {
+          std::cout << "Got message." << std::endl;
           //But still working on previous frame
           if(!frame_complete) {
             frame_complete = flexframegen_write_samples(d_fg, d_outbuf, d_buf_len);

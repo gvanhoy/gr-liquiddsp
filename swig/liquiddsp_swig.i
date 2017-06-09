@@ -8,7 +8,6 @@
 %include "liquiddsp_swig_doc.i"
 
 %{
-#include "liquiddsp/fft.h"
 #include "liquiddsp/flex_rx_cb.h"
 #include "liquiddsp/flex_rx_c.h"
 #include "liquiddsp/flex_tx_c.h"
@@ -17,9 +16,6 @@
 #include "liquiddsp/flex_rx_msgq.h"
 %}
 
-
-%include "liquiddsp/fft.h"
-GR_SWIG_BLOCK_MAGIC2(liquiddsp, fft);
 
 %include "liquiddsp/flex_rx_cb.h"
 GR_SWIG_BLOCK_MAGIC2(liquiddsp, flex_rx_cb);

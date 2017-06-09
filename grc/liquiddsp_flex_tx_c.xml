@@ -4,7 +4,7 @@
   <key>liquiddsp_flex_tx_c</key>
   <category>liquiddsp</category>
   <import>import liquiddsp</import>
-  <make>liquiddsp.flex_tx_c(1, 0)</make>
+  <make>liquiddsp.flex_tx_c(1, 100)</make>
   <sink>
     <name>in</name>
     <type>msg</type>

@@ -119,7 +119,7 @@ namespace gr {
           d_modulation = LIQUID_MODEM_QAM64;
           break;
         default:
-          printf("Unsupported Modulation Defaulting to BPSK.\n");
+          std::cout << "Unsupported Modulation Defaulting to BPSK." << std::endl;
           d_modulation = LIQUID_MODEM_PSK2;
           break;
       }
@@ -150,7 +150,7 @@ namespace gr {
           d_inner_code = LIQUID_FEC_CONV_V27P78;
           break;
         default:
-          printf("Unsupported FEC Defaulting to none.\n");
+          std::cout << "Unsupported FEC Defaulting to none." << std:endl;
           d_inner_code = LIQUID_FEC_NONE;
           break;
       }
@@ -184,7 +184,7 @@ namespace gr {
           d_outer_code = LIQUID_FEC_SECDED7264;
           break;
         default:
-          printf("Unsupported FEC Defaulting to none.\n");
+          std::cout << "Unsupported FEC Defaulting to none." << std::endl;
           d_outer_code = LIQUID_FEC_NONE;
           break;
       }

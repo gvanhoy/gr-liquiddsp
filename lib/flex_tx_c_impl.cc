@@ -234,7 +234,7 @@ namespace gr {
       static int frame_complete = 0;
 
       while(num_items < noutput_items){
-        std::cout << noutput_items << " requested." << std::endl;
+        std::cout << d_msgq->count() << "Messages ready." << std::endl;
         //Have message in queue
         if (d_msg) {
           std::cout << "Got message." << std::endl;

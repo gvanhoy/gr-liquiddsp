@@ -78,7 +78,6 @@ namespace gr {
       info->_frame_symbols = _stats.framesyms;
       info->_num_frames++;
       info->_new_payload = true;
-      flexframesync_print();
     }
 
     int
@@ -101,6 +100,7 @@ namespace gr {
             pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
             message_port_pub(pmt::mp("hdr_and_payload"), payload_pdu);
             message_port_pub(pmt::mp("constellation"), constellation_pdu);
+            flexframesync_print(d_fs);
         }
       }
 

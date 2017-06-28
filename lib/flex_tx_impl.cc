@@ -48,9 +48,10 @@ namespace gr {
               d_outer_code(outer_code)
     {
         flexframegenprops_init_default(&d_fgprops);
-        d_fgprops.mod_scheme = d_modulation;
-        d_fgprops.fec0 = inner_code;
-        d_fgprops.fec1 = outer_code;
+        d_fgprops.check = LIQUID_CRC_24;      // data validity check
+        set_inner_code(inner_code);      // inner FEC scheme
+        set_outer_code(outer_code);      // outer FEC scheme
+        set_modulation(modulation);
         d_fg = flexframegen_create(&d_fgprops);
         message_port_register_out(PDU_PORT_ID);
         d_header = (unsigned char *) malloc(14*sizeof(unsigned char));
@@ -64,6 +65,114 @@ namespace gr {
      */
     flex_tx_impl::~flex_tx_impl()
     {
+    }
+
+    void
+    flex_tx_impl::set_modulation(unsigned int modulation) {
+      switch (modulation) {
+        case 0:
+          d_fgprops.mod_scheme = LIQUID_MODEM_PSK2;
+          break;
+        case 1:
+          d_fgprops.mod_scheme = LIQUID_MODEM_PSK4;
+          break;
+        case 2:
+          d_fgprops.mod_scheme = LIQUID_MODEM_PSK8;
+          break;
+        case 3:
+          d_fgprops.mod_scheme = LIQUID_MODEM_PSK16;
+          break;
+        case 4:
+          d_fgprops.mod_scheme = LIQUID_MODEM_DPSK2;
+          break;
+        case 5:
+          d_fgprops.mod_scheme = LIQUID_MODEM_DPSK4;
+          break;
+        case 6:
+          d_fgprops.mod_scheme = LIQUID_MODEM_DPSK8;
+          break;
+        case 7:
+          d_fgprops.mod_scheme = LIQUID_MODEM_ASK4;
+          break;
+        case 8:
+          d_fgprops.mod_scheme = LIQUID_MODEM_QAM16;
+          break;
+        case 9:
+          d_fgprops.mod_scheme = LIQUID_MODEM_QAM32;
+          break;
+        case 10:
+          d_fgprops.mod_scheme = LIQUID_MODEM_QAM64;
+          break;
+        default:
+            std::cout << "Unsupported Modulation Defaulting to BPSK." << std::endl;
+          d_fgprops.mod_scheme = LIQUID_MODEM_PSK2;
+          break;
+      }
+    }
+
+    void
+    flex_tx_impl::set_inner_code(unsigned int inner_code) {
+      switch (inner_code) {
+        case 0:
+          d_fgprops.fec0 = LIQUID_FEC_NONE;
+          break;
+        case 1:
+          d_fgprops.fec0 = LIQUID_FEC_CONV_V27;
+          break;
+        case 2:
+          d_fgprops.fec0 = LIQUID_FEC_CONV_V27P23;
+          break;
+        case 3:
+          d_fgprops.fec0 = LIQUID_FEC_CONV_V27P45;
+          break;
+        case 4:
+          d_fgprops.fec0 = LIQUID_FEC_CONV_V27P56;
+          break;
+        case 5:
+          d_fgprops.fec0 = LIQUID_FEC_CONV_V27P67;
+          break;
+        case 6:
+          d_fgprops.fec0 = LIQUID_FEC_CONV_V27P78;
+          break;
+        default:
+            std::cout << "Unsupported FEC Defaulting to none." << std::endl;
+          d_fgprops.fec0 = LIQUID_FEC_NONE;
+          break;
+      }
+    }
+
+    void
+    flex_tx_impl::set_outer_code(unsigned int outer_code) {
+      switch (outer_code) {
+        case 0:
+          d_fgprops.fec1 = LIQUID_FEC_NONE;
+          break;
+        case 1:
+          d_fgprops.fec1 = LIQUID_FEC_GOLAY2412;
+          break;
+        case 2:
+          d_fgprops.fec1 = LIQUID_FEC_RS_M8;
+          break;
+        case 3:
+          d_fgprops.fec1 = LIQUID_FEC_HAMMING74;
+          break;
+        case 4:
+          d_fgprops.fec1 = LIQUID_FEC_HAMMING128;
+          break;
+        case 5:
+          d_fgprops.fec1 = LIQUID_FEC_SECDED2216;
+          break;
+        case 6:
+          d_fgprops.fec1 = LIQUID_FEC_SECDED3932;
+          break;
+        case 7:
+          d_fgprops.fec1 = LIQUID_FEC_SECDED7264;
+          break;
+        default:
+          std::cout << "Unsupported FEC Defaulting to none." << std::endl;
+          d_fgprops.fec1 = LIQUID_FEC_NONE;
+          break;
+      }
     }
 
     void flex_tx_impl::send_pkt(pmt::pmt_t pdu){

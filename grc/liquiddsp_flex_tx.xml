@@ -5,14 +5,20 @@
   <category>[liquiddsp]</category>
   <import>import liquiddsp</import>
   <make>liquiddsp.flex_tx($modulation, $inner_code, $outer_code)</make>
-  <!-- Make one 'param' node for every Parameter you want settable from the GUI.
-       Sub-nodes:
-       * name
-       * key (makes the value accessible as $keyname, e.g. in the make node)
-       * type -->
+
   <param>
-    <name>Modulation</name>
+   <name>Modulation</name>
     <key>modulation</key>
+    <type>int</type>
+  </param>
+  <param>
+   <name>Inner Code</name>
+    <key>inner_code</key>
+    <type>int</type>
+  </param>
+  <param>
+   <name>Outer Code</name>
+    <key>outer_code</key>
     <type>int</type>
   </param>
 

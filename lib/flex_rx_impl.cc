@@ -88,7 +88,6 @@ namespace gr {
         gr_complex *in = (gr_complex *) input_items[0];
       unsigned int num_items = 0;
       assert (noutput_items % d_inbuf_len == 0);
-
       while (num_items < noutput_items) {
         flexframesync_execute(d_fs, in, d_inbuf_len);
         num_items += d_inbuf_len;
@@ -104,6 +103,7 @@ namespace gr {
             d_info->_new_payload = false;
         }
       }
+      std::cout << "Processed " << num_items << " items." << std::endl;
 
       return num_items;
     }

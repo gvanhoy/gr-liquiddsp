@@ -22,11 +22,6 @@
 ########################################################################
 install(FILES
     api.h
-    iir_filter_ccf.h
-    flex_rx_cb.h
-    flex_rx_c.h
-    flex_rx_c_constel.h
-    flex_rx_msgq.h
     flex_tx.h
     flex_rx.h DESTINATION include/liquiddsp
 )

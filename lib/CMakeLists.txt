@@ -25,11 +25,6 @@ include(GrPlatform) #define LIB_SUFFIX
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIRS})
 list(APPEND liquiddsp_sources
-    iir_filter_ccf_impl.cc
-    flex_rx_cb_impl.cc
-    flex_rx_c_impl.cc
-    flex_rx_c_constel_impl.cc
-    flex_rx_msgq_impl.cc
     flex_tx_impl.cc
     flex_rx_impl.cc )
 

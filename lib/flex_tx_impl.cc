@@ -69,7 +69,7 @@ namespace gr {
         bool frame_complete = false;
 
         // fill it with random bytes
-        flexframegen_assemble(d_fg, d_header, d_payload, pmt::length(meta));
+        flexframegen_assemble(d_fg, d_header, d_payload, pmt::length(bytes));
         unsigned int frame_len = flexframegen_getframelen(d_fg);
         std::vector<gr_complex> vec(frame_len);
         frame_complete = flexframegen_write_samples(d_fg, &vec.front(), frame_len);

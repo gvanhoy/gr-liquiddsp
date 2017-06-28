@@ -78,6 +78,7 @@ namespace gr {
       info->_frame_symbols = _stats.framesyms;
       info->_num_frames++;
       info->_new_payload = true;
+      flexframesync_print();
     }
 
     int

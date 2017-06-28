@@ -44,7 +44,7 @@ namespace gr {
      private:
          flexframesync d_fs;
          struct packet_info *d_info;
-         static const unsigned int d_inbuf_len = 1024;
+         static const unsigned int d_inbuf_len = 256;
          static int callback(
           unsigned char *_header,
           int _header_valid,

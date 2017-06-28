@@ -51,6 +51,7 @@ namespace gr {
         d_fg = flexframegen_create(&d_fgprops);
         message_port_register_out(PDU_PORT_ID);
         d_header = (unsigned char *) malloc(14*sizeof(unsigned char));
+        memset(d_header, 0, 14);
         message_port_register_in(PDU_PORT_ID);
         set_msg_handler(PDU_PORT_ID, boost::bind(&flex_tx_impl::send_pkt, this, _1));
     }
@@ -69,7 +70,8 @@ namespace gr {
         bool frame_complete = false;
 
         // fill it with random bytes
-        flexframegen_assemble(d_fg, d_header, d_payload, pmt::length(bytes));
+        std::vector<uint8_t> payload = pmt::u8vector_elements(bytes);
+        flexframegen_assemble(d_fg, d_header, &payload.front(), pmt::length(bytes));
         unsigned int frame_len = flexframegen_getframelen(d_fg);
         std::vector<gr_complex> vec(frame_len);
         frame_complete = flexframegen_write_samples(d_fg, &vec.front(), frame_len);

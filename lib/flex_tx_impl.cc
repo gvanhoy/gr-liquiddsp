@@ -49,7 +49,7 @@ namespace gr {
     {
         flexframegenprops_init_default(&d_fgprops);
         d_fg = flexframegen_create(&d_fgprops);
-        message_port_register_out(pmt::mp("frame_symbols"));
+        message_port_register_out(PDU_PORT_ID);
         d_header = (unsigned char *) malloc(14*sizeof(unsigned char));
         message_port_register_in(PDU_PORT_ID);
         set_msg_handler(PDU_PORT_ID, boost::bind(&flex_tx_impl::send_pkt, this, _1));

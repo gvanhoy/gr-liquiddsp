@@ -30,7 +30,8 @@ list(APPEND liquiddsp_sources
     flex_rx_c_impl.cc
     flex_rx_c_constel_impl.cc
     flex_rx_msgq_impl.cc
-    flex_tx_impl.cc )
+    flex_tx_impl.cc
+    flex_rx_impl.cc )
 
 add_library(gnuradio-liquiddsp SHARED ${liquiddsp_sources})
 target_link_libraries(gnuradio-liquiddsp ${Boost_LIBRARIES} ${GNURADIO_RUNTIME_LIBRARIES} liquid)

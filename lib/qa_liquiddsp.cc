@@ -26,13 +26,11 @@
  */
 
 #include "qa_liquiddsp.h"
-#include "qa_flex_tx_c.h"
 
 CppUnit::TestSuite *
 qa_liquiddsp::suite()
 {
   CppUnit::TestSuite *s = new CppUnit::TestSuite("liquiddsp");
-  s->addTest(gr::liquiddsp::qa_flex_tx_c::suite());
 
   return s;
 }

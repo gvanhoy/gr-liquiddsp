@@ -20,8 +20,7 @@ install(FILES
     liquiddsp_iir_filter_ccf.xml
     liquiddsp_flex_rx_cb.xml
     liquiddsp_flex_rx_c.xml
-    liquiddsp_flex_tx_c.xml
-    liquiddsp_flex_tx_bc_2.xml
     liquiddsp_flex_rx_c_constel.xml
-    liquiddsp_flex_rx_msgq.xml DESTINATION share/gnuradio/grc/blocks
+    liquiddsp_flex_rx_msgq.xml
+    liquiddsp_flex_tx.xml DESTINATION share/gnuradio/grc/blocks
 )

@@ -18,9 +18,11 @@
   <source>
     <name>constellation</name>
     <type>message</type>
+    <optional>1</optional>
   </source>
   <source>
     <name>hdr_and_payload</name>
     <type>message</type>
+    <optional>1</optional>
   </source>
 </block>

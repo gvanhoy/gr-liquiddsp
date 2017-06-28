@@ -28,7 +28,7 @@
        * vlen
        * optional (set to 1 for optional inputs) -->
   <sink>
-    <name>in</name>
+    <name>pdus</name>
     <type>message</type>
   </sink>
 
@@ -38,7 +38,7 @@
        * vlen
        * optional (set to 1 for optional inputs) -->
   <source>
-    <name>out</name>
+    <name>pdus</name>
     <type>message</type>
   </source>
 </block>

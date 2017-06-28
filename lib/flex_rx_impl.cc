@@ -49,7 +49,7 @@ namespace gr {
         set_output_multiple(d_inbuf_len);
         message_port_register_out(pmt::mp("constellation"));
         message_port_register_out(pmt::mp("hdr_and_payload"));
-        gr::block::set_thread_priority(80);
+        gr::block::set_thread_priority(95);
     }
 
     /*

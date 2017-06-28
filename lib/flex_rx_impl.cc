@@ -101,6 +101,7 @@ namespace gr {
             message_port_pub(pmt::mp("hdr_and_payload"), payload_pdu);
             message_port_pub(pmt::mp("constellation"), constellation_pdu);
             flexframesync_print(d_fs);
+            d_info->_new_payload = false;
         }
       }
 

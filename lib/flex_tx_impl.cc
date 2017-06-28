@@ -48,6 +48,7 @@ namespace gr {
               d_outer_code(outer_code)
     {
         flexframegenprops_init_default(&d_fgprops);
+        d_fgprops.mod_scheme = LIQUID_MODEM_QPSK;
         d_fg = flexframegen_create(&d_fgprops);
         message_port_register_out(PDU_PORT_ID);
         d_header = (unsigned char *) malloc(14*sizeof(unsigned char));

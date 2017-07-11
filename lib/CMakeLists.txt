@@ -26,7 +26,8 @@ include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIRS})
 list(APPEND liquiddsp_sources
     flex_tx_impl.cc
-    flex_rx_impl.cc )
+    flex_rx_impl.cc
+    frame_detector_cc_impl.cc )
 
 add_library(gnuradio-liquiddsp SHARED ${liquiddsp_sources})
 target_link_libraries(gnuradio-liquiddsp ${Boost_LIBRARIES} ${GNURADIO_RUNTIME_LIBRARIES} liquid)

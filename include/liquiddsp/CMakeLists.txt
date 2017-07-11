@@ -23,5 +23,6 @@
 install(FILES
     api.h
     flex_tx.h
-    flex_rx.h DESTINATION include/liquiddsp
+    flex_rx.h
+    frame_detector_cc.h DESTINATION include/liquiddsp
 )

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<block>
+  <name>frame_detector_cc</name>
+  <key>liquiddsp_frame_detector_cc</key>
+  <category>[liquiddsp]</category>
+  <import>import liquiddsp</import>
+  <make>liquiddsp.frame_detector_cc()</make>
+  <sink>
+    <name>in</name>
+    <type>complex</type>
+  </sink>
+
+ <source>
+    <name>out</name>
+    <type>complex</type>
+  </source>
+</block>

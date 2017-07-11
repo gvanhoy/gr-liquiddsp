@@ -49,7 +49,6 @@ namespace gr {
         set_output_multiple(d_inbuf_len);
         message_port_register_out(pmt::mp("constellation"));
         message_port_register_out(pmt::mp("hdr_and_payload"));
-        gr::block::set_thread_priority(95);
     }
 
     /*
@@ -104,7 +103,7 @@ namespace gr {
             d_info->_new_payload = false;
         }
       }
-      std::cout << "Processed " << num_items << " items." << std::endl;
+      // std::cout << "Processed " << num_items << " items." << std::endl;
 
       return num_items;
     }

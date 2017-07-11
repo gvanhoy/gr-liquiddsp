@@ -45,7 +45,8 @@ namespace gr {
               gr::io_signature::make(0, 0, 0)),
               d_modulation(modulation),
               d_inner_code(inner_code),
-              d_outer_code(outer_code)
+              d_outer_code(outer_code),
+              d_num_frames(0)
     {
         flexframegenprops_init_default(&d_fgprops);
         d_fgprops.check = LIQUID_CRC_24;      // data validity check
@@ -65,6 +66,7 @@ namespace gr {
      */
     flex_tx_impl::~flex_tx_impl()
     {
+        flexframegen_destroy(d_fg);
     }
 
     void
@@ -179,19 +181,20 @@ namespace gr {
 
         pmt::pmt_t meta = pmt::car(pdu);
         pmt::pmt_t bytes = pmt::cdr(pdu);
-        bool frame_complete = false;
 
         // fill it with random bytes
         std::vector<uint8_t> payload = pmt::u8vector_elements(bytes);
         flexframegen_assemble(d_fg, d_header, &payload.front(), pmt::length(bytes));
         unsigned int frame_len = flexframegen_getframelen(d_fg);
         std::vector<gr_complex> vec(frame_len);
-        frame_complete = flexframegen_write_samples(d_fg, &vec.front(), frame_len);
+        flexframegen_write_samples(d_fg, &vec.front(), frame_len);
         pmt::pmt_t vecpmt = pmt::init_c32vector(frame_len, vec);
 
         // send the vector
         pmt::pmt_t out_pdu(pmt::cons(pmt::PMT_NIL, vecpmt));
         message_port_pub(PDU_PORT_ID, out_pdu);
+        d_num_frames++;
+        std::cout << "Sent " << d_num_frames << " frames" << std:endl;
     }
 
     int

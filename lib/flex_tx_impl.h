@@ -37,6 +37,7 @@ namespace gr {
          unsigned char *        d_payload;
          flexframegenprops_s    d_fgprops;
          flexframegen           d_fg;
+         unsigned long int      d_num_frames;
 
      public:
       flex_tx_impl(unsigned int modulation, unsigned int inner_code, unsigned int outer_code);

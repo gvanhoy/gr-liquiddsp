@@ -52,7 +52,7 @@ namespace gr {
         msequence_destroy(ms);
 
         d_detector = qdetector_cccf_create_linear(d_preamble_pn, 64, LIQUID_FIRFILT_ARKAISER, d_k, d_m, d_beta);
-        qdetector_cccf_set_threshold(d_detector, 0.5);
+        qdetector_cccf_set_threshold(d_detector, 0.4);
     }
 
     /*
@@ -60,6 +60,7 @@ namespace gr {
      */
     frame_detector_cc_impl::~frame_detector_cc_impl()
     {
+        qdetector_cccf_destroy(d_detector);
     }
 
     int

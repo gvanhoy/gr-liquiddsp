@@ -71,11 +71,11 @@ namespace gr {
       gr_complex *out = (gr_complex *) output_items[0];
 
         // Do <+signal processing+>
-
+        std::cout << "Producing " << noutput_items << " output items." << std::endl;
         for(unsigned long int i = 0; i < noutput_items; i++){
             void * v = qdetector_cccf_execute(d_detector, in[i]);
             if(v != NULL){
-                std::cout << "Detected " << d_num_frames << "frames!" << std::endl;
+                std::cout << "Detected " << d_num_frames << " frames!" << std::endl;
                 d_num_frames++;
             }
             out[i] = in[i];

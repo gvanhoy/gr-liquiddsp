@@ -47,6 +47,9 @@ namespace gr {
        * creating new instances.
        */
       static sptr make(unsigned int modulation, unsigned int inner_code, unsigned int outer_code);
+     virtual void set_modulation(unsigned int modulation) = 0;
+     virtual void set_inner_code(unsigned int inner_code) = 0; 
+     virtual void set_outer_code(unsigned int outer_code) = 0;
     };
 
   } // namespace liquiddsp

@@ -194,7 +194,7 @@ namespace gr {
         pmt::pmt_t out_pdu(pmt::cons(pmt::PMT_NIL, vecpmt));
         message_port_pub(PDU_PORT_ID, out_pdu);
         d_num_frames++;
-        std::cout << "Sent " << d_num_frames << " frames" << std::endl;
+        // std::cout << "Sent " << d_num_frames << " frames" << std::endl;
     }
 
     int

@@ -68,7 +68,8 @@ namespace gr {
         int _payload_valid,
         framesyncstats_s _stats,
         void *_userdata) {
-      struct packet_info *info = (struct packet_info *) _userdata;
+
+            struct packet_info *info = (struct packet_info *) _userdata;
       info->_payload = _payload;
       info->_header = _header;
       info->_header_valid = _header_valid;
@@ -100,6 +101,10 @@ namespace gr {
             message_port_pub(pmt::mp("hdr_and_payload"), payload_pdu);
             message_port_pub(pmt::mp("constellation"), constellation_pdu);
             flexframesync_print(d_fs);
+            if(d_info->_header_valid){
+                d_performance_matrix[d_info->_header[2]][d_info->_header[3]][d_info->_header[4]].num_received++;
+                if(d_info->_payload_valid) d_performance_matrix[d_info->_header[2]][d_info->_header[3]][d_info->_header[4]].num_correct++;
+            }
             d_info->_new_payload = false;
         }
       }

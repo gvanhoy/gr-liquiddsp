@@ -47,7 +47,7 @@ namespace gr {
        * class. liquiddsp::flex_rx::make is the public interface for
        * creating new instances.
        */
-      pmt::pmt_t get_performance_info(unsigned int modulation, unsigned int inner_code, unsigned int outer_code)
+      pmt::pmt_t get_performance_info(unsigned int modulation, unsigned int inner_code, unsigned int outer_code);
       static sptr make();
     };
 

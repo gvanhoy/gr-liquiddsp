@@ -22,5 +22,6 @@ class SimpleTxRx(gr.top_block):
 if __name__ == '__main__':
     simple_tx_rx = SimpleTxRx()
     simple_tx_rx.simulate()
+    print simple_tx_rx.transmitter.liquiddsp_flex_rx_0.get_performance_matrix(0, 0, 0)
 
 

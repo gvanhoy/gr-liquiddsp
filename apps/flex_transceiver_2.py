@@ -51,12 +51,3 @@ class FlexTransceiver(gr.hier_block2):
         msg = pmt.cons(pmt.PMT_NIL, pmt.to_pmt(np.array(payload, dtype=np.uint8)))
         self.liquiddsp_flex_tx_0.to_basic_block()._post(pmt.intern("pdus"), msg)
 
-
-if __name__ == '__main__':
-    tb = FlexTransceiver()
-    tb.start()
-
-    while True:
-        tb.liquiddsp_flex_tx_0.send
-    tb.stop()
-    tb.wait()

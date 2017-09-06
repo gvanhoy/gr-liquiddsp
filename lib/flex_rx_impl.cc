@@ -81,6 +81,14 @@ namespace gr {
       info->_new_payload = true;
     }
 
+    pmt::pmt_t flex_rx_impl::get_performance_info(unsigned int modulation, unsigned int inner_code, unsigned int outer_code){
+        pmt::pmt_t performance_info = pmt::make_dict();
+        pmt::dict_add(performance_info, pmt::intern("num_received"), pmt::from_long(d_performance_matrix[modulation][inner_code][outer_code].num_received));
+        pmt::dict_add(performance_info, pmt::intern("num_correct"), pmt::from_long(d_performance_matrix[modulation][inner_code][outer_code].num_correct));
+        return performance_info;
+    }
+
+
     int
     flex_rx_impl::work(int noutput_items,
         gr_vector_const_void_star &input_items,

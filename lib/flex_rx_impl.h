@@ -65,7 +65,7 @@ namespace gr {
       flex_rx_impl();
       ~flex_rx_impl();
 
-      performance_info get_performance_info(unsigned int modulation, unsigned int inner_code, unsigned int outer_code){ return d_performance_matrix[modulation][inner_code][outer_code]; };
+      pmt::pmt_t get_performance_info(unsigned int modulation, unsigned int inner_code, unsigned int outer_code);
 
       // Where all the action really happens
       int work(int noutput_items,

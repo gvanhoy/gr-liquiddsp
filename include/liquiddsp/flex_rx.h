@@ -24,6 +24,7 @@
 
 #include <liquiddsp/api.h>
 #include <gnuradio/sync_block.h>
+#include <pmt/pmt.h>
 
 namespace gr {
   namespace liquiddsp {
@@ -46,6 +47,7 @@ namespace gr {
        * class. liquiddsp::flex_rx::make is the public interface for
        * creating new instances.
        */
+      pmt::pmt_t flex_rx_impl::get_performance_info(unsigned int modulation, unsigned int inner_code, unsigned int outer_code)
       static sptr make();
     };
 

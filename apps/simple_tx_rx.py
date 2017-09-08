@@ -1,5 +1,6 @@
 import numpy
 from gnuradio import gr
+import time
 import pmt
 from gnuradio import blocks
 from flex_transceiver_2 import FlexTransceiver
@@ -19,6 +20,7 @@ class SimpleTxRx(gr.top_block):
             random_bits = numpy.random.randint(255, size=(1000,))
             self.transmitter.send_packet(0, 0, 0, random_bits)
         while True:
+            time.sleep(.1)
             for m in range(11):
                 for i in range(7):
                     for o in range(8):

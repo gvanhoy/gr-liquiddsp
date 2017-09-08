@@ -110,6 +110,7 @@ namespace gr {
         gr_complex *in = (gr_complex *) input_items[0];
       unsigned int num_items = 0;
       assert (noutput_items % d_inbuf_len == 0);
+      std::cout << "Received " << noutput_items << " items." << std::endl;
       while (num_items < noutput_items) {
         flexframesync_execute(d_fs, in, d_inbuf_len);
         num_items += d_inbuf_len;

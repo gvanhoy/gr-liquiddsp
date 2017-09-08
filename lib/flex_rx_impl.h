@@ -59,7 +59,12 @@ namespace gr {
           framesyncstats_s _stats,
           void *_userdata);
 		performance_info d_performance_matrix[11][7][8];
-
+		int d_rx_mod_scheme;
+        int d_rx_outer_code;
+		int d_rx_inner_code;
+        void get_mod_scheme(unsigned int mod_scheme);
+        void get_outer_code(unsigned int outer_code);
+		void get_inner_code(unsigned int inner_code);
 
      public:
       flex_rx_impl();

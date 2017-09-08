@@ -68,6 +68,113 @@ namespace gr {
         flexframesync_destroy(d_fs);
     }
 
+    void
+    flex_rx_impl::get_outer_code(unsigned int outer_code) {
+      switch (outer_code) {
+        case LIQUID_FEC_NONE:
+          d_rx_outer_code = 0;
+          break;
+        case LIQUID_FEC_GOLAY2412:
+          d_rx_outer_code = 1;
+          break;
+        case LIQUID_FEC_RS_M8:
+          d_rx_outer_code = 2;
+          break;
+        case LIQUID_FEC_HAMMING74:
+          d_rx_outer_code = 3;
+          break;
+        case LIQUID_FEC_HAMMING128:
+          d_rx_outer_code = 4;
+          break;
+        case LIQUID_FEC_SECDED2216:
+          d_rx_outer_code = 5;
+          break;
+        case LIQUID_FEC_SECDED3932:
+          d_rx_outer_code = 6;
+          break;
+        case LIQUID_FEC_SECDED7264:
+          d_rx_outer_code = 7;
+          break;
+        default:
+          std::cout << "Unsupported FEC received defaulting to none." << std::endl;
+          d_rx_outer_code = 0;
+      }
+    }
+
+    void
+    flex_rx_impl::get_inner_code(unsigned int inner_code) {
+      switch (inner_code) {
+        case LIQUID_FEC_NONE:
+          d_rx_inner_code = 0;
+          break;
+        case LIQUID_FEC_CONV_V27:
+          d_rx_inner_code = 1;
+          break;
+        case LIQUID_FEC_CONV_V27P23:
+          d_rx_inner_code = 2;
+          break;
+        case LIQUID_FEC_CONV_V27P45:
+          d_rx_inner_code = 3;
+          break;
+        case LIQUID_FEC_CONV_V27P56:
+          d_rx_inner_code = 4;
+          break;
+        case LIQUID_FEC_CONV_V27P67:
+          d_rx_inner_code = 5;
+          break;
+        case LIQUID_FEC_CONV_V27P78:
+          d_rx_inner_code = 6;
+          break;
+        default:
+          std::cout << "Unsupported Received FEC Defaulting to none." << std::endl;
+          d_rx_inner_code = 0;
+          break;
+      }
+    }
+
+    void
+    flex_rx_impl::get_mod_scheme(unsigned int mod_scheme) {
+      switch (mod_scheme) {
+        case LIQUID_MODEM_PSK2:
+          d_rx_mod_scheme = 0;
+          break;
+        case LIQUID_MODEM_PSK4:
+          d_rx_mod_scheme = 1;
+          break;
+        case LIQUID_MODEM_PSK8:
+          d_rx_mod_scheme = 2;
+          break;
+        case LIQUID_MODEM_PSK16:
+          d_rx_mod_scheme = 3;
+          break;
+        case LIQUID_MODEM_DPSK2:
+          d_rx_mod_scheme = 4;
+          break;
+        case LIQUID_MODEM_DPSK4:
+          d_rx_mod_scheme = 5;
+          break;
+        case LIQUID_MODEM_DPSK8:
+          d_rx_mod_scheme = 6;
+          break;
+        case LIQUID_MODEM_ASK4:
+          d_rx_mod_scheme = 7;
+          break;
+        case LIQUID_MODEM_QAM16:
+          d_rx_mod_scheme = 8;
+          break;
+        case LIQUID_MODEM_QAM32:
+          d_rx_mod_scheme = 9;
+          break;
+        case LIQUID_MODEM_QAM64:
+          d_rx_mod_scheme = 10;
+          break;
+        default:
+          std::cout << "Unsupported Received Modulation Defaulting to BPSK." << std::endl;
+          d_rx_mod_scheme = 0;
+          break;
+      }
+    }
+
     int
     flex_rx_impl::callback(
         unsigned char *_header,
@@ -123,12 +230,10 @@ namespace gr {
                 message_port_pub(pmt::mp("constellation"), constellation_pdu);
                 flexframesync_print(d_fs);
                 if(d_info->_header_valid){
-                        std::cout << "Header: ";
-                        for(unsigned int i = 0; i < 14; i++){
-                            std::cout << d_info->_header[i] << ", ";
-                        }
-                        std::cout << std::endl;
-                    // std::cout << "Got mod: " << d_info->_header[2] << " inner_code: " << d_info->_header[3] << " outer_code: " << d_info->_header[4] << std::endl;
+                    get_mod_scheme(d_info->_stats.mod_scheme);
+                    get_inner_code(d_info->_stats.fec0);
+                    get_outer_code(d_info->_stats.fec1);
+                    std::cout << "Got mod: " << d_rx_mod_scheme << " inner_code: " << d_rx_inner_code << " outer_code: " << d_rx_outer_code << std::endl;
                     // d_performance_matrix[d_info->_header[2]][d_info->_header[3]][d_info->_header[4]].num_received++;
                     // if(d_info->_payload_valid) d_performance_matrix[d_info->_header[2]][d_info->_header[3]][d_info->_header[4]].num_correct++;
                 }

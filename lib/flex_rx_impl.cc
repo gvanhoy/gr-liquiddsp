@@ -48,6 +48,14 @@ namespace gr {
         d_info = (struct packet_info *) malloc(sizeof(struct packet_info));
         d_fs = flexframesync_create(callback, (void *) d_info);
         set_output_multiple(d_inbuf_len);
+        for(unsigned int m = 0; m < 11; m++){
+            for(unsigned int i = 0; i < 7; i++){
+                for(unsigned int o = 0; o < 8; o++){
+                    d_performance_matrix[m][i][o].num_correct = 0;
+                    d_performance_matrix[m][i][o].num_received = 0;
+                }
+            }
+        }
         message_port_register_out(pmt::mp("constellation"));
         message_port_register_out(pmt::mp("hdr_and_payload"));
     }
@@ -115,6 +123,7 @@ namespace gr {
             message_port_pub(pmt::mp("constellation"), constellation_pdu);
             flexframesync_print(d_fs);
             if(d_info->_header_valid){
+                std::cout << "Got mod: " << d_info->_header[2] << " inner_code: " << d_info->_header[3] << " outer_code: " << d_info->_header[4] << std::endl;
                 d_performance_matrix[d_info->_header[2]][d_info->_header[3]][d_info->_header[4]].num_received++;
                 if(d_info->_payload_valid) d_performance_matrix[d_info->_header[2]][d_info->_header[3]][d_info->_header[4]].num_correct++;
             }

@@ -1,5 +1,6 @@
 import numpy
 from gnuradio import gr
+import pmt
 from gnuradio import blocks
 from flex_transceiver_2 import FlexTransceiver
 
@@ -17,11 +18,15 @@ class SimpleTxRx(gr.top_block):
         for x in range(self.num_packets_to_send):
             random_bits = numpy.random.randint(255, size=(1000,))
             self.transmitter.send_packet(0, 0, 0, random_bits)
+        while True:
+            for m in range(11):
+                for i in range(7):
+                    for o in range(8):
+                        print repr(self.transmitter.liquiddsp_flex_rx_0.get_performance_info(m, i, o))
+                        # print pmt.dict_has_key(self.transmitter.liquiddsp_flex_rx_0.get_performance_info(m, i, o), pmt.intern('num_received'))
 
 
 if __name__ == '__main__':
     simple_tx_rx = SimpleTxRx()
     simple_tx_rx.simulate()
-    print simple_tx_rx.transmitter.liquiddsp_flex_rx_0.get_performance_matrix(0, 0, 0)
-
-
+    print simple_tx_rx.transmitter.liquiddsp_flex_rx_0.get_performance_info(0, 0, 0)

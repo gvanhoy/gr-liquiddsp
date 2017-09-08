@@ -84,6 +84,9 @@ namespace gr {
 
     pmt::pmt_t flex_rx_impl::get_performance_info(unsigned int modulation, unsigned int inner_code, unsigned int outer_code){
         pmt::pmt_t performance_info = pmt::make_dict();
+        std::cout << "Received: " << pmt::from_long(d_performance_matrix[modulation][inner_code][outer_code].num_received) << " " <<
+        d_performance_matrix[modulation][inner_code][outer_code].num_received <<
+        std::endl;
         pmt::dict_add(performance_info, pmt::string_to_symbol("num_received"), pmt::from_long(d_performance_matrix[modulation][inner_code][outer_code].num_received));
         pmt::dict_add(performance_info, pmt::string_to_symbol("num_correct"), pmt::from_long(d_performance_matrix[modulation][inner_code][outer_code].num_correct));
         std::cout << "Returning: " << performance_info << std::endl;

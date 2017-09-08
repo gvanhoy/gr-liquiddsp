@@ -101,39 +101,43 @@ namespace gr {
         return performance_info;
     }
 
-
     int
     flex_rx_impl::work(int noutput_items,
         gr_vector_const_void_star &input_items,
         gr_vector_void_star &output_items)
     {
         gr_complex *in = (gr_complex *) input_items[0];
-      unsigned int num_items = 0;
-      assert (noutput_items % d_inbuf_len == 0);
-      std::cout << "Received " << noutput_items << " items." << std::endl;
-      while (num_items < noutput_items) {
-        flexframesync_execute(d_fs, in, d_inbuf_len);
-        num_items += d_inbuf_len;
-        in += d_inbuf_len;
-        if(d_info->_new_payload){
-            pmt::pmt_t constellation_pmt = pmt::init_c32vector(d_info->_stats.num_framesyms, d_info->_stats.framesyms);
-            pmt::pmt_t constellation_pdu(pmt::cons(pmt::PMT_NIL, constellation_pmt));
-            pmt::pmt_t payload_pmt = pmt::init_u8vector(d_info->_payload_len, d_info->_payload);
-            pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
-            message_port_pub(pmt::mp("hdr_and_payload"), payload_pdu);
-            message_port_pub(pmt::mp("constellation"), constellation_pdu);
-            flexframesync_print(d_fs);
-            if(d_info->_header_valid){
-                std::cout << "Got mod: " << d_info->_header[2] << " inner_code: " << d_info->_header[3] << " outer_code: " << d_info->_header[4] << std::endl;
-                d_performance_matrix[d_info->_header[2]][d_info->_header[3]][d_info->_header[4]].num_received++;
-                if(d_info->_payload_valid) d_performance_matrix[d_info->_header[2]][d_info->_header[3]][d_info->_header[4]].num_correct++;
+        unsigned int num_items = 0;
+        assert (noutput_items % d_inbuf_len == 0);
+        std::cout << "Received " << noutput_items << " items." << std::endl;
+        while (num_items < noutput_items) {
+            flexframesync_execute(d_fs, in, d_inbuf_len);
+            num_items += d_inbuf_len;
+            in += d_inbuf_len;
+            if(d_info->_new_payload){
+                pmt::pmt_t constellation_pmt = pmt::init_c32vector(d_info->_stats.num_framesyms, d_info->_stats.framesyms);
+                pmt::pmt_t constellation_pdu(pmt::cons(pmt::PMT_NIL, constellation_pmt));
+                pmt::pmt_t payload_pmt = pmt::init_u8vector(d_info->_payload_len, d_info->_payload);
+                pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
+                message_port_pub(pmt::mp("hdr_and_payload"), payload_pdu);
+                message_port_pub(pmt::mp("constellation"), constellation_pdu);
+                flexframesync_print(d_fs);
+                if(d_info->_header_valid){
+                        std::cout << "Header: ";
+                        for(unsigned int i = 0; i < 14; i++){
+                            std::cout << d_info->_header[i] << ", ";
+                        }
+                        std::cout << std::endl;
+                    // std::cout << "Got mod: " << d_info->_header[2] << " inner_code: " << d_info->_header[3] << " outer_code: " << d_info->_header[4] << std::endl;
+                    // d_performance_matrix[d_info->_header[2]][d_info->_header[3]][d_info->_header[4]].num_received++;
+                    // if(d_info->_payload_valid) d_performance_matrix[d_info->_header[2]][d_info->_header[3]][d_info->_header[4]].num_correct++;
+                }
+                d_info->_new_payload = false;
             }
-            d_info->_new_payload = false;
         }
-      }
-      // std::cout << "Processed " << num_items << " items." << std::endl;
+        // std::cout << "Processed " << num_items << " items." << std::endl;
 
-      return num_items;
+        return num_items;
     }
 
   } /* namespace liquiddsp */

@@ -86,7 +86,7 @@ namespace gr {
         pmt::pmt_t performance_info = pmt::make_dict();
         pmt::dict_add(performance_info, pmt::intern("num_received"), pmt::from_long(d_performance_matrix[modulation][inner_code][outer_code].num_received));
         pmt::dict_add(performance_info, pmt::intern("num_correct"), pmt::from_long(d_performance_matrix[modulation][inner_code][outer_code].num_correct));
-        std::cout << "Returning: " << pmt::print(performance_info) << std::endl;
+        std::cout << "Returning: " << performance_info << std::endl;
         return performance_info;
     }
 

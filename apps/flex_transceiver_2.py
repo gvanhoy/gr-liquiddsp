@@ -6,18 +6,26 @@
 # Generated: Mon Sep 11 13:16:42 2017
 ##################################################
 
+if __name__ == '__main__':
+    import ctypes
+    import sys
+    if sys.platform.startswith('linux'):
+        try:
+            x11 = ctypes.cdll.LoadLibrary('libX11.so')
+            x11.XInitThreads()
+        except:
+            print "Warning: failed to XInitThreads()"
+
 from PyQt4 import Qt
 from gnuradio import blocks
 from gnuradio import gr
 import es
 import liquiddsp
 import pmt
-import sys
 from gnuradio import qtgui
 
 
 class FlexLoopback(gr.top_block, Qt.QWidget):
-
     def __init__(self, samp_rate=1000000):
         gr.top_block.__init__(self, "Top Block")
         Qt.QWidget.__init__(self)
@@ -98,13 +106,5 @@ def main(top_block_cls=FlexLoopback, options=None):
     qapp.connect(qapp, Qt.SIGNAL("aboutToQuit()"), quitting)
     qapp.exec_()
 
-
 if __name__ == '__main__':
-    import ctypes
-    import sys
-    if sys.platform.startswith('linux'):
-        try:
-            x11 = ctypes.cdll.LoadLibrary('libX11.so')
-            x11.XInitThreads()
-        except:
-            print "Warning: failed to XInitThreads()"
+    main()

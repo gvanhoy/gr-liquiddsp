@@ -66,8 +66,8 @@ namespace gr {
       flex_rx_impl();
       ~flex_rx_impl();
 
-      unsigned long int get_num_received(unsigned int modulation, unsigned int inner_code, unsigned int outer_code);
-      unsigned long int get_num_correct(unsigned int modulation, unsigned int inner_code, unsigned int outer_code);
+      unsigned long int get_num_received(unsigned int modulation, unsigned int inner_code, unsigned int outer_code) const;
+      unsigned long int get_num_correct(unsigned int modulation, unsigned int inner_code, unsigned int outer_code) const;
 
       // Where all the action really happens
       int work(int noutput_items,

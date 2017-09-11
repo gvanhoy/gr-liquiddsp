@@ -47,8 +47,8 @@ namespace gr {
        * class. liquiddsp::flex_rx::make is the public interface for
        * creating new instances.
        */
-      virtual unsigned long int get_num_received(unsigned int modulation, unsigned int inner_code, unsigned int outer_code) = 0;
-      virtual unsigned long int get_num_correct(unsigned int modulation, unsigned int inner_code, unsigned int outer_code) = 0;
+      virtual unsigned long int get_num_received(unsigned int modulation, unsigned int inner_code, unsigned int outer_code) const = 0;
+      virtual unsigned long int get_num_correct(unsigned int modulation, unsigned int inner_code, unsigned int outer_code) const = 0;
       static sptr make();
     };
 

@@ -216,7 +216,7 @@ namespace gr {
         gr_complex *in = (gr_complex *) input_items[0];
         unsigned int num_items = 0;
         assert (noutput_items % d_inbuf_len == 0);
-        std::cout << "Received " << noutput_items << " items." << std::endl;
+//        std::cout << "Received " << noutput_items << " items." << std::endl;
         while (num_items < noutput_items) {
             flexframesync_execute(d_fs, in, d_inbuf_len);
             num_items += d_inbuf_len;
@@ -234,8 +234,8 @@ namespace gr {
                     get_inner_code(d_info->_stats.fec0);
                     get_outer_code(d_info->_stats.fec1);
                     std::cout << "Got mod: " << d_rx_mod_scheme << " inner_code: " << d_rx_inner_code << " outer_code: " << d_rx_outer_code << std::endl;
-                    // d_performance_matrix[d_info->_header[2]][d_info->_header[3]][d_info->_header[4]].num_received++;
-                    // if(d_info->_payload_valid) d_performance_matrix[d_info->_header[2]][d_info->_header[3]][d_info->_header[4]].num_correct++;
+                    d_performance_matrix[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code].num_received++;
+                    if(d_info->_payload_valid) d_performance_matrix[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code].num_correct++;
                 }
                 d_info->_new_payload = false;
             }

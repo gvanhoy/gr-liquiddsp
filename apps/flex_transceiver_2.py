@@ -16,7 +16,7 @@ class FlexTransceiver(gr.hier_block2):
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate
+        self.samp_rate = samp_rate = 1000000
 
         ##################################################
         # Blocks
@@ -26,7 +26,8 @@ class FlexTransceiver(gr.hier_block2):
         self.es_source_0 = es.source(1 * [gr.sizeof_gr_complex], 1, 2, 0)
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex * 1, samp_rate, True)
         self.blocks_random_pdu_0 = blocks.random_pdu(50, 200, chr(0xFF), 2)
-        self.blocks_message_strobe_random_0 = blocks.message_strobe_random(pmt.intern("TEST"), blocks.STROBE_POISSON, 100, 1)
+        self.blocks_message_strobe_random_0 = blocks.message_strobe_random(pmt.intern("TEST"), blocks.STROBE_POISSON,
+                                                                           1000, 100)
 
         ##################################################
         # Connections

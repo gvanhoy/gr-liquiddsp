@@ -197,16 +197,14 @@ namespace gr {
       info->_new_payload = true;
     }
 
-    pmt::pmt_t flex_rx_impl::get_performance_info(unsigned int modulation, unsigned int inner_code, unsigned int outer_code){
-        pmt::pmt_t performance_info = pmt::make_dict();
-        std::cout << "Received: " << pmt::from_long(d_performance_matrix[modulation][inner_code][outer_code].num_received) << " " <<
-        d_performance_matrix[modulation][inner_code][outer_code].num_received <<
-        std::endl;
-        pmt::dict_add(performance_info, pmt::string_to_symbol("num_received"), pmt::from_long(d_performance_matrix[modulation][inner_code][outer_code].num_received));
-        pmt::dict_add(performance_info, pmt::string_to_symbol("num_correct"), pmt::from_long(d_performance_matrix[modulation][inner_code][outer_code].num_correct));
-        std::cout << "Returning: " << performance_info << std::endl;
-        return performance_info;
+    unsigned long int flex_rx_impl::get_num_received(unsigned int modulation, unsigned int inner_code, unsigned int outer_code){
+        return d_num_received[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code];
     }
+
+    unsigned long int flex_rx_impl::get_num_received(unsigned int modulation, unsigned int inner_code, unsigned int outer_code){
+        return d_num_correct[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code];
+    }
+
 
     int
     flex_rx_impl::work(int noutput_items,
@@ -216,7 +214,6 @@ namespace gr {
         gr_complex *in = (gr_complex *) input_items[0];
         unsigned int num_items = 0;
         assert (noutput_items % d_inbuf_len == 0);
-//        std::cout << "Received " << noutput_items << " items." << std::endl;
         while (num_items < noutput_items) {
             flexframesync_execute(d_fs, in, d_inbuf_len);
             num_items += d_inbuf_len;
@@ -228,23 +225,16 @@ namespace gr {
                 pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
                 message_port_pub(pmt::mp("hdr_and_payload"), payload_pdu);
                 message_port_pub(pmt::mp("constellation"), constellation_pdu);
-                // flexframesync_print(d_fs);
                 if(d_info->_header_valid){
                     get_mod_scheme(d_info->_stats.mod_scheme);
                     get_inner_code(d_info->_stats.fec0);
                     get_outer_code(d_info->_stats.fec1);
                     d_performance_matrix[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code].num_received++;
                     if(d_info->_payload_valid) d_performance_matrix[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code].num_correct++;
-                    std::cout << "MCS: " << d_rx_mod_scheme << " " << d_rx_inner_code << " " << d_rx_outer_code <<
-                    " rx: " << d_performance_matrix[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code].num_received <<
-                    " ok: " <<d_performance_matrix[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code].num_correct <<
-                    std::endl;
                 }
                 d_info->_new_payload = false;
             }
         }
-        // std::cout << "Processed " << num_items << " items." << std::endl;
-
         return num_items;
     }
 

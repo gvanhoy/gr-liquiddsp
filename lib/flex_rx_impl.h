@@ -36,11 +36,6 @@ struct packet_info {
   bool _new_payload;
 };
 
-typedef struct performance_info_struct{
-	unsigned long int num_received;
-	unsigned long int num_correct;
-} performance_info;
-
 namespace gr {
   namespace liquiddsp {
 
@@ -58,7 +53,8 @@ namespace gr {
           int _payload_valid,
           framesyncstats_s _stats,
           void *_userdata);
-		performance_info d_performance_matrix[11][7][8];
+		unsigned long int d_num_received[11][7][8];
+		unsigned long int d_num_correct[11][7][8];
 		int d_rx_mod_scheme;
         int d_rx_outer_code;
 		int d_rx_inner_code;
@@ -70,7 +66,8 @@ namespace gr {
       flex_rx_impl();
       ~flex_rx_impl();
 
-      pmt::pmt_t get_performance_info(unsigned int modulation, unsigned int inner_code, unsigned int outer_code);
+      unsigned long int get_num_received(unsigned int modulation, unsigned int inner_code, unsigned int outer_code);
+      unsigned long int get_num_correct(unsigned int modulation, unsigned int inner_code, unsigned int outer_code);
 
       // Where all the action really happens
       int work(int noutput_items,

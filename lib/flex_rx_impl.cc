@@ -201,7 +201,7 @@ namespace gr {
         return d_num_received[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code];
     }
 
-    unsigned long int flex_rx_impl::get_num_received(unsigned int modulation, unsigned int inner_code, unsigned int outer_code){
+    unsigned long int flex_rx_impl::get_num_correct(unsigned int modulation, unsigned int inner_code, unsigned int outer_code){
         return d_num_correct[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code];
     }
 

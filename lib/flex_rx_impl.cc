@@ -51,8 +51,8 @@ namespace gr {
         for(unsigned int m = 0; m < 11; m++){
             for(unsigned int i = 0; i < 7; i++){
                 for(unsigned int o = 0; o < 8; o++){
-                    d_performance_matrix[m][i][o].num_correct = 0;
-                    d_performance_matrix[m][i][o].num_received = 0;
+                    d_num_received[m][i][o] = 0;
+                    d_num_correct[m][i][o] = 0;
                 }
             }
         }

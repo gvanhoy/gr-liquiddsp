@@ -228,7 +228,7 @@ namespace gr {
                 pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
                 message_port_pub(pmt::mp("hdr_and_payload"), payload_pdu);
                 message_port_pub(pmt::mp("constellation"), constellation_pdu);
-                flexframesync_print(d_fs);
+                // flexframesync_print(d_fs);
                 if(d_info->_header_valid){
                     get_mod_scheme(d_info->_stats.mod_scheme);
                     get_inner_code(d_info->_stats.fec0);

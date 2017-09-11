@@ -32,8 +32,14 @@ if __name__ == '__main__':
     simple_tx_rx = SimpleTxRx()
     simple_tx_rx.run()
     # simple_tx_rx.simulate()
-    while True:
-        print simple_tx_rx.transmitter.liquiddsp_flex_rx_0.get_performance_info(0, 0, 0)
-        time.sleep(.1)
+
+    try:
+        raw_input('Press Enter to quit: ')
+    except EOFError:
+        pass
+
+    # while True:
+    print simple_tx_rx.transmitter.liquiddsp_flex_rx_0.get_performance_info(0, 0, 0)
+        # time.sleep(.1)
     simple_tx_rx.wait()
     simple_tx_rx.stop()

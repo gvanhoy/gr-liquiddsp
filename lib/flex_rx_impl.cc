@@ -233,9 +233,12 @@ namespace gr {
                     get_mod_scheme(d_info->_stats.mod_scheme);
                     get_inner_code(d_info->_stats.fec0);
                     get_outer_code(d_info->_stats.fec1);
-                    std::cout << "Got mod: " << d_rx_mod_scheme << " inner_code: " << d_rx_inner_code << " outer_code: " << d_rx_outer_code << std::endl;
                     d_performance_matrix[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code].num_received++;
                     if(d_info->_payload_valid) d_performance_matrix[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code].num_correct++;
+                    std::cout << "MCS: " << d_rx_mod_scheme << " " << d_rx_inner_code << " " << d_rx_outer_code <<
+                    " rx: " << d_performance_matrix[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code].num_received <<
+                    " ok: " <<d_performance_matrix[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code].num_correct <<
+                    std::endl;
                 }
                 d_info->_new_payload = false;
             }

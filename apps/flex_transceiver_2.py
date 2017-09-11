@@ -6,12 +6,9 @@ import pmt
 import numpy as np
 
 
-class FlexTransceiver(gr.hier_block2):
+class FlexTransceiver(gr.top_block):
     def __init__(self, samp_rate=200000):
-        gr.hier_block2.__init__(self,
-                                "Flex Transceiver",
-                                gr.io_signature(0, 0, gr.sizeof_gr_complex),
-                                gr.io_signature(0, 0, gr.sizeof_gr_complex))
+        gr.top_block.__init__(self, "Flex Transceiver")
 
         ##################################################
         # Variables
@@ -52,3 +49,20 @@ class FlexTransceiver(gr.hier_block2):
         msg = pmt.cons(pmt.PMT_NIL, pmt.to_pmt(np.array(payload, dtype=np.uint8)))
         self.liquiddsp_flex_tx_0.to_basic_block()._post(pmt.intern("pdus"), msg)
 
+
+def main(top_block_cls=FlexTransceiver, options=None):
+
+    tb = top_block_cls()
+    tb.start()
+    try:
+        raw_input('Press Enter to quit: ')
+    except EOFError:
+        pass
+
+    print tb.liquiddsp_flex_rx_0.get_performance_info(0, 0, 0)
+    tb.stop()
+    tb.wait()
+
+
+if __name__ == '__main__':
+    main()

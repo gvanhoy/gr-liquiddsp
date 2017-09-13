@@ -63,7 +63,7 @@ class cognitive_engine(gr.sync_block):
                                           header_valid,
                                           goodput)
 
-        ce_configuration = self.engine.epsilon_greedy(.01)
+        ce_configuration = self.engine.epsilon_greedy(self.num_packets, .01)
         if ce_configuration is not None:
             new_configuration = pmt.make_dict()
             new_ce_configuration = ce_configuration[0]
@@ -349,11 +349,20 @@ class CognitiveEngine:
         self.config_connection.close()
         self.config_cursor.close()
 
-    def epsilon_greedy(self, epsilon):
-        # try:
+    def epsilon_greedy(self, num_trial, epsilon):
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
-        Allconfigs = self.config_cursor.fetchone()[0]
-        for j in xrange(1, Allconfigs + 1):
+        num_configs = self.config_cursor.fetchone()[0]
+
+        if num_trial <= num_configs:
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
+            for row in self.config_cursor:
+                Modulation = row[1]
+                InnerCode = row[2]
+                OuterCode = row[3]
+            config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+            return config_map, config_map
+
+        for j in xrange(1, num_configs + 1):
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
             for row in self.config_cursor:
                 Modulation = row[1]
@@ -444,8 +453,6 @@ class CognitiveEngine:
                 print "###############################\n\n"
 
         return NextConf1, NextConf2
-        # except:
-        #     print "Error with database.", sys.exc_info()[0]
 
     def CI(self, mean, variance, maxp, confidence, N):
         C = 1 - ((1 - confidence) / 2)

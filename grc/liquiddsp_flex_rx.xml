@@ -21,7 +21,7 @@
     <optional>1</optional>
   </source>
   <source>
-    <name>hdr_and_payload</name>
+    <name>packet_info</name>
     <type>message</type>
     <optional>1</optional>
   </source>

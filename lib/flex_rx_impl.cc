@@ -57,7 +57,7 @@ namespace gr {
             }
         }
         message_port_register_out(pmt::mp("constellation"));
-        message_port_register_out(pmt::mp("hdr_and_payload"));
+        message_port_register_out(pmt::mp("packet_info"));
     }
 
     /*
@@ -197,15 +197,6 @@ namespace gr {
       info->_new_payload = true;
     }
 
-    unsigned long int flex_rx_impl::get_num_received(unsigned int modulation, unsigned int inner_code, unsigned int outer_code) const {
-        return d_num_received[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code];
-    }
-
-    unsigned long int flex_rx_impl::get_num_correct(unsigned int modulation, unsigned int inner_code, unsigned int outer_code) const {
-        return d_num_correct[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code];
-    }
-
-
     int
     flex_rx_impl::work(int noutput_items,
         gr_vector_const_void_star &input_items,
@@ -214,23 +205,38 @@ namespace gr {
         gr_complex *in = (gr_complex *) input_items[0];
         unsigned int num_items = 0;
         assert (noutput_items % d_inbuf_len == 0);
+
         while (num_items < noutput_items) {
             flexframesync_execute(d_fs, in, d_inbuf_len);
             num_items += d_inbuf_len;
             in += d_inbuf_len;
             if(d_info->_new_payload){
+                // send constellation regardless of validity
                 pmt::pmt_t constellation_pmt = pmt::init_c32vector(d_info->_stats.num_framesyms, d_info->_stats.framesyms);
                 pmt::pmt_t constellation_pdu(pmt::cons(pmt::PMT_NIL, constellation_pmt));
-                pmt::pmt_t payload_pmt = pmt::init_u8vector(d_info->_payload_len, d_info->_payload);
-                pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
-                message_port_pub(pmt::mp("hdr_and_payload"), payload_pdu);
+
                 message_port_pub(pmt::mp("constellation"), constellation_pdu);
+
                 if(d_info->_header_valid){
+
+                    // send packet information
                     get_mod_scheme(d_info->_stats.mod_scheme);
                     get_inner_code(d_info->_stats.fec0);
                     get_outer_code(d_info->_stats.fec1);
-                    d_num_received[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code]++;
-                    if(d_info->_payload_valid) d_num_correct[d_rx_mod_scheme][d_rx_inner_code][d_rx_outer_code]++;
+
+                    pmt::pmt_t packet_info = pmt::make_dict();
+
+                    // pmt::pmt_t payload_pmt = pmt::init_u8vector(d_info->_payload_len, d_info->_payload);
+                    // pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
+
+                    pmt::dict_add(packet_info, pmt::mp("header_valid"), pmt::from_long(d_info->_header_valid))
+                    pmt::dict_add(packet_info, pmt::mp("payload_valid"), pmt::from_long(d_info->_payload_valid))
+                    pmt::dict_add(packet_info, pmt::mp("modulation"), pmt::from_long(d_rx_mod_scheme))
+                    pmt::dict_add(packet_info, pmt::mp("inner_code"), pmt::from_long(d_rx_inner_code))
+                    pmt::dict_add(packet_info, pmt::mp("outer_code"), pmt::from_long(d_rx_outer_code))
+
+                    message_port_pub(pmt::mp("packet_info"), packet_info);
+
                 }
                 d_info->_new_payload = false;
             }

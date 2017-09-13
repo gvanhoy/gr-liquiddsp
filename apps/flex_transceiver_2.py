@@ -106,5 +106,6 @@ def main(top_block_cls=FlexLoopback, options=None):
     qapp.connect(qapp, Qt.SIGNAL("aboutToQuit()"), quitting)
     qapp.exec_()
 
+
 if __name__ == '__main__':
     main()

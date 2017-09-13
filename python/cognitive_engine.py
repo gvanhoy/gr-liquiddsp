@@ -38,7 +38,7 @@ class cognitive_engine(gr.sync_block):
         self.database = DatabaseControl()
         self.database.reset_config_tables()
         self.database.reset_cognitive_engine_tables()
-        self.engine = CognitiveEngine()
+        # self.engine = CognitiveEngine()
         self.message_port_register_in(pmt.intern('packet_info'))
         self.set_msg_handler(pmt.intern('packet_info'), self.handler)
         self.message_port_register_out(pmt.intern('configuration'))

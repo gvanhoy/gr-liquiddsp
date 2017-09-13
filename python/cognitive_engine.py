@@ -114,6 +114,7 @@ class DatabaseControl:
             print e
 
     def reset_cognitive_engine_tables(self):
+        print "Resetting Cognitive Engine Tables"
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         Allconfigs = self.config_cursor.fetchone()[0]
 
@@ -202,7 +203,6 @@ class DatabaseControl:
             self.config_cursor.execute('INSERT INTO UCB (ID,TrialNumber,Mean,Ind) VALUES (?,?,?,?)', (j, 1, Mean, ind))
 
         self.config_connection.commit()
-        self.config_cursor.close()
 
     def reset_config_tables(self):
         ######################################################################

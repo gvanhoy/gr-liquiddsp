@@ -409,7 +409,7 @@ class CognitiveEngine:
                 for row1 in self.config_cursor:
                     NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
                     print "Configuration is"
-                    config_map = ConfigurationMap(NextConf2.modulation, NextConf2.innercode, NextConf2.outercode)
+                    config_map = ConfigurationMap(NextConf2.modulation, NextConf2.inner_code, NextConf2.outer_code)
                     print "Modulation is ", config_map.constellationN, config_map.modulationtype
                     print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
                     print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
@@ -437,7 +437,7 @@ class CognitiveEngine:
             for row in self.config_cursor:
                 NextConf1 = ConfigurationMap(row[1], row[2], row[3], row[0])
                 print "Configuration is"
-                config_map = ConfigurationMap(NextConf1.modulation, NextConf1.innercode, NextConf1.outercode)
+                config_map = ConfigurationMap(NextConf1.modulation, NextConf1.inner_code, NextConf1.outer_code)
                 print "Modulation is ", config_map.constellationN, config_map.modulationtype
                 print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
                 print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate

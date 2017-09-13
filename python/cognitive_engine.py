@@ -114,24 +114,23 @@ class DatabaseControl:
             print e
 
     def reset_tables(self):
-        connection = self.config_connection
-        cursor = self.config_cursor
-        cursor.execute('SELECT MAX(ID) FROM CONFIG')
+        self.config_cursor
+        self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         Allconfigs = cursor.fetchone()[0]
 
         # Egreedy
         for i in xrange(1, Allconfigs + 1):
-            cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
+            self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
                            [0, 0, 0, 0.0, 0.0, i])
-        connection.commit()
+        self.config_connection.commit()
 
-        cursor.execute('drop table if exists Egreedy')
-        connection.commit()
+        self.config_cursor.execute('drop table if exists Egreedy')
+        self.config_connection.commit()
 
         sql = 'create table if not exists Egreedy (ID integer primary key, TrialNumber integer default 0, Mean integer default 0, Lower real default 0.0, Upper real default 0.0, Eligibility int default 1)'
-        cursor.execute(sql)
+        self.config_cursor.execute(sql)
         for j in xrange(1, Allconfigs + 1):
-            cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
             for row in cursor:
                 Modulation = row[1]
                 InnerCode = row[2]
@@ -139,16 +138,16 @@ class DatabaseControl:
             config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
             upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
             float(config_map.innercodingrate))
-            cursor.execute('INSERT INTO Egreedy (ID,TrialNumber,Mean,Lower,Upper,Eligibility) VALUES (?,?,?,?,?,?)',
+            self.config_cursor.execute('INSERT INTO Egreedy (ID,TrialNumber,Mean,Lower,Upper,Eligibility) VALUES (?,?,?,?,?,?)',
                            (j, 0, 0, 0, upperbound, 1))
-        connection.commit()
+            self.config_connection.commit()
 
         # Boltmann
-        cursor.execute('drop table if exists Boltzmann')
-        connection.commit()
+        self.config_cursor.execute('drop table if exists Boltzmann')
+        self.config_connection.commit()
 
         sql = 'create table if not exists Boltzmann (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, Prob float default 1.0, Lower real default 0.0, Upper real default 0.0, Eligibility int default 1)'
-        cursor.execute(sql)
+        self.config_cursor.execute(sql)
         for j in xrange(1, Allconfigs + 1):
             cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
             for row in cursor:
@@ -158,16 +157,16 @@ class DatabaseControl:
                 config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
             upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
             float(config_map.innercodingrate))
-            cursor.execute(
+            self.config_cursor.execute(
                 'INSERT INTO Boltzmann (ID,TrialNumber,Mean,Prob,Lower,Upper,Eligibility) VALUES (?,?,?,?,?,?,?)',
                 (j, 0, 0, 1.0, 0, upperbound, 1))
 
         # Gittins
-        connection.commit()
-        cursor.execute('drop table if exists Gittins')
-        connection.commit()
+            self.config_connection.commit()
+        self.config_cursor.execute('drop table if exists Gittins')
+        self.config_connection.commit()
         sql = 'create table if not exists Gittins (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, Stdv real default 1.0, Indexx float default 0)'
-        cursor.execute(sql)
+        self.config_cursor.execute(sql)
         for j in xrange(1, Allconfigs + 1):
             cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
             for row in cursor:
@@ -177,16 +176,16 @@ class DatabaseControl:
                 config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
             upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
             float(config_map.innercodingrate))
-            cursor.execute('INSERT INTO Gittins (ID,TrialNumber,Mean,Stdv,Indexx) VALUES (?,?,?,?,?)',
+            self.config_cursor.execute('INSERT INTO Gittins (ID,TrialNumber,Mean,Stdv,Indexx) VALUES (?,?,?,?,?)',
                            (j, 0, 0.0, 0.0, upperbound))
 
-        connection.commit()
+            self.config_connection.commit()
 
         # UCB
-        cursor.execute('drop table if exists UCB')
-        connection.commit()
+        self.config_cursor.execute('drop table if exists UCB')
+        self.config_connection.commit()
         sql = 'create table if not exists UCB (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, Ind float default 0)'
-        cursor.execute(sql)
+        self.config_cursor.execute(sql)
         M = 64
         maxReward = np.log2(M)
         for j in xrange(1, Allconfigs + 1):
@@ -201,11 +200,10 @@ class DatabaseControl:
             Mean = upperbound / maxReward
             bonus = np.sqrt(2 * np.log10(Allconfigs))
             ind = Mean + bonus
-            cursor.execute('INSERT INTO UCB (ID,TrialNumber,Mean,Ind) VALUES (?,?,?,?)', (j, 1, Mean, ind))
+            self.config_cursor.execute('INSERT INTO UCB (ID,TrialNumber,Mean,Ind) VALUES (?,?,?,?)', (j, 1, Mean, ind))
 
-        connection.commit()
-        cursor.close()
-        connection.close()
+        self.config_connection.commit()
+        self.config_cursor.close()
 
     def create_tables(self):
         ######################################################################

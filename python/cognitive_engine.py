@@ -34,6 +34,7 @@ class cognitive_engine(gr.sync_block):
             in_sig=[],
             out_sig=[])
         self.database = DatabaseControl()
+        self.database.create_tables()
         self.database.reset_tables()
         self.engine = CognitiveEngine()
         self.message_port_register_in(pmt.intern('packet_info'))
@@ -109,8 +110,8 @@ class DatabaseControl:
             print e
 
     def reset_tables(self):
-        connection = sqlite3.connect('config.db')
-        cursor = connection.cursor()
+        connection = self.config_connection
+        cursor = self.config_cursor
         cursor.execute('SELECT MAX(ID) FROM CONFIG')
         Allconfigs = cursor.fetchone()[0]
 
@@ -201,6 +202,51 @@ class DatabaseControl:
         connection.commit()
         cursor.close()
         connection.close()
+
+    def create_tables(self):
+        ######################################################################
+        conn = sqlite3.connect('config.db')
+        print "Opened database successfully";
+        conn.execute('''CREATE TABLE CONFIG
+            (ID INT PRIMARY KEY         NOT NULL,
+            MODULATION       INT        NOT NULL,
+            Innercode        INT        NOT NULL,
+            Outercode        INT        NOT NULL,
+            TrialN           INT        NOT NULL,
+            Total            INT        NOT NULL,
+            Success          INT        NOT NULL,
+            Throughput       REAL       NOT NULL,
+            SQTh             REAL       NOT NULL);''')
+        print "Table created successfully";
+        conn = sqlite3.connect('config.db')
+        j = 1
+        for m in xrange(0, 11):
+            ##    for i in xrange(0,7):
+            for o in xrange(0, 8):
+                conn.execute('INSERT INTO CONFIG (ID,MODULATION,Innercode,Outercode,TrialN,Total,Success,Throughput,SQTh) \
+                          VALUES (?, ?, 0, ?, 0, 0, 0, 0.0, 0.0)', (j, m, o));
+                j = j + 1
+        conn.commit()
+        conn.close()
+        print "Config Records created successfully";
+        #################################################################################################################################
+        conn = sqlite3.connect('rules.db')
+        print "Opened rules database successfully";
+        conn.execute('''CREATE TABLE rules1
+            (idd  INT PRIMARY KEY       NOT NULL,
+            ID               INT        NOT NULL,
+            MODULATION       INT        NOT NULL,
+            Innercode        INT        NOT NULL,
+            Outercode        INT        NOT NULL);''')
+        print "rules Table created successfully";
+        conn = sqlite3.connect('rules.db')
+        conn.execute('INSERT INTO rules1 (idd,ID,MODULATION,Innercode,Outercode) \
+              VALUES (1,1, 0, 0, 0)');
+        conn.execute('INSERT INTO rules1 (idd,ID,MODULATION,Innercode,Outercode) \
+              VALUES (2,2, 0, 0, 0)');
+        conn.commit()
+        conn.close()
+        print "rules1 Records created successfully";
 
 
 class ConfigurationMap:

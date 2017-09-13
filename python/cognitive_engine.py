@@ -253,7 +253,7 @@ class DatabaseControl:
 
 class ConfigurationMap:
     def __init__(self, modulation, inner_code, outer_code, conf_id=0):
-        self.id = conf_id
+        self.conf_id = conf_id
         self.constellationN = 0
         self.modulationtype = ""
         self.innercodingrate = 0
@@ -355,7 +355,6 @@ class CognitiveEngine:
             cursor = connection.cursor()
             cursor.execute('SELECT MAX(ID) FROM CONFIG')
             Allconfigs = cursor.fetchone()[0]
-
             for j in xrange(1, Allconfigs + 1):
                 cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
                 for row in cursor:
@@ -401,7 +400,7 @@ class CognitiveEngine:
 
             cursor.execute('SELECT count(*) FROM Egreedy WHERE Mean=?', [muBest])
             NO = cursor.fetchone()[0]
-            nn = random.randrange(1, NO + 1)
+            nn = np.random.randrange(1, NO + 1)
             cursor.execute('SELECT ID FROM Egreedy WHERE Mean=?', [muBest])
             j = 0
             for row in cursor:
@@ -419,7 +418,7 @@ class CognitiveEngine:
                         print "###############################\n\n"
                     break
 
-            if random.random() > epsilon:
+            if np.random.random() > epsilon:
                 print "***Exploitation***\n"
                 NextConf1 = NextConf2
 

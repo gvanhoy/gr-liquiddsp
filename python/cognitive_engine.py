@@ -23,6 +23,8 @@ from gnuradio import gr
 import sqlite3
 import pmt
 import sys
+import numpy as np
+
 
 class cognitive_engine(gr.sync_block):
     """
@@ -49,7 +51,7 @@ class cognitive_engine(gr.sync_block):
         outer_code = pmt.dict_ref(packet_info, pmt.intern("outer_code"), pmt.PMT_NIL)
         config_id = modulation*11 + inner_code*7 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
-        goodput = math.log(configuration.constellationN, 2) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid[0]
+        goodput = np.log(configuration.constellationN, 2) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid[0]
         self.database.write_configuration(configuration,
                                           pmt.dict_ref(packet_info, pmt.intern("header_valid"), pmt.PMT_NIL),
                                           pmt.dict_ref(packet_info, pmt.intern("payload_valid"), pmt.PMT_NIL),

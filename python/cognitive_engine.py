@@ -59,7 +59,7 @@ class cognitive_engine(gr.sync_block):
                                           header_valid,
                                           goodput)
 
-        # ce_configuration = self.engine.epsilon_greedy(.01)
+        ce_configuration = self.engine.epsilon_greedy(.01)
         ce_configuration = None
         if ce_configuration is not None:
             new_configuration = pmt.make_dict()
@@ -72,9 +72,9 @@ class cognitive_engine(gr.sync_block):
 
 class DatabaseControl:
     def __init__(self):
-        self.config_connection = sqlite3.connect('config.db')
+        self.config_connection = sqlite3.connect('config.db', check_same_thread=False)
         self.config_cursor = self.config_connection.cursor()
-        self.rules_connection = sqlite3.connect('rules.db')
+        self.rules_connection = sqlite3.connect('rules.db', check_same_thread=False)
         self.rules_cursor = self.rules_connection.cursor()
 
     def __del__(self):
@@ -351,7 +351,7 @@ class ConfigurationMap:
 
 class CognitiveEngine:
     def __init__(self):
-        self.config_connection = sqlite3.connect('config.db')
+        self.config_connection = sqlite3.connect('config.db', check_same_thread=False)
         self.config_cursor = self.config_connection.cursor()
 
     def __del__(self):

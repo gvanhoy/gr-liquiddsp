@@ -7,3 +7,5 @@ except ImportError:
 
 # import any pure python here
 from cognitive_engine import cognitive_engine
+from Database_Control import *
+from Reset_databases import *

@@ -21,8 +21,6 @@
 
 from gnuradio import gr
 import pmt
-from Database_Control import *
-from Reset_databases import *
 
 
 class cognitive_engine(gr.sync_block):

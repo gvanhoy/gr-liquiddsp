@@ -223,7 +223,6 @@ class DatabaseControl:
         for m in xrange(0, 11):
             for i in xrange(0, 7):
                 for o in xrange(0, 8):
-                    print (conf_id, m, i, o)
                     self.config_connection.execute('INSERT INTO CONFIG (MODULATION,Innercode,Outercode,TrialN,Total,Success,Throughput,SQTh) \
                               VALUES (?, ?, ?, 0, 0, 0, 0.0, 0.0)', (m, i, o))
         self.config_connection.commit()

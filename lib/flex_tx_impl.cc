@@ -181,9 +181,9 @@ namespace gr {
 
     void flex_tx_impl::configure(pmt::pmt_t configuration){
 
-        if(pmt::dict_has_key(configuration, pmt::mp("modulation"))) set_modulation(pmt::dict_values(pmt::mp("modulation")));
-        if(pmt::dict_has_key(configuration, pmt::mp("inner_code"))) set_modulation(pmt::dict_values(pmt::mp("inner_code")));
-        if(pmt::dict_has_key(configuration, pmt::mp("outer_code"))) set_modulation(pmt::dict_values(pmt::mp("outer_code")));
+        if(pmt::dict_has_key(configuration, pmt::mp("modulation"))) set_modulation(pmt::to_long(pmt::dict_values(pmt::mp("modulation"))));
+        if(pmt::dict_has_key(configuration, pmt::mp("inner_code"))) set_inner_code(pmt::to_long(pmt::dict_values(pmt::mp("inner_code"))));
+        if(pmt::dict_has_key(configuration, pmt::mp("outer_code"))) set_outer_code(pmt::to_long(pmt::dict_values(pmt::mp("outer_code"))));
 
     }
 

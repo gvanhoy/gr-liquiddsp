@@ -130,7 +130,7 @@ class DatabaseControl:
         self.config_cursor.execute(sql)
         for j in xrange(1, Allconfigs + 1):
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
-            for row in cursor:
+            for row in self.config_cursor:
                 Modulation = row[1]
                 InnerCode = row[2]
                 OuterCode = row[3]
@@ -149,7 +149,7 @@ class DatabaseControl:
         self.config_cursor.execute(sql)
         for j in xrange(1, Allconfigs + 1):
             cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
-            for row in cursor:
+            for row in self.config_cursor:
                 Modulation = row[1]
                 InnerCode = row[2]
                 OuterCode = row[3]
@@ -168,7 +168,7 @@ class DatabaseControl:
         self.config_cursor.execute(sql)
         for j in xrange(1, Allconfigs + 1):
             cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
-            for row in cursor:
+            for row in self.config_cursor:
                 Modulation = row[1]
                 InnerCode = row[2]
                 OuterCode = row[3]
@@ -189,7 +189,7 @@ class DatabaseControl:
         maxReward = np.log2(M)
         for j in xrange(1, Allconfigs + 1):
             cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
-            for row in cursor:
+            for row in self.config_cursor:
                 Modulation = row[1]
                 InnerCode = row[2]
                 OuterCode = row[3]

@@ -53,8 +53,8 @@ class cognitive_engine(gr.sync_block):
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid[0]
         self.database.write_configuration(configuration,
-                                          pmt.dict_ref(packet_info, pmt.intern("header_valid"), pmt.PMT_NIL),
-                                          pmt.dict_ref(packet_info, pmt.intern("payload_valid"), pmt.PMT_NIL),
+                                          pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("header_valid"), pmt.PMT_NIL)),
+                                          pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("payload_valid"), pmt.PMT_NIL)),
                                           goodput)
 
         ce_configuration = self.engine.epsilon_greedy(.01)

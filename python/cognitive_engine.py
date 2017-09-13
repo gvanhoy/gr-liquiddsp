@@ -148,7 +148,7 @@ class DatabaseControl:
         sql = 'create table if not exists Boltzmann (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, Prob float default 1.0, Lower real default 0.0, Upper real default 0.0, Eligibility int default 1)'
         self.config_cursor.execute(sql)
         for j in xrange(1, Allconfigs + 1):
-            cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
             for row in self.config_cursor:
                 Modulation = row[1]
                 InnerCode = row[2]
@@ -161,13 +161,13 @@ class DatabaseControl:
                 (j, 0, 0, 1.0, 0, upperbound, 1))
 
         # Gittins
-            self.config_connection.commit()
+        self.config_connection.commit()
         self.config_cursor.execute('drop table if exists Gittins')
         self.config_connection.commit()
         sql = 'create table if not exists Gittins (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, Stdv real default 1.0, Indexx float default 0)'
         self.config_cursor.execute(sql)
         for j in xrange(1, Allconfigs + 1):
-            cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
             for row in self.config_cursor:
                 Modulation = row[1]
                 InnerCode = row[2]
@@ -188,7 +188,7 @@ class DatabaseControl:
         M = 64
         maxReward = np.log2(M)
         for j in xrange(1, Allconfigs + 1):
-            cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
             for row in self.config_cursor:
                 Modulation = row[1]
                 InnerCode = row[2]

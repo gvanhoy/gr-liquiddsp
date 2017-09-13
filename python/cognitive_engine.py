@@ -39,4 +39,3 @@ class cognitive_engine(gr.sync_block):
 
     def handler(self, packet_info):
         print packet_info
-        print pmt.dict_keys(packet_info)

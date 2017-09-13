@@ -96,7 +96,8 @@ class DatabaseControl:
         newTrialN = num_trial + 1
         newTotal = total_packet + total
         newSuccess = success_packet + success
-        newThroughput = old_throughput + throughput
+        # newThroughput = old_throughput + throughput
+        newThroughput = throughput
         newSQTh = old_sqth + np.power(throughput, 2)
         self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
                        [newTrialN, newTotal, newSuccess, newThroughput, newSQTh, configuration.conf_id])

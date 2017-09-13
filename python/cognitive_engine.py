@@ -82,25 +82,22 @@ class DatabaseControl:
         self.rules_connection.close()
 
     def write_configuration(self, configuration, total, success, throughput):
-        try:
-            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
-            for row in self.config_cursor:
-                num_trial = row[4]
-                total_packet = row[5]
-                success_packet = row[6]
-                old_throughput = row[7]
-                old_sqth = row[8]
+        self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
+        for row in self.config_cursor:
+            num_trial = row[4]
+            total_packet = row[5]
+            success_packet = row[6]
+            old_throughput = row[7]
+            old_sqth = row[8]
 
-            newTrialN = num_trial + 1
-            newTotal = total_packet + total
-            newSuccess = success_packet + success
-            newThroughput = old_throughput + throughput
-            newSQTh = old_sqth + np.power(throughput, 2)
-            self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
-                           [newTrialN, newTotal, newSuccess, newThroughput, newSQTh, Conf.ID])
-            self.config_connection.commit()
-        except Exception as e:
-            print e
+        newTrialN = num_trial + 1
+        newTotal = total_packet + total
+        newSuccess = success_packet + success
+        newThroughput = old_throughput + throughput
+        newSQTh = old_sqth + np.power(throughput, 2)
+        self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
+                       [newTrialN, newTotal, newSuccess, newThroughput, newSQTh, configuration.conf_id])
+        self.config_connection.commit()
 
     def reset_cognitive_engine_tables(self):
         print "Resetting Cognitive Engine Tables"

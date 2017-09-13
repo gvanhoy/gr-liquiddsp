@@ -209,7 +209,7 @@ class DatabaseControl:
         ######################################################################
         conn = sqlite3.connect('config.db')
         print "Opened database successfully";
-        conn.execute('''CREATE TABLE CONFIG
+        conn.execute('''CREATE TABLE if not exists CONFIG
             (ID INT PRIMARY KEY         NOT NULL,
             MODULATION       INT        NOT NULL,
             Innercode        INT        NOT NULL,
@@ -234,7 +234,7 @@ class DatabaseControl:
         #################################################################################################################################
         conn = sqlite3.connect('rules.db')
         print "Opened rules database successfully";
-        conn.execute('''CREATE TABLE rules1
+        conn.execute('''CREATE TABLE if not exists rules1
             (idd  INT PRIMARY KEY       NOT NULL,
             ID               INT        NOT NULL,
             MODULATION       INT        NOT NULL,

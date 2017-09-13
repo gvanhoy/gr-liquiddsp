@@ -63,7 +63,7 @@ class cognitive_engine(gr.sync_block):
                                           header_valid,
                                           goodput)
 
-        ce_configuration = self.engine.epsilon_greedy(self.num_packets, .01)
+        ce_configuration = self.engine.epsilon_greedy(self.num_packets, .1)
         if ce_configuration is not None:
             new_configuration = pmt.make_dict()
             new_ce_configuration = ce_configuration[0]
@@ -339,6 +339,7 @@ class CognitiveEngine:
     def __init__(self):
         self.config_connection = sqlite3.connect('config.db', check_same_thread=False)
         self.config_cursor = self.config_connection.cursor()
+        self.training_mode = True
 
     def __del__(self):
         self.config_connection.close()
@@ -355,6 +356,9 @@ class CognitiveEngine:
                 InnerCode = row[2]
                 OuterCode = row[3]
             config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+            if self.training_mode:
+                "Training all configurations..."
+                self.training_mode = False
             return config_map, config_map
 
         for j in xrange(1, num_configs + 1):

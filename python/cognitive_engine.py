@@ -354,7 +354,7 @@ class CognitiveEngine:
         num_configs = self.config_cursor.fetchone()[0]
 
         if num_trial <= num_configs:
-            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [num_trial])
             for row in self.config_cursor:
                 Modulation = row[1]
                 InnerCode = row[2]

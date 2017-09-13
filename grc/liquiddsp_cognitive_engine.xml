@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<block>
+  <name>cognitive_engine</name>
+  <key>liquiddsp_cognitive_engine</key>
+  <category>[liquiddsp]</category>
+  <import>import liquiddsp</import>
+  <make>liquiddsp.cognitive_engine()</make>
+  <sink>
+    <name>packet_info</name>
+    <type>message</type>
+  </sink>
+  <source>
+    <name>configuration</name>
+    <type>message</type>
+    <optional>1</optional>
+  </source>
+</block>

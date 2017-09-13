@@ -31,7 +31,7 @@ endif()
 GR_PYTHON_INSTALL(
     FILES
     __init__.py
-    DESTINATION ${GR_PYTHON_DIR}/liquiddsp
+    cognitive_engine.py DESTINATION ${GR_PYTHON_DIR}/liquiddsp
 )
 
 ########################################################################
@@ -44,3 +44,4 @@ set(GR_TEST_PYTHON_DIRS ${CMAKE_BINARY_DIR}/swig)
 GR_ADD_TEST(qa_flex_tx ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_flex_tx.py)
 GR_ADD_TEST(qa_flex_rx ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_flex_rx.py)
 GR_ADD_TEST(qa_frame_detector_cc ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_frame_detector_cc.py)
+GR_ADD_TEST(qa_cognitive_engine ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_cognitive_engine.py)

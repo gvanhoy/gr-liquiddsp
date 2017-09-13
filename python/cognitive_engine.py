@@ -38,4 +38,4 @@ class cognitive_engine(gr.sync_block):
         self.message_port_register_out(pmt.intern('configuration'))
 
     def handler(self, packet_info):
-        pass
+        print packet_info

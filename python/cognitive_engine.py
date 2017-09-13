@@ -54,10 +54,10 @@ class cognitive_engine(gr.sync_block):
         config_id = modulation*11 + inner_code*7 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
-        self.database.write_configuration(configuration,
-                                          payload_valid,
-                                          header_valid,
-                                          goodput)
+        # self.database.write_configuration(configuration,
+        #                                   payload_valid,
+        #                                   header_valid,
+        #                                   goodput)
 
         ce_configuration = self.engine.epsilon_greedy(.01)
         if ce_configuration is not None:

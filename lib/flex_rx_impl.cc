@@ -229,11 +229,11 @@ namespace gr {
                     // pmt::pmt_t payload_pmt = pmt::init_u8vector(d_info->_payload_len, d_info->_payload);
                     // pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
 
-                    pmt::dict_add(packet_info, pmt::mp("header_valid"), pmt::from_long(d_info->_header_valid))
-                    pmt::dict_add(packet_info, pmt::mp("payload_valid"), pmt::from_long(d_info->_payload_valid))
-                    pmt::dict_add(packet_info, pmt::mp("modulation"), pmt::from_long(d_rx_mod_scheme))
-                    pmt::dict_add(packet_info, pmt::mp("inner_code"), pmt::from_long(d_rx_inner_code))
-                    pmt::dict_add(packet_info, pmt::mp("outer_code"), pmt::from_long(d_rx_outer_code))
+                    pmt::dict_add(packet_info, pmt::mp("header_valid"), pmt::from_long(d_info->_header_valid));
+                    pmt::dict_add(packet_info, pmt::mp("payload_valid"), pmt::from_long(d_info->_payload_valid));
+                    pmt::dict_add(packet_info, pmt::mp("modulation"), pmt::from_long(d_rx_mod_scheme));
+                    pmt::dict_add(packet_info, pmt::mp("inner_code"), pmt::from_long(d_rx_inner_code));
+                    pmt::dict_add(packet_info, pmt::mp("outer_code"), pmt::from_long(d_rx_outer_code));
 
                     message_port_pub(pmt::mp("packet_info"), packet_info);
 

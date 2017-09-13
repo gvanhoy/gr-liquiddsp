@@ -106,7 +106,7 @@ class DatabaseControl:
             newTotal = total_packet + total
             newSuccess = success_packet + success
             newThroughput = old_throughput + throughput
-            newSQTh = old_sqth + np.pow(throughput, 2)
+            newSQTh = old_sqth + np.powerer(throughput, 2)
             self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
                            [newTrialN, newTotal, newSuccess, newThroughput, newSQTh, Conf.ID])
             self.config_connection.commit()
@@ -374,7 +374,7 @@ class CognitiveEngine:
                     sqth = row[8]
                 if trialN > 0:
                     mean = throughput / trialN
-                    variance = (sqth / trialN) - (np.pow(mean, 2))
+                    variance = (sqth / trialN) - (np.power(mean, 2))
                     if variance < 0:
                         variance = 0
                     config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)

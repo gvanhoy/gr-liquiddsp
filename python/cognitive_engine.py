@@ -36,8 +36,8 @@ class cognitive_engine(gr.sync_block):
             in_sig=[],
             out_sig=[])
         self.database = DatabaseControl()
-        self.database.create_tables()
-        self.database.reset_tables()
+        self.database.reset_config_tables()
+        self.database.reset_cognitive_engine_tables()
         self.engine = CognitiveEngine()
         self.message_port_register_in(pmt.intern('packet_info'))
         self.set_msg_handler(pmt.intern('packet_info'), self.handler)
@@ -113,7 +113,7 @@ class DatabaseControl:
         except Exception as e:
             print e
 
-    def reset_tables(self):
+    def reset_cognitive_engine_tables(self):
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         Allconfigs = self.config_cursor.fetchone()[0]
 
@@ -204,7 +204,7 @@ class DatabaseControl:
         self.config_connection.commit()
         self.config_cursor.close()
 
-    def create_tables(self):
+    def reset_config_tables(self):
         ######################################################################
         self.config_connection.execute('''drop table if exists config;''')
         self.config_connection.execute(

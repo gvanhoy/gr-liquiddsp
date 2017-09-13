@@ -207,7 +207,7 @@ class DatabaseControl:
 
     def create_tables(self):
         ######################################################################
-        print "Opened database successfully"
+        self.config_connection.execute('''drop table if exists config;''')
         self.config_connection.execute(
             '''CREATE TABLE if not exists CONFIG
             (ID INT PRIMARY KEY         NOT NULL,
@@ -225,14 +225,14 @@ class DatabaseControl:
             for i in xrange(0, 7):
                 for o in xrange(0, 8):
                     self.config_connection.execute('INSERT INTO CONFIG (ID,MODULATION,Innercode,Outercode,TrialN,Total,Success,Throughput,SQTh) \
-                              VALUES (?, ?, ?, ?, 0, 0, 0, 0.0, 0.0)', (int(conf_id), m, i, o))
+                              VALUES (?, ?, ?, ?, 0, 0, 0, 0.0, 0.0)', (conf_id, m, i, o))
                     conf_id += 1
         self.config_connection.commit()
 
         print "Config Records created successfully"
         #################################################################################################################################
 
-        print "Opened rules database successfully"
+        self.rules_connection.execute('''drop table if exists rules1;''')
         self.rules_connection.execute(
             '''CREATE TABLE if not exists rules1
             (idd  INT PRIMARY KEY       NOT NULL,

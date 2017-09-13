@@ -54,12 +54,13 @@ class cognitive_engine(gr.sync_block):
         config_id = modulation*11 + inner_code*7 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
-        # self.database.write_configuration(configuration,
-        #                                   payload_valid,
-        #                                   header_valid,
-        #                                   goodput)
+        self.database.write_configuration(configuration,
+                                          payload_valid,
+                                          header_valid,
+                                          goodput)
 
-        ce_configuration = self.engine.epsilon_greedy(.01)
+        # ce_configuration = self.engine.epsilon_greedy(.01)
+        ce_configuration = None
         if ce_configuration is not None:
             new_configuration = pmt.make_dict()
             new_ce_configuration = ce_configuration[0]
@@ -382,7 +383,7 @@ class CognitiveEngine:
                     float(config_map.innercodingrate))
                     unsuccess = total - success
                     PSR = float(success) / total
-                    self.config_cursor.execute('UPDATE Egreedy set TrialNumber=? ,Mean=? WHERE ID=?', [trialN, mean, j])
+                    self.config_cursor.execute('UPDATE Egreedy set TrialNumber=?, Mean=? WHERE ID=?', [trialN, mean, j])
                 if trialN > 1:
                     RCI = self.CI(mean, variance, maxp, confidence, trialN)
                     lower = RCI[0]

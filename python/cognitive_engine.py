@@ -65,8 +65,8 @@ class cognitive_engine(gr.sync_block):
             new_configuration = pmt.make_dict()
             new_ce_configuration = ce_configuration[0]
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("modulation"), pmt.from_long(new_ce_configuration.modulation))
-            new_configuration = pmt.dict_add(new_configuration, pmt.intern("inner_code"), pmt.from_long(new_ce_configuration.innercode))
-            new_configuration = pmt.dict_add(new_configuration, pmt.intern("outer_code"), pmt.from_long(new_ce_configuration.outercode))
+            new_configuration = pmt.dict_add(new_configuration, pmt.intern("inner_code"), pmt.from_long(new_ce_configuration.inner_code))
+            new_configuration = pmt.dict_add(new_configuration, pmt.intern("outer_code"), pmt.from_long(new_ce_configuration.outer_code))
             self.message_port_pub(pmt.intern('configuration'), new_configuration)
 
 

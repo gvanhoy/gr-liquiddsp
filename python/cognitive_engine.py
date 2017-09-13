@@ -395,7 +395,7 @@ class CognitiveEngine:
         self.config_cursor.execute('SELECT MAX(Mean) FROM Egreedy')
         muBest = self.config_cursor.fetchone()[0]
         print "muBest = ", muBest
-        for j in xrange(1, Allconfigs + 1):
+        for j in xrange(1, num_configs + 1):
             self.config_cursor.execute('SELECT Upper FROM Egreedy WHERE ID=?', [j])
             upper = self.config_cursor.fetchone()[0]
             if upper < muBest:

@@ -219,15 +219,15 @@ class DatabaseControl:
             Success          INT        NOT NULL,
             Throughput       REAL       NOT NULL,
             SQTh             REAL       NOT NULL);''')
-        print "Table created successfully";
+        print "Table created successfully"
         conn = sqlite3.connect('config.db')
-        j = 1
+        conf_id = 0
         for m in xrange(0, 11):
-            ##    for i in xrange(0,7):
-            for o in xrange(0, 8):
-                conn.execute('INSERT INTO CONFIG (ID,MODULATION,Innercode,Outercode,TrialN,Total,Success,Throughput,SQTh) \
-                          VALUES (?, ?, 0, ?, 0, 0, 0, 0.0, 0.0)', (j, m, o));
-                j = j + 1
+            for i in xrange(0, 7):
+                for o in xrange(0, 8):
+                    conn.execute('INSERT INTO CONFIG (ID,MODULATION,Innercode,Outercode,TrialN,Total,Success,Throughput,SQTh) \
+                              VALUES (?, ?, ?, ?, 0, 0, 0, 0.0, 0.0)', (conf_id, m, i, o))
+                    conf_id += 1
         conn.commit()
         conn.close()
         print "Config Records created successfully";

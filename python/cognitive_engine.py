@@ -246,6 +246,9 @@ class DatabaseControl:
 class ConfigurationMap:
     def __init__(self, modulation, inner_code, outer_code, conf_id=0):
         self.conf_id = conf_id
+        self.modulation = modulation
+        self.inner_code = inner_code
+        self.outer_code = outer_code
         self.constellationN = 0
         self.modulationtype = ""
         self.innercodingrate = 0

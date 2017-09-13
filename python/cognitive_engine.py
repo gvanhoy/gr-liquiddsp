@@ -38,4 +38,4 @@ class cognitive_engine(gr.sync_block):
         self.message_port_register_out(pmt.intern('configuration'))
 
     def handler(self, packet_info):
-        print pmt.dict_has_key(packet_info, pmt.intern("header_valid"))
+        pass

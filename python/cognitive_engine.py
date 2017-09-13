@@ -392,7 +392,7 @@ class CognitiveEngine:
             self.config_connection.commit()
 
             self.config_cursor.execute('SELECT MAX(Mean) FROM Egreedy')
-            muBest = cursor.fetchone()[0]
+            muBest = self.config_cursor.fetchone()[0]
             print "muBest = ", muBest
             for j in xrange(1, Allconfigs + 1):
                 self.config_cursor.execute('SELECT Upper FROM Egreedy WHERE ID=?', [j])
@@ -414,7 +414,7 @@ class CognitiveEngine:
                 if j == nn:
                     configN = row[0]
                     self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
-                    for row1 in cursor:
+                    for row1 in self.config_cursor:
                         NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
                         print "Configuration is"
                         config_map = ConfigurationMap(NextConf2.modulation, NextConf2.innercode, NextConf2.outercode)
@@ -435,14 +435,14 @@ class CognitiveEngine:
                 nn = random.randrange(1, NO + 1)
                 self.config_cursor.execute('SELECT ID FROM Egreedy')
                 j = 0
-                for row in cursor:
+                for row in self.config_cursor:
                     j = j + 1
                     if j == nn:
                         configN = row[0]
                         break
 
                 self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
-                for row in cursor:
+                for row in self.config_cursor:
                     NextConf1 = ConfigurationMap(row[1], row[2], row[3], row[0])
                     print "Configuration is"
                     config_map = ConfigurationMap(NextConf1.modulation, NextConf1.innercode, NextConf1.outercode)

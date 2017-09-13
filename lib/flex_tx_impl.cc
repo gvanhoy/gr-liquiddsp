@@ -184,9 +184,9 @@ namespace gr {
 
         std::cout << "Got dict: " << pmt::dict_keys(configuration) << std::endl;
 
-        // if(pmt::dict_has_key(configuration, pmt::mp("modulation"))) set_modulation(pmt::to_long(pmt::dict_values(pmt::mp("modulation"))));
-        // if(pmt::dict_has_key(configuration, pmt::mp("inner_code"))) set_inner_code(pmt::to_long(pmt::dict_values(pmt::mp("inner_code"))));
-        // if(pmt::dict_has_key(configuration, pmt::mp("outer_code"))) set_outer_code(pmt::to_long(pmt::dict_values(pmt::mp("outer_code"))));
+         if(pmt::dict_has_key(configuration, pmt::mp("modulation"))) set_modulation(pmt::to_long(pmt::dict_ref(configuration, pmt::mp("modulation"), pmt::PMT_NIL)));
+         if(pmt::dict_has_key(configuration, pmt::mp("inner_code"))) set_inner_code(pmt::to_long(pmt::dict_ref(configuration, pmt::mp("inner_code"), pmt::PMT_NIL))));
+         if(pmt::dict_has_key(configuration, pmt::mp("outer_code"))) set_outer_code(pmt::to_long(pmt::dict_ref(configuration, pmt::mp("outer_code"), pmt::PMT_NIL))));
 
     }
 

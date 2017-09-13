@@ -207,9 +207,9 @@ class DatabaseControl:
 
     def create_tables(self):
         ######################################################################
-        conn = sqlite3.connect('config.db')
         print "Opened database successfully";
-        conn.execute('''CREATE TABLE if not exists CONFIG
+        self.config_connection.execute(
+            '''CREATE TABLE if not exists CONFIG
             (ID INT PRIMARY KEY         NOT NULL,
             MODULATION       INT        NOT NULL,
             Innercode        INT        NOT NULL,
@@ -220,39 +220,38 @@ class DatabaseControl:
             Throughput       REAL       NOT NULL,
             SQTh             REAL       NOT NULL);''')
         print "Table created successfully"
-        conn = sqlite3.connect('config.db')
         conf_id = 0
         for m in xrange(0, 11):
             for i in xrange(0, 7):
                 for o in xrange(0, 8):
-                    conn.execute('INSERT INTO CONFIG (ID,MODULATION,Innercode,Outercode,TrialN,Total,Success,Throughput,SQTh) \
+                    print conf_id
+                    self.config_connection.execute('INSERT INTO CONFIG (ID,MODULATION,Innercode,Outercode,TrialN,Total,Success,Throughput,SQTh) \
                               VALUES (?, ?, ?, ?, 0, 0, 0, 0.0, 0.0)', (conf_id, m, i, o))
                     conf_id += 1
-        conn.commit()
-        conn.close()
-        print "Config Records created successfully";
+        self.config_connection.commit()
+
+        print "Config Records created successfully"
         #################################################################################################################################
-        conn = sqlite3.connect('rules.db')
-        print "Opened rules database successfully";
-        conn.execute('''CREATE TABLE if not exists rules1
+
+        print "Opened rules database successfully"
+        self.rules_connection.execute(
+            '''CREATE TABLE if not exists rules1
             (idd  INT PRIMARY KEY       NOT NULL,
             ID               INT        NOT NULL,
             MODULATION       INT        NOT NULL,
             Innercode        INT        NOT NULL,
             Outercode        INT        NOT NULL);''')
-        print "rules Table created successfully";
-        conn = sqlite3.connect('rules.db')
-        conn.execute('INSERT INTO rules1 (idd,ID,MODULATION,Innercode,Outercode) \
-              VALUES (1,1, 0, 0, 0)');
-        conn.execute('INSERT INTO rules1 (idd,ID,MODULATION,Innercode,Outercode) \
-              VALUES (2,2, 0, 0, 0)');
-        conn.commit()
-        conn.close()
-        print "rules1 Records created successfully";
+        print "rules Table created successfully"
+        self.rules_connection.execute('INSERT INTO rules1 (idd,ID,MODULATION,Innercode,Outercode) \
+              VALUES (1,1, 0, 0, 0)')
+        self.rules_connection.execute('INSERT INTO rules1 (idd,ID,MODULATION,Innercode,Outercode) \
+              VALUES (2,2, 0, 0, 0)')
+        self.rules_connection.commit()
+        print "rules1 Records created successfully"
 
 
 class ConfigurationMap:
-    def __init__(self, modulation, inner_code, outer_code, conf_id = 0):
+    def __init__(self, modulation, inner_code, outer_code, conf_id=0):
         self.id = conf_id
         self.constellationN = 0
         self.modulationtype = ""

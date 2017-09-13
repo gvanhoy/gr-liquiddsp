@@ -24,6 +24,7 @@ import sqlite3
 import pmt
 import sys
 import numpy as np
+import random
 
 
 class cognitive_engine(gr.sync_block):
@@ -394,7 +395,7 @@ class CognitiveEngine:
 
         self.config_cursor.execute('SELECT count(*) FROM Egreedy WHERE Mean=?', [muBest])
         NO = self.config_cursor.fetchone()[0]
-        nn = np.random.randrange(1, NO + 1)
+        nn = random.randrange(1, NO + 1)
         self.config_cursor.execute('SELECT ID FROM Egreedy WHERE Mean=?', [muBest])
         j = 0
         for row in self.config_cursor:

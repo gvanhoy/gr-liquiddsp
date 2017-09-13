@@ -26,6 +26,9 @@ import sys
 import numpy as np
 import random
 
+CONFIDENCE = 0.9
+PSR_Threshold = 0.8
+
 
 class cognitive_engine(gr.sync_block):
     """
@@ -373,7 +376,7 @@ class CognitiveEngine:
                 PSR = float(success) / total
                 self.config_cursor.execute('UPDATE Egreedy set TrialNumber=?, Mean=? WHERE ID=?', [trialN, mean, j])
             if trialN > 1:
-                RCI = self.CI(mean, variance, maxp, confidence, trialN)
+                RCI = self.CI(mean, variance, maxp, CONFIDENCE, trialN)
                 lower = RCI[0]
                 upper = RCI[1]
                 self.config_cursor.execute('UPDATE Egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',

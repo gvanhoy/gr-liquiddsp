@@ -38,7 +38,7 @@ class cognitive_engine(gr.sync_block):
         self.database = DatabaseControl()
         self.database.reset_config_tables()
         self.database.reset_cognitive_engine_tables()
-        # self.engine = CognitiveEngine()
+        self.engine = CognitiveEngine()
         self.message_port_register_in(pmt.intern('packet_info'))
         self.set_msg_handler(pmt.intern('packet_info'), self.handler)
         self.message_port_register_out(pmt.intern('configuration'))
@@ -60,7 +60,6 @@ class cognitive_engine(gr.sync_block):
                                           goodput)
 
         ce_configuration = self.engine.epsilon_greedy(.01)
-        ce_configuration = None
         if ce_configuration is not None:
             new_configuration = pmt.make_dict()
             new_ce_configuration = ce_configuration[0]

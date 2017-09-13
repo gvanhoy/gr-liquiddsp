@@ -21,6 +21,7 @@
 
 import numpy
 from gnuradio import gr
+import pmt
 
 
 class cognitive_engine(gr.sync_block):

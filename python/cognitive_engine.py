@@ -51,7 +51,7 @@ class cognitive_engine(gr.sync_block):
         outer_code = pmt.dict_ref(packet_info, pmt.intern("outer_code"), pmt.PMT_NIL)
         config_id = modulation*11 + inner_code*7 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
-        goodput = np.log(configuration.constellationN, 2) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid[0]
+        goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid[0]
         self.database.write_configuration(configuration,
                                           pmt.dict_ref(packet_info, pmt.intern("header_valid"), pmt.PMT_NIL),
                                           pmt.dict_ref(packet_info, pmt.intern("payload_valid"), pmt.PMT_NIL),
@@ -135,7 +135,7 @@ class DatabaseControl:
                 InnerCode = row[2]
                 OuterCode = row[3]
             config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-            upperbound = np.log(config_map.constellationN, 2) * (float(config_map.outercodingrate)) * (
+            upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
             float(config_map.innercodingrate))
             cursor.execute('INSERT INTO Egreedy (ID,TrialNumber,Mean,Lower,Upper,Eligibility) VALUES (?,?,?,?,?,?)',
                            (j, 0, 0, 0, upperbound, 1))
@@ -154,7 +154,7 @@ class DatabaseControl:
                 InnerCode = row[2]
                 OuterCode = row[3]
                 config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-            upperbound = np.log(config_map.constellationN, 2) * (float(config_map.outercodingrate)) * (
+            upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
             float(config_map.innercodingrate))
             cursor.execute(
                 'INSERT INTO Boltzmann (ID,TrialNumber,Mean,Prob,Lower,Upper,Eligibility) VALUES (?,?,?,?,?,?,?)',
@@ -173,7 +173,7 @@ class DatabaseControl:
                 InnerCode = row[2]
                 OuterCode = row[3]
                 config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-            upperbound = np.log(config_map.constellationN, 2) * (float(config_map.outercodingrate)) * (
+            upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
             float(config_map.innercodingrate))
             cursor.execute('INSERT INTO Gittins (ID,TrialNumber,Mean,Stdv,Indexx) VALUES (?,?,?,?,?)',
                            (j, 0, 0.0, 0.0, upperbound))
@@ -186,7 +186,7 @@ class DatabaseControl:
         sql = 'create table if not exists UCB (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, Ind float default 0)'
         cursor.execute(sql)
         M = 64
-        maxReward = np.log(M, 2)
+        maxReward = np.log2(M)
         for j in xrange(1, Allconfigs + 1):
             cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
             for row in cursor:
@@ -194,10 +194,10 @@ class DatabaseControl:
                 InnerCode = row[2]
                 OuterCode = row[3]
                 config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-            upperbound = np.log(config_map.constellationN, 2) * (float(config_map.outercodingrate)) * (
+            upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
             float(config_map.innercodingrate))
             Mean = upperbound / maxReward
-            bonus = np.sqrt(2 * np.log(Allconfigs, 10))
+            bonus = np.sqrt(2 * np.log10(Allconfigs))
             ind = Mean + bonus
             cursor.execute('INSERT INTO UCB (ID,TrialNumber,Mean,Ind) VALUES (?,?,?,?)', (j, 1, Mean, ind))
 
@@ -371,7 +371,7 @@ class CognitiveEngine:
                     if variance < 0:
                         variance = 0
                     config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-                    maxp = np.log(config_map.constellationN, 2) * (float(config_map.outercodingrate)) * (
+                    maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
                     float(config_map.innercodingrate))
                     unsuccess = total - success
                     PSR = float(success) / total

@@ -235,7 +235,8 @@ namespace gr {
                     pmt::dict_add(packet_info, pmt::mp("inner_code"), pmt::from_long(d_rx_inner_code));
                     pmt::dict_add(packet_info, pmt::mp("outer_code"), pmt::from_long(d_rx_outer_code));
 
-                    message_port_pub(pmt::mp("packet_info"), packet_info);
+                    pmt::pmt_t packet_info_pdu(pmt::cons(pmt::PMT_NIL, packet_info));
+                    message_port_pub(pmt::mp("packet_info"), packet_info_pdu);
 
                 }
                 d_info->_new_payload = false;

@@ -46,9 +46,9 @@ class cognitive_engine(gr.sync_block):
 
     def handler(self, packet_info):
         self.num_packets += 1
-        modulation = pmt.from_long(pmt.dict_ref(packet_info, pmt.intern("modulation"), pmt.PMT_NIL))
-        inner_code = pmt.from_long(pmt.dict_ref(packet_info, pmt.intern("inner_code"), pmt.PMT_NIL))
-        outer_code = pmt.from_long(pmt.dict_ref(packet_info, pmt.intern("outer_code"), pmt.PMT_NIL))
+        modulation = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("modulation"), pmt.PMT_NIL))
+        inner_code = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("inner_code"), pmt.PMT_NIL))
+        outer_code = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("outer_code"), pmt.PMT_NIL))
         config_id = modulation*11 + inner_code*7 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid[0]

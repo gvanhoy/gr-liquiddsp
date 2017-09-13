@@ -80,18 +80,6 @@ class DatabaseControl:
         self.config_connection.close()
         self.rules_connection.close()
 
-    ##########################################################################
-    # def read_configuration(self):
-    #     self.rules_cursor.execute('SELECT * FROM rules1 WHERE idd=?', [1])
-    #     for row in self.rules_cursor:
-    #         ID = row[1]
-    #         modulation = row[2]
-    #         innercode = row[3]
-    #         outercode = row[4]
-    #     Conf = ConfigurationMap(ID, modulation, innercode, outercode)
-    #     return Conf
-
-    ##########################################################################
     def write_configuration(self, configuration, total, success, throughput):
         try:
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
@@ -358,102 +346,102 @@ class CognitiveEngine:
         self.config_cursor.close()
 
     def epsilon_greedy(self, epsilon):
-        try:
-            self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
-            Allconfigs = self.config_cursor.fetchone()[0]
-            for j in xrange(1, Allconfigs + 1):
-                self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
-                for row in self.config_cursor:
-                    Modulation = row[1]
-                    InnerCode = row[2]
-                    OuterCode = row[3]
-                    trialN = row[4]
-                    total = row[5]
-                    success = row[6]
-                    throughput = row[7]
-                    sqth = row[8]
-                if trialN > 0:
-                    mean = throughput / trialN
-                    variance = (sqth / trialN) - (np.power(mean, 2))
-                    if variance < 0:
-                        variance = 0
-                    config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-                    maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
-                    float(config_map.innercodingrate))
-                    unsuccess = total - success
-                    PSR = float(success) / total
-                    self.config_cursor.execute('UPDATE Egreedy set TrialNumber=?, Mean=? WHERE ID=?', [trialN, mean, j])
-                if trialN > 1:
-                    RCI = self.CI(mean, variance, maxp, confidence, trialN)
-                    lower = RCI[0]
-                    upper = RCI[1]
-                    self.config_cursor.execute('UPDATE Egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
-                                   [trialN, mean, lower, upper, j])
-            self.config_connection.commit()
+        # try:
+        self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
+        Allconfigs = self.config_cursor.fetchone()[0]
+        for j in xrange(1, Allconfigs + 1):
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
+            for row in self.config_cursor:
+                Modulation = row[1]
+                InnerCode = row[2]
+                OuterCode = row[3]
+                trialN = row[4]
+                total = row[5]
+                success = row[6]
+                throughput = row[7]
+                sqth = row[8]
+            if trialN > 0:
+                mean = throughput / trialN
+                variance = (sqth / trialN) - (np.power(mean, 2))
+                if variance < 0:
+                    variance = 0
+                config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+                maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+                float(config_map.innercodingrate))
+                unsuccess = total - success
+                PSR = float(success) / total
+                self.config_cursor.execute('UPDATE Egreedy set TrialNumber=?, Mean=? WHERE ID=?', [trialN, mean, j])
+            if trialN > 1:
+                RCI = self.CI(mean, variance, maxp, confidence, trialN)
+                lower = RCI[0]
+                upper = RCI[1]
+                self.config_cursor.execute('UPDATE Egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
+                               [trialN, mean, lower, upper, j])
+        self.config_connection.commit()
 
-            self.config_cursor.execute('SELECT MAX(Mean) FROM Egreedy')
-            muBest = self.config_cursor.fetchone()[0]
-            print "muBest = ", muBest
-            for j in xrange(1, Allconfigs + 1):
-                self.config_cursor.execute('SELECT Upper FROM Egreedy WHERE ID=?', [j])
-                upper = self.config_cursor.fetchone()[0]
-                if upper < muBest:
-                    # FAST FIX! change 0 for quick fix to 1, makes all methods eligable
-                    self.config_cursor.execute('UPDATE Egreedy set Eligibility=? WHERE ID=?', [0, j])
-                else:
-                    self.config_cursor.execute('UPDATE Egreedy set Eligibility=? WHERE ID=?', [1, j])
-            self.config_connection.commit()
+        self.config_cursor.execute('SELECT MAX(Mean) FROM Egreedy')
+        muBest = self.config_cursor.fetchone()[0]
+        print "muBest = ", muBest
+        for j in xrange(1, Allconfigs + 1):
+            self.config_cursor.execute('SELECT Upper FROM Egreedy WHERE ID=?', [j])
+            upper = self.config_cursor.fetchone()[0]
+            if upper < muBest:
+                # FAST FIX! change 0 for quick fix to 1, makes all methods eligable
+                self.config_cursor.execute('UPDATE Egreedy set Eligibility=? WHERE ID=?', [0, j])
+            else:
+                self.config_cursor.execute('UPDATE Egreedy set Eligibility=? WHERE ID=?', [1, j])
+        self.config_connection.commit()
 
-            self.config_cursor.execute('SELECT count(*) FROM Egreedy WHERE Mean=?', [muBest])
+        self.config_cursor.execute('SELECT count(*) FROM Egreedy WHERE Mean=?', [muBest])
+        NO = self.config_cursor.fetchone()[0]
+        nn = np.random.randrange(1, NO + 1)
+        self.config_cursor.execute('SELECT ID FROM Egreedy WHERE Mean=?', [muBest])
+        j = 0
+        for row in self.config_cursor:
+            j = j + 1
+            if j == nn:
+                configN = row[0]
+                self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+                for row1 in self.config_cursor:
+                    NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
+                    print "Configuration is"
+                    config_map = ConfigurationMap(NextConf2.modulation, NextConf2.innercode, NextConf2.outercode)
+                    print "Modulation is ", config_map.constellationN, config_map.modulationtype
+                    print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+                    print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+                    print "###############################\n\n"
+                break
+
+        if np.random.random() > epsilon:
+            print "***Exploitation***\n"
+            NextConf1 = NextConf2
+
+        else:
+            print "***Exploration***\n"
+            self.config_cursor.execute('SELECT count(*) FROM Egreedy')
             NO = self.config_cursor.fetchone()[0]
-            nn = np.random.randrange(1, NO + 1)
-            self.config_cursor.execute('SELECT ID FROM Egreedy WHERE Mean=?', [muBest])
+            nn = random.randrange(1, NO + 1)
+            self.config_cursor.execute('SELECT ID FROM Egreedy')
             j = 0
             for row in self.config_cursor:
                 j = j + 1
                 if j == nn:
                     configN = row[0]
-                    self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
-                    for row1 in self.config_cursor:
-                        NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
-                        print "Configuration is"
-                        config_map = ConfigurationMap(NextConf2.modulation, NextConf2.innercode, NextConf2.outercode)
-                        print "Modulation is ", config_map.constellationN, config_map.modulationtype
-                        print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
-                        print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
-                        print "###############################\n\n"
                     break
 
-            if np.random.random() > epsilon:
-                print "***Exploitation***\n"
-                NextConf1 = NextConf2
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+            for row in self.config_cursor:
+                NextConf1 = ConfigurationMap(row[1], row[2], row[3], row[0])
+                print "Configuration is"
+                config_map = ConfigurationMap(NextConf1.modulation, NextConf1.innercode, NextConf1.outercode)
+                print "Modulation is ", config_map.constellationN, config_map.modulationtype
+                print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+                print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+                print "###############################\n\n"
 
-            else:
-                print "***Exploration***\n"
-                self.config_cursor.execute('SELECT count(*) FROM Egreedy')
-                NO = self.config_cursor.fetchone()[0]
-                nn = random.randrange(1, NO + 1)
-                self.config_cursor.execute('SELECT ID FROM Egreedy')
-                j = 0
-                for row in self.config_cursor:
-                    j = j + 1
-                    if j == nn:
-                        configN = row[0]
-                        break
-
-                self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
-                for row in self.config_cursor:
-                    NextConf1 = ConfigurationMap(row[1], row[2], row[3], row[0])
-                    print "Configuration is"
-                    config_map = ConfigurationMap(NextConf1.modulation, NextConf1.innercode, NextConf1.outercode)
-                    print "Modulation is ", config_map.constellationN, config_map.modulationtype
-                    print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
-                    print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
-                    print "###############################\n\n"
-
-            return NextConf1, NextConf2
-        except:
-            print "Error with database.", sys.exc_info()[0]
+        return NextConf1, NextConf2
+        # except:
+        #     print "Error with database.", sys.exc_info()[0]
 
     def CI(self, mean, variance, maxp, confidence, N):
         C = 1 - ((1 - confidence) / 2)

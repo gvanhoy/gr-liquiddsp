@@ -118,12 +118,14 @@ class DatabaseControl:
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         Allconfigs = self.config_cursor.fetchone()[0]
 
-        # Egreedy
+        print "Wiping configs"
         for i in xrange(1, Allconfigs + 1):
             self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
                            [0, 0, 0, 0.0, 0.0, i])
         self.config_connection.commit()
 
+        # Egreedy
+        print "Wiping Egreedy"
         self.config_cursor.execute('drop table if exists Egreedy')
         self.config_connection.commit()
 
@@ -140,9 +142,11 @@ class DatabaseControl:
             float(config_map.innercodingrate))
             self.config_cursor.execute('INSERT INTO Egreedy (ID,TrialNumber,Mean,Lower,Upper,Eligibility) VALUES (?,?,?,?,?,?)',
                            (j, 0, 0, 0, upperbound, 1))
-            self.config_connection.commit()
+
+        self.config_connection.commit()
 
         # Boltmann
+        print "Wiping Boltzmann"
         self.config_cursor.execute('drop table if exists Boltzmann')
         self.config_connection.commit()
 
@@ -161,8 +165,10 @@ class DatabaseControl:
                 'INSERT INTO Boltzmann (ID,TrialNumber,Mean,Prob,Lower,Upper,Eligibility) VALUES (?,?,?,?,?,?,?)',
                 (j, 0, 0, 1.0, 0, upperbound, 1))
 
-        # Gittins
         self.config_connection.commit()
+
+        # Gittins
+        print "Wiping Gittins"
         self.config_cursor.execute('drop table if exists Gittins')
         self.config_connection.commit()
         sql = 'create table if not exists Gittins (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, Stdv real default 1.0, Indexx float default 0)'
@@ -179,7 +185,7 @@ class DatabaseControl:
             self.config_cursor.execute('INSERT INTO Gittins (ID,TrialNumber,Mean,Stdv,Indexx) VALUES (?,?,?,?,?)',
                            (j, 0, 0.0, 0.0, upperbound))
 
-            self.config_connection.commit()
+        self.config_connection.commit()
 
         # UCB
         self.config_cursor.execute('drop table if exists UCB')

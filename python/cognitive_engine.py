@@ -19,7 +19,6 @@
 # Boston, MA 02110-1301, USA.
 # 
 
-import numpy
 from gnuradio import gr
 import pmt
 
@@ -38,4 +37,8 @@ class cognitive_engine(gr.sync_block):
         self.message_port_register_out(pmt.intern('configuration'))
 
     def handler(self, packet_info):
-        print packet_info
+        new_configuration = pmt.make_dict()
+        new_configuration = pmt.dict_add(new_configuration, pmt.intern("modulation"), pmt.from_long(1))
+        new_configuration = pmt.dict_add(new_configuration, pmt.intern("inner_code"), pmt.from_long(1))
+        new_configuration = pmt.dict_add(new_configuration, pmt.intern("outer_code"), pmt.from_long(1))
+        self.message_port_pub(pmt.intern('configuration'), new_configuration)

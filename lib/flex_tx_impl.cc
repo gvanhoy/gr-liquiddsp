@@ -59,6 +59,8 @@ namespace gr {
         memset(d_header, 0, 14);
         message_port_register_in(PDU_PORT_ID);
         set_msg_handler(PDU_PORT_ID, boost::bind(&flex_tx_impl::send_pkt, this, _1));
+        message_port_register_out(pmt::mp("configuration"));
+        set_msg_handler(pmt::mp("configuration"), boost::bind(&flex_tx_impl::configure, this, _1));
     }
 
     /*
@@ -175,6 +177,14 @@ namespace gr {
           d_fgprops.fec1 = LIQUID_FEC_NONE;
           break;
       }
+    }
+
+    void flex_tx_impl::configure(pmt::pmt_t configuration){
+
+        if(pmt::dict_has_key(pmt::mp("modulation"))) set_modulation(pmt::dict_values(pmt::mp("modulation")));
+        if(pmt::dict_has_key(pmt::mp("inner_code"))) set_modulation(pmt::dict_values(pmt::mp("inner_code")));
+        if(pmt::dict_has_key(pmt::mp("outer_code"))) set_modulation(pmt::dict_values(pmt::mp("outer_code")));
+
     }
 
     void flex_tx_impl::send_pkt(pmt::pmt_t pdu){

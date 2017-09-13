@@ -43,6 +43,8 @@ namespace gr {
       flex_tx_impl(unsigned int modulation, unsigned int inner_code, unsigned int outer_code);
       ~flex_tx_impl();
       void send_pkt(pmt::pmt_t pdu);
+      void configure(pmt::pmt_t configuration);
+
       void set_modulation(unsigned int modulation);
       void set_inner_code(unsigned int inner_code);
       void set_outer_code(unsigned int outer_code);

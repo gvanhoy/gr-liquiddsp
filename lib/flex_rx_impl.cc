@@ -235,6 +235,8 @@ namespace gr {
                     pmt::dict_add(packet_info, pmt::string_to_symbol("inner_code"), pmt::from_long(d_rx_inner_code));
                     pmt::dict_add(packet_info, pmt::string_to_symbol("outer_code"), pmt::from_long(d_rx_outer_code));
 
+                    std::cout << "Dict has key: header_valid" << pmt::dict_has_key(pmt::string_to_symbol("header_valid")) << std::endl;
+
                     message_port_pub(pmt::mp("packet_info"), packet_info);
 
                 }

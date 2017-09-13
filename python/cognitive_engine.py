@@ -344,17 +344,20 @@ class ConfigurationMap:
 
 class CognitiveEngine:
     def __init__(self):
-        pass
+        self.config_connection = sqlite3.connect('config.db')
+        self.config_cursor = self.config_connection.cursor()
+
+    def __del__(self):
+        self.config_connection.close()
+        self.config_cursor.close()
 
     def epsilon_greedy(self, epsilon):
         try:
-            connection = sqlite3.connect('config.db')
-            cursor = connection.cursor()
-            cursor.execute('SELECT MAX(ID) FROM CONFIG')
-            Allconfigs = cursor.fetchone()[0]
+            self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
+            Allconfigs = self.config_cursor.fetchone()[0]
             for j in xrange(1, Allconfigs + 1):
-                cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
-                for row in cursor:
+                self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
+                for row in self.config_cursor:
                     Modulation = row[1]
                     InnerCode = row[2]
                     OuterCode = row[3]
@@ -373,38 +376,38 @@ class CognitiveEngine:
                     float(config_map.innercodingrate))
                     unsuccess = total - success
                     PSR = float(success) / total
-                    cursor.execute('UPDATE Egreedy set TrialNumber=? ,Mean=? WHERE ID=?', [trialN, mean, j])
+                    self.config_cursor.execute('UPDATE Egreedy set TrialNumber=? ,Mean=? WHERE ID=?', [trialN, mean, j])
                 if trialN > 1:
                     RCI = self.CI(mean, variance, maxp, confidence, trialN)
                     lower = RCI[0]
                     upper = RCI[1]
-                    cursor.execute('UPDATE Egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
+                    self.config_cursor.execute('UPDATE Egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
                                    [trialN, mean, lower, upper, j])
-            connection.commit()
+            self.config_connection.commit()
 
-            cursor.execute('SELECT MAX(Mean) FROM Egreedy')
+            self.config_cursor.execute('SELECT MAX(Mean) FROM Egreedy')
             muBest = cursor.fetchone()[0]
             print "muBest = ", muBest
             for j in xrange(1, Allconfigs + 1):
-                cursor.execute('SELECT Upper FROM Egreedy WHERE ID=?', [j])
-                upper = cursor.fetchone()[0]
+                self.config_cursor.execute('SELECT Upper FROM Egreedy WHERE ID=?', [j])
+                upper = self.config_cursor.fetchone()[0]
                 if upper < muBest:
                     # FAST FIX! change 0 for quick fix to 1, makes all methods eligable
-                    cursor.execute('UPDATE Egreedy set Eligibility=? WHERE ID=?', [0, j])
+                    self.config_cursor.execute('UPDATE Egreedy set Eligibility=? WHERE ID=?', [0, j])
                 else:
-                    cursor.execute('UPDATE Egreedy set Eligibility=? WHERE ID=?', [1, j])
-            connection.commit()
+                    self.config_cursor.execute('UPDATE Egreedy set Eligibility=? WHERE ID=?', [1, j])
+            self.config_connection.commit()
 
-            cursor.execute('SELECT count(*) FROM Egreedy WHERE Mean=?', [muBest])
-            NO = cursor.fetchone()[0]
+            self.config_cursor.execute('SELECT count(*) FROM Egreedy WHERE Mean=?', [muBest])
+            NO = self.config_cursor.fetchone()[0]
             nn = np.random.randrange(1, NO + 1)
-            cursor.execute('SELECT ID FROM Egreedy WHERE Mean=?', [muBest])
+            self.config_cursor.execute('SELECT ID FROM Egreedy WHERE Mean=?', [muBest])
             j = 0
-            for row in cursor:
+            for row in self.config_cursor:
                 j = j + 1
                 if j == nn:
                     configN = row[0]
-                    cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+                    self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
                     for row1 in cursor:
                         NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
                         print "Configuration is"
@@ -421,10 +424,10 @@ class CognitiveEngine:
 
             else:
                 print "***Exploration***\n"
-                cursor.execute('SELECT count(*) FROM Egreedy')
-                NO = cursor.fetchone()[0]
+                self.config_cursor.execute('SELECT count(*) FROM Egreedy')
+                NO = self.config_cursor.fetchone()[0]
                 nn = random.randrange(1, NO + 1)
-                cursor.execute('SELECT ID FROM Egreedy')
+                self.config_cursor.execute('SELECT ID FROM Egreedy')
                 j = 0
                 for row in cursor:
                     j = j + 1
@@ -432,7 +435,7 @@ class CognitiveEngine:
                         configN = row[0]
                         break
 
-                cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+                self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
                 for row in cursor:
                     NextConf1 = ConfigurationMap(row[1], row[2], row[3], row[0])
                     print "Configuration is"
@@ -442,13 +445,9 @@ class CognitiveEngine:
                     print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
                     print "###############################\n\n"
 
-            cursor.close()
-            connection.close()
             return NextConf1, NextConf2
         except:
             print "Error with database.", sys.exc_info()[0]
-            cursor.close()
-            connection.close()
 
     def CI(self, mean, variance, maxp, confidence, N):
         C = 1 - ((1 - confidence) / 2)

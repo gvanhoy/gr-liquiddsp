@@ -114,9 +114,8 @@ class DatabaseControl:
             print e
 
     def reset_tables(self):
-        self.config_cursor
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
-        Allconfigs = cursor.fetchone()[0]
+        Allconfigs = self.config_cursor.fetchone()[0]
 
         # Egreedy
         for i in xrange(1, Allconfigs + 1):

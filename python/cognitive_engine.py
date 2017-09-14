@@ -348,7 +348,7 @@ class CognitiveEngine:
     def epsilon_greedy(self, num_trial, epsilon):
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
-        print "num-config",num_configs
+        print "num_tial",num_trial
 
         if num_trial <= num_configs:
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [num_trial])

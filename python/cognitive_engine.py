@@ -132,7 +132,6 @@ class DatabaseControl:
 
         self.config_connection.commit()
 
-        # Boltmann
         self.config_cursor.execute('drop table if exists Boltzmann')
         self.config_connection.commit()
 
@@ -395,6 +394,7 @@ class CognitiveEngine:
         self.config_cursor.execute('SELECT MAX(Mean) FROM Egreedy')
         muBest = self.config_cursor.fetchone()[0]
         print "muBest = ", muBest
+        print "testetststetst"
         for j in xrange(1, num_configs + 1):
             self.config_cursor.execute('SELECT Upper FROM Egreedy WHERE ID=?', [j])
             upper = self.config_cursor.fetchone()[0]

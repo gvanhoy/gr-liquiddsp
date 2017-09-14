@@ -86,16 +86,16 @@ class DatabaseControl:
 
     def write_configuration(self, configuration, total, success, throughput):
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
+        has_row = False
         for row in self.config_cursor:
             num_trial = row[4]
             total_packet = row[5]
             success_packet = row[6]
             old_throughput = row[7]
             old_sqth = row[8]
+            has_row = True
 
-        print len(self.config_cursor)
-
-        if len(self.config_cursor) > 0:
+        if has_row:
             newTrialN = num_trial + 1
             newTotal = total_packet + total
             newSuccess = success_packet + success

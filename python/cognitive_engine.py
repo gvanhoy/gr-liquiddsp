@@ -348,6 +348,7 @@ class CognitiveEngine:
     def epsilon_greedy(self, num_trial, epsilon):
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
+        print "num-config",num_configs
 
         if num_trial <= num_configs:
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [num_trial])
@@ -394,7 +395,6 @@ class CognitiveEngine:
         self.config_cursor.execute('SELECT MAX(Mean) FROM Egreedy')
         muBest = self.config_cursor.fetchone()[0]
         print "muBest = ", muBest
-        print "testetststetst"
         for j in xrange(1, num_configs + 1):
             self.config_cursor.execute('SELECT Upper FROM Egreedy WHERE ID=?', [j])
             upper = self.config_cursor.fetchone()[0]

@@ -348,7 +348,6 @@ class CognitiveEngine:
     def epsilon_greedy(self, num_trial, epsilon):
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
-        print "num_tial",num_trial
 
         if num_trial <= num_configs:
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [num_trial])
@@ -368,7 +367,7 @@ class CognitiveEngine:
                 Modulation = row[1]
                 InnerCode = row[2]
                 OuterCode = row[3]
-                trialN = row[4]
+                trialN = row[4]+1
                 total = row[5]
                 success = row[6]
                 throughput = row[7]
@@ -383,12 +382,12 @@ class CognitiveEngine:
                 float(config_map.innercodingrate))
                 unsuccess = total - success
                 PSR = float(success) / total
-                self.config_cursor.execute('UPDATE Egreedy set TrialNumber=?, Mean=? WHERE ID=?', [trialN, mean, j])
+                self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?', [trialN, mean, j])
             if trialN > 1:
                 RCI = self.CI(mean, variance, maxp, CONFIDENCE, trialN)
                 lower = RCI[0]
                 upper = RCI[1]
-                self.config_cursor.execute('UPDATE Egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
+                self.config_cursor.execute('UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
                                [trialN, mean, lower, upper, j])
         self.config_connection.commit()
 

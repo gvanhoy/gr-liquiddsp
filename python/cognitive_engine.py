@@ -388,13 +388,17 @@ class CognitiveEngine:
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
 
-        if num_trial <= 5 * num_configs:
-            temp = int(np.floor(num_trial/num_configs))
-            index_no = num_trial - (temp * num_configs)
-            if index_no == 0:
-                index_no = 616
-            if index_no > 616:
-                index_no = 1
+        if num_trial <= 10 * num_configs:
+            # temp = int(np.floor(num_trial/num_configs))
+            # index_no = num_trial - (temp * num_configs)
+            # if index_no == 0:
+            #     index_no = 616
+            # if index_no > 616:
+            #     index_no = 1
+            # print "num trial =", num_trial
+            # print "index_no = ", index_no
+
+            index_no = int(np.ceil(num_trial/10))
             print "num trial =", num_trial
             print "index_no = ", index_no
 
@@ -414,37 +418,6 @@ class CognitiveEngine:
             print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
             print "###############################\n\n"
             return config_map, config_map
-
-        # for j in xrange(1, num_configs+1):
-        #     self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
-        #     for row in self.config_cursor:
-        #         Modulation = row[1]
-        #         InnerCode = row[2]
-        #         OuterCode = row[3]
-        #         trialN = row[4]
-        #         total = row[5]
-        #         success = row[6]
-        #         throughput = row[7]
-        #         sqth = row[8]
-        #         if trialN > 0:
-        #             mean = throughput / trialN
-        #             variance = (sqth / trialN) - (np.power(mean, 2))
-        #             if variance < 0:
-        #                 variance = 0
-        #             config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-        #             maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
-        #             float(config_map.innercodingrate))
-        #             unsuccess = total - success
-        #             PSR = float(success) / total
-        #             if trialN == 1:
-        #                 self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?', [trialN, mean, j])
-        #             if trialN > 1:
-        #                 RCI = self.CI(mean, variance, maxp, CONFIDENCE, trialN)
-        #                 lower = RCI[0]
-        #                 upper = RCI[1]
-        #                 self.config_cursor.execute('UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
-        #                                [trialN, mean, lower, upper, j])
-        #             self.config_connection.commit()
 
         self.config_cursor.execute('SELECT MAX(Mean) FROM Egreedy')
         muBest = self.config_cursor.fetchone()[0]
@@ -507,18 +480,3 @@ class CognitiveEngine:
                 print "###############################\n\n"
 
         return NextConf1, NextConf2
-
-    # def CI(self, mean, variance, maxp, confidence, N):
-    #     C = 1 - ((1 - confidence) / 2)
-    #     std = np.sqrt(variance)
-    #     coefficient = t.ppf(C, N - 1)
-    #     RCIl = mean - (coefficient * (std / np.sqrt(N)))
-    #     if RCIl < 0:
-    #         RCIl = 0
-    #
-    #     RCIu = mean + (coefficient * (std / np.sqrt(N)))
-    #     if RCIu > maxp:
-    #         RCIu = maxp
-    #
-    #     RCI = [RCIl, RCIu]
-    #     return RCI

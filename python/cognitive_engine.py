@@ -53,14 +53,14 @@ class cognitive_engine(gr.sync_block):
         modulation = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("modulation"), pmt.PMT_NIL))
         inner_code = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("inner_code"), pmt.PMT_NIL))
         outer_code = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("outer_code"), pmt.PMT_NIL))
-        payload_valid = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("header_valid"), pmt.PMT_NIL))
-        header_valid = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("payload_valid"), pmt.PMT_NIL))
+        header_valid = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("header_valid"), pmt.PMT_NIL))
+        payload_valid = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("payload_valid"), pmt.PMT_NIL))
         config_id = modulation*7*8 + inner_code*8 + outer_code
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
         self.database.write_configuration(configuration,
-                                          payload_valid,
                                           header_valid,
+                                          payload_valid,
                                           goodput)
 
         ce_configuration = self.engine.epsilon_greedy(self.num_packets, .1)
@@ -212,7 +212,7 @@ class DatabaseControl:
             Throughput       REAL       NOT NULL,
             SQTh             REAL       NOT NULL);''')
         print "Table created successfully"
-        conf_id = 0
+        conf_id = 1
         for m in xrange(0, 11):
             for i in xrange(0, 7):
                 for o in xrange(0, 8):

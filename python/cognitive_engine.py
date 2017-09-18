@@ -354,7 +354,7 @@ class CognitiveEngine:
 
         if num_trial <= 10*num_configs:
 
-            index_no = num_trial - ((int(np.ceil(num_trial/num_configs))-1)*num_configs)
+            index_no = num_trial - ((int(np.floor(num_trial/num_configs)))*num_configs)
             print "num trial =", num_trial
             print "index_no = ", index_no
 

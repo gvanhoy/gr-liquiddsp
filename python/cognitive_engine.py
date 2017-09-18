@@ -262,6 +262,21 @@ class DatabaseControl:
         self.rules_connection.commit()
         print "rules1 Records created successfully"
 
+    def CI(self, mean, variance, maxp, confidence, N):
+        C = 1 - ((1 - confidence) / 2)
+        std = np.sqrt(variance)
+        coefficient = t.ppf(C, N - 1)
+        RCIl = mean - (coefficient * (std / np.sqrt(N)))
+        if RCIl < 0:
+            RCIl = 0
+
+        RCIu = mean + (coefficient * (std / np.sqrt(N)))
+        if RCIu > maxp:
+            RCIu = maxp
+
+        RCI = [RCIl, RCIu]
+        return RCI
+
 
 class ConfigurationMap:
     def __init__(self, modulation, inner_code, outer_code, conf_id=0):
@@ -494,17 +509,17 @@ class CognitiveEngine:
 
         return NextConf1, NextConf2
 
-    def CI(self, mean, variance, maxp, confidence, N):
-        C = 1 - ((1 - confidence) / 2)
-        std = np.sqrt(variance)
-        coefficient = t.ppf(C, N - 1)
-        RCIl = mean - (coefficient * (std / np.sqrt(N)))
-        if RCIl < 0:
-            RCIl = 0
-
-        RCIu = mean + (coefficient * (std / np.sqrt(N)))
-        if RCIu > maxp:
-            RCIu = maxp
-
-        RCI = [RCIl, RCIu]
-        return RCI
+    # def CI(self, mean, variance, maxp, confidence, N):
+    #     C = 1 - ((1 - confidence) / 2)
+    #     std = np.sqrt(variance)
+    #     coefficient = t.ppf(C, N - 1)
+    #     RCIl = mean - (coefficient * (std / np.sqrt(N)))
+    #     if RCIl < 0:
+    #         RCIl = 0
+    #
+    #     RCIu = mean + (coefficient * (std / np.sqrt(N)))
+    #     if RCIu > maxp:
+    #         RCIu = maxp
+    #
+    #     RCI = [RCIl, RCIu]
+    #     return RCI

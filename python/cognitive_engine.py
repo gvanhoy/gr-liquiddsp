@@ -105,6 +105,22 @@ class DatabaseControl:
             self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
                            [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, configuration.conf_id])
             self.config_connection.commit()
+            mean = new_aggregated_Throughput / newTrialN
+            variance = (newSQTh / newTrialN) - (np.power(mean, 2))
+            if variance < 0:
+                variance = 0
+                if newTrialN == 1:
+                    self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?',
+                                                   [newTrialN, mean, configuration.conf_id])
+                if trialN > 1:
+                    RCI = self.CI(mean, variance, maxp, CONFIDENCE, trialN)
+                    lower = RCI[0]
+                    upper = RCI[1]
+                    self.config_cursor.execute(
+                        'UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
+                        [trinewTrialNalN, mean, lower, upper, configuration.conf_id])
+                self.config_connection.commit()
+
 
     def reset_cognitive_engine_tables(self):
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
@@ -352,7 +368,7 @@ class CognitiveEngine:
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
 
-        if num_trial <= 10 * num_configs:
+        if num_trial <= 5 * num_configs:
             temp = int(np.floor(num_trial/num_configs))
             index_no = num_trial - (temp * num_configs)
             if index_no == 0:
@@ -379,37 +395,36 @@ class CognitiveEngine:
             print "###############################\n\n"
             return config_map, config_map
 
-
-        for j in xrange(1, num_configs+1):
-            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
-            for row in self.config_cursor:
-                Modulation = row[1]
-                InnerCode = row[2]
-                OuterCode = row[3]
-                trialN = row[4]
-                total = row[5]
-                success = row[6]
-                throughput = row[7]
-                sqth = row[8]
-                if trialN > 0:
-                    mean = throughput / trialN
-                    variance = (sqth / trialN) - (np.power(mean, 2))
-                    if variance < 0:
-                        variance = 0
-                    config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-                    maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
-                    float(config_map.innercodingrate))
-                    unsuccess = total - success
-                    PSR = float(success) / total
-                    if trialN == 1:
-                        self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?', [trialN, mean, j])
-                    if trialN > 1:
-                        RCI = self.CI(mean, variance, maxp, CONFIDENCE, trialN)
-                        lower = RCI[0]
-                        upper = RCI[1]
-                        self.config_cursor.execute('UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
-                                       [trialN, mean, lower, upper, j])
-                    self.config_connection.commit()
+        # for j in xrange(1, num_configs+1):
+        #     self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
+        #     for row in self.config_cursor:
+        #         Modulation = row[1]
+        #         InnerCode = row[2]
+        #         OuterCode = row[3]
+        #         trialN = row[4]
+        #         total = row[5]
+        #         success = row[6]
+        #         throughput = row[7]
+        #         sqth = row[8]
+        #         if trialN > 0:
+        #             mean = throughput / trialN
+        #             variance = (sqth / trialN) - (np.power(mean, 2))
+        #             if variance < 0:
+        #                 variance = 0
+        #             config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+        #             maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+        #             float(config_map.innercodingrate))
+        #             unsuccess = total - success
+        #             PSR = float(success) / total
+        #             if trialN == 1:
+        #                 self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?', [trialN, mean, j])
+        #             if trialN > 1:
+        #                 RCI = self.CI(mean, variance, maxp, CONFIDENCE, trialN)
+        #                 lower = RCI[0]
+        #                 upper = RCI[1]
+        #                 self.config_cursor.execute('UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
+        #                                [trialN, mean, lower, upper, j])
+        #             self.config_connection.commit()
 
         self.config_cursor.execute('SELECT MAX(Mean) FROM Egreedy')
         muBest = self.config_cursor.fetchone()[0]

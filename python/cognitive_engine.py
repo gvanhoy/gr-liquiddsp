@@ -107,25 +107,24 @@ class DatabaseControl:
             newSQTh = old_sqth + np.power(throughput, 2)
             self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
                            [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, configuration.conf_id])
-            self.config_connection.commit()
             mean = new_aggregated_Throughput / newTrialN
             variance = (newSQTh / newTrialN) - (np.power(mean, 2))
             if variance < 0:
                 variance = 0
-                if newTrialN == 1:
-                    self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?',
+            if newTrialN == 1:
+                self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?',
                                                    [newTrialN, mean, configuration.conf_id])
-                if newTrialN > 1:
-                    config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-                    maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
-                        float(config_map.innercodingrate))
-                    RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
-                    lower = RCI[0]
-                    upper = RCI[1]
-                    self.config_cursor.execute(
-                        'UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
-                        [newTrialN, mean, lower, upper, configuration.conf_id])
-                self.config_connection.commit()
+            if newTrialN > 1:
+                config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+                maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+                    float(config_map.innercodingrate))
+                RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
+                lower = RCI[0]
+                upper = RCI[1]
+                self.config_cursor.execute(
+                    'UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
+                    [newTrialN, mean, lower, upper, configuration.conf_id])
+            self.config_connection.commit()
 
 
     def reset_cognitive_engine_tables(self):

@@ -398,7 +398,11 @@ class CognitiveEngine:
             # print "num trial =", num_trial
             # print "index_no = ", index_no
 
-            index_no = np.ceil(num_trial/10)
+            index_no = int(np.floor(num_trial/10))+1
+            if index_no == 0:
+                index_no = 1
+            if index_no > 616:
+                index_no = 616
             print "num trial =", num_trial
             print "index_no = ", index_no
 

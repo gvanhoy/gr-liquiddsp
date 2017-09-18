@@ -356,9 +356,9 @@ class CognitiveEngine:
             temp = int(np.floor(num_trial/num_configs))
             index_no = num_trial - (temp * num_configs)
             if index_no == 0:
-                index_no = 1
-            if index_no > 616:
                 index_no = 616
+            if index_no > 616:
+                index_no = 1
             print "num trial =", num_trial
             print "index_no = ", index_no
 

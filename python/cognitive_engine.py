@@ -353,9 +353,9 @@ class CognitiveEngine:
         num_configs = self.config_cursor.fetchone()[0]
 
         if num_trial <= 10*num_configs:
-            id=num_trial - ((int(np.floor(num_trial/(num_configs+1))))*num_configs)
+            index_no = num_trial - ((int(np.floor(num_trial/(num_configs+1))))*num_configs)
 
-            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [id])
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [index_no])
             for row in self.config_cursor:
                 Modulation = row[1]
                 InnerCode = row[2]
@@ -369,6 +369,8 @@ class CognitiveEngine:
             print "Modulation is ", config_map.constellationN, config_map.modulationtype
             print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
             print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+            print "num trial =", num_trial
+            print "index_no = ", index_no
             print "###############################\n\n"
             return config_map, config_map
 

@@ -352,7 +352,8 @@ class CognitiveEngine:
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
 
-        if num_trial <= 2*num_configs:
+        if num_trial <= num_configs:
+            print "num_trial in training=", num_trial
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [num_trial])
             for row in self.config_cursor:
                 Modulation = row[1]
@@ -364,7 +365,7 @@ class CognitiveEngine:
                 self.training_mode = False
             return config_map, config_map
 
-        for j in xrange(0, num_configs):
+        for j in xrange(1, num_configs+1):
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
             for row in self.config_cursor:
                 Modulation = row[1]

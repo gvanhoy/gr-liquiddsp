@@ -88,6 +88,9 @@ class DatabaseControl:
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
         has_row = False
         for row in self.config_cursor:
+            Modulation = row[1]
+            InnerCode = row[2]
+            OuterCode = row[3]
             num_trial = row[4]
             total_packet = row[5]
             success_packet = row[6]
@@ -112,13 +115,16 @@ class DatabaseControl:
                 if newTrialN == 1:
                     self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?',
                                                    [newTrialN, mean, configuration.conf_id])
-                if trialN > 1:
-                    RCI = self.CI(mean, variance, maxp, CONFIDENCE, trialN)
+                if newTrialN > 1:
+                    config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+                    maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+                        float(config_map.innercodingrate))
+                    RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
                     lower = RCI[0]
                     upper = RCI[1]
                     self.config_cursor.execute(
                         'UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
-                        [trinewTrialNalN, mean, lower, upper, configuration.conf_id])
+                        [newTrialN, mean, lower, upper, configuration.conf_id])
                 self.config_connection.commit()
 
 

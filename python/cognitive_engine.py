@@ -353,7 +353,7 @@ class CognitiveEngine:
         num_configs = self.config_cursor.fetchone()[0]
 
         if num_trial <= 10*num_configs:
-            id=num_trial - (int(np.floor(num_trial/(num_configs+1))))
+            id=num_trial - ((int(np.floor(num_trial/(num_configs+1))))*num_configs)
 
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [id])
             for row in self.config_cursor:

@@ -352,9 +352,10 @@ class CognitiveEngine:
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
 
-        if num_trial <= 10*num_configs:
+        if num_trial <= 10 * num_configs:
             temp = int(np.ceil(num_trial/num_configs))
-            temp = temp - 1
+            tempone = int(1)
+            temp = int(temp - tempone)
 
             index_no = num_trial - (temp * num_configs)
             print "num trial =", num_trial

@@ -352,7 +352,7 @@ class CognitiveEngine:
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
 
-        if num_trial <= num_configs:
+        if num_trial <= 10*num_configs:
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [num_trial])
             for row in self.config_cursor:
                 Modulation = row[1]
@@ -362,7 +362,14 @@ class CognitiveEngine:
             if self.training_mode:
                 "Training all configurations..."
                 self.training_mode = False
+            print "Training phase"
+            print "Configuration is="
+            print "Modulation is ", config_map.constellationN, config_map.modulationtype
+            print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+            print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+            print "###############################\n\n"
             return config_map, config_map
+
 
         for j in xrange(1, num_configs+1):
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])

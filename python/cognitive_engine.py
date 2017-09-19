@@ -458,10 +458,12 @@ class CognitiveEngine:
 
         if random.random() > epsilon:
             print "***Exploitation***\n"
+            print "num trial =", num_trial
             NextConf1 = NextConf2
 
         else:
             print "***Exploration***\n"
+            print "num trial =", num_trial
             self.config_cursor.execute('SELECT count(*) FROM Egreedy')
             NO = self.config_cursor.fetchone()[0]
             nn = random.randrange(1, NO + 1)

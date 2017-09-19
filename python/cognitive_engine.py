@@ -388,23 +388,23 @@ class CognitiveEngine:
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
 
-        if num_trial <= 10 * num_configs:
-            # temp = int(np.floor(num_trial/num_configs))
-            # index_no = num_trial - (temp * num_configs)
-            # if index_no == 0:
-            #     index_no = 616
-            # if index_no > 616:
-            #     index_no = 1
-            # print "num trial =", num_trial
-            # print "index_no = ", index_no
-
-            index_no = int(np.floor(num_trial/10))+1
+        if num_trial <= 2 * num_configs:
+            temp = int(np.floor(num_trial/num_configs))
+            index_no = num_trial - (temp * num_configs)
             if index_no == 0:
-                index_no = 1
-            if index_no > 616:
                 index_no = 616
+            if index_no > 616:
+                index_no = 1
             print "num trial =", num_trial
             print "index_no = ", index_no
+
+            # index_no = int(np.floor(num_trial/10))+1
+            # if index_no == 0:
+            #     index_no = 1
+            # if index_no > 616:
+            #     index_no = 616
+            # print "num trial =", num_trial
+            # print "index_no = ", index_no
 
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [index_no])
             for row in self.config_cursor:

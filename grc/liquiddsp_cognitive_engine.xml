@@ -13,6 +13,10 @@
       <name>Epsilon Greedy</name>
       <key>epsilon_greedy</key>
     </option>
+    <option>
+      <name>Gittins</name>
+      <key>gittins</key>
+    </option>
   </param>
   <sink>
     <name>packet_info</name>

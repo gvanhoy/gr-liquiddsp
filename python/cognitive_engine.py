@@ -25,9 +25,11 @@ import pmt
 from scipy.stats import *
 import numpy as np
 import random
+from gittinsNormal import *
 
 CONFIDENCE = 0.9
 PSR_Threshold = 0.8
+DiscountFactor = 0.9
 
 
 class cognitive_engine(gr.sync_block):
@@ -67,7 +69,7 @@ class cognitive_engine(gr.sync_block):
         print "inner code=", inner_code
         print "outer code=", outer_code
         print "********************************************************"
-        self.database.write_configuration(configuration,
+        self.database.write_configuration(self.ce_type, configuration,
                                           header_valid,
                                           payload_valid,
                                           goodput)
@@ -93,7 +95,7 @@ class DatabaseControl:
         self.config_connection.close()
         self.rules_connection.close()
 
-    def write_configuration(self, configuration, total, success, throughput):
+    def write_configuration(self, ce_type, configuration, total, success, throughput):
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
         has_row = False
         for row in self.config_cursor:
@@ -120,19 +122,31 @@ class DatabaseControl:
             variance = (newSQTh / newTrialN) - (np.power(mean, 2))
             if variance < 0:
                 variance = 0
-            if newTrialN == 1:
-                self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?',
-                                                   [newTrialN, mean, configuration.conf_id])
-            if newTrialN > 1:
-                config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-                maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
-                    float(config_map.innercodingrate))
-                RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
-                lower = RCI[0]
-                upper = RCI[1]
-                self.config_cursor.execute(
-                    'UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
-                    [newTrialN, mean, lower, upper, configuration.conf_id])
+            if ce_type == "epsilon_greedy":
+                if newTrialN == 1:
+                    self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?',
+                                                       [newTrialN, mean, configuration.conf_id])
+                if newTrialN > 1:
+                    config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+                    maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+                        float(config_map.innercodingrate))
+                    RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
+                    lower = RCI[0]
+                    upper = RCI[1]
+                    self.config_cursor.execute(
+                        'UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
+                        [newTrialN, mean, lower, upper, configuration.conf_id])
+            elif ce_type == "Gittins"
+                if newTrialN == 1:
+                    self.config_cursor.execute('UPDATE gittins set TrialNumber=?, Mean=? WHERE ID=?',
+                                                       [newTrialN, mean, configuration.conf_id])
+                if newTrialN > 1:
+                    config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+                    stdv = np.sqrt(variance);
+                    index = mean + (stdv * GittinsIndexNormalUnitVar(newTrialN, DiscountFactor));
+                    self.config_cursor.execute(
+                        'UPDATE gittins set TrialNumber=? ,Mean=? ,stdv=? ,indexx=? WHERE ID=?',
+                        [newTrialN, mean, stdv, index, configuration.conf_id])
             self.config_connection.commit()
 
 

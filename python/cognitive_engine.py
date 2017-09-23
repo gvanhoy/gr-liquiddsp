@@ -298,7 +298,7 @@ class DatabaseControl:
         RCI = [RCIl, RCIu]
         return RCI
 
-    def GittinsIndexNormalUnitVar(No, Discount_F):
+    def GittinsIndexNormalUnitVar(self, No, Discount_F):
         Discount_F_index = np.array([0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 0.995])
         No_index = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90,
                              100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 9999999])

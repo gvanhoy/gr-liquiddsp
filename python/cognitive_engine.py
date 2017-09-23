@@ -58,8 +58,14 @@ class cognitive_engine(gr.sync_block):
         config_id = modulation*7*8 + inner_code*8 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
+        print "****************************************************"
+        print "Received packet info to the CE"
         print "header_valid =", header_valid
         print "payload_valid =", payload_valid
+        print "received mod=", modulation
+        print "inner code=", inner_code
+        print "outer code=", outer_code
+        print "********************************************************"
         self.database.write_configuration(configuration,
                                           header_valid,
                                           payload_valid,

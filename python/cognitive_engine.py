@@ -414,7 +414,7 @@ class CognitiveEngine:
             # print "num trial =", num_trial
             # print "index_no = ", index_no
 
-            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [561])
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [index_no])
             for row in self.config_cursor:
                 Modulation = row[1]
                 InnerCode = row[2]

@@ -135,14 +135,14 @@ class DatabaseControl:
                     self.config_cursor.execute(
                         'UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
                         [newTrialN, mean, lower, upper, configuration.conf_id])
-            elif ce_type == "Gittins"
+            elif ce_type == "Gittins":
                 if newTrialN == 1:
                     self.config_cursor.execute('UPDATE gittins set TrialNumber=?, Mean=? WHERE ID=?',
                                                        [newTrialN, mean, configuration.conf_id])
                 if newTrialN > 1:
                     config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-                    stdv = np.sqrt(variance);
-                    index = mean + (stdv * GittinsIndexNormalUnitVar(newTrialN, DiscountFactor));
+                    stdv = np.sqrt(variance)
+                    index = mean + (stdv * GittinsIndexNormalUnitVar(newTrialN, DiscountFactor))
                     self.config_cursor.execute(
                         'UPDATE gittins set TrialNumber=? ,Mean=? ,stdv=? ,indexx=? WHERE ID=?',
                         [newTrialN, mean, stdv, index, configuration.conf_id])

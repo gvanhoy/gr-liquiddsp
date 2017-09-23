@@ -140,9 +140,8 @@ class DatabaseControl:
                     self.config_cursor.execute('UPDATE gittins set TrialNumber=?, Mean=? WHERE ID=?',
                                                        [newTrialN, mean, configuration.conf_id])
                 if newTrialN > 1:
-                    config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
                     stdv = np.sqrt(variance)
-                    index = mean + (stdv * GittinsIndexNormalUnitVar(newTrialN, DiscountFactor))
+                    index = mean + (stdv * self.GittinsIndexNormalUnitVar(newTrialN, DiscountFactor))
                     self.config_cursor.execute(
                         'UPDATE gittins set TrialNumber=? ,Mean=? ,stdv=? ,indexx=? WHERE ID=?',
                         [newTrialN, mean, stdv, index, configuration.conf_id])
@@ -175,6 +174,26 @@ class DatabaseControl:
             float(config_map.innercodingrate))
             self.config_cursor.execute('INSERT INTO Egreedy (ID,TrialNumber,Mean,Lower,Upper,Eligibility) VALUES (?,?,?,?,?,?)',
                            (j, 0, 0, 0, upperbound, 1))
+
+        self.config_connection.commit()
+
+        self.config_cursor.execute('drop table if exists Annealing_Egreedy')
+        self.config_connection.commit()
+
+        sql = 'create table if not exists Annealing_Egreedy (ID integer primary key, TrialNumber integer default 0, Mean integer default 0, Lower real default 0.0, Upper real default 0.0, Eligibility int default 1)'
+        self.config_cursor.execute(sql)
+        for j in xrange(1, Allconfigs + 1):
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
+            for row in self.config_cursor:
+                Modulation = row[1]
+                InnerCode = row[2]
+                OuterCode = row[3]
+            config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+            upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+                float(config_map.innercodingrate))
+            self.config_cursor.execute(
+                'INSERT INTO Annealing_Egreedy (ID,TrialNumber,Mean,Lower,Upper,Eligibility) VALUES (?,?,?,?,?,?)',
+                (j, 0, 0, 0, upperbound, 1))
 
         self.config_connection.commit()
 

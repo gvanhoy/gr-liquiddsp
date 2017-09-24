@@ -72,10 +72,13 @@ class cognitive_engine(gr.sync_block):
         # print "inner code=", inner_code
         # print "outer code=", outer_code
         # print "********************************************************"
-        self.database.write_configuration(self.ce_type, configuration,
-                                          header_valid,
-                                          payload_valid,
-                                          goodput)
+        if modulation >= 0:
+            if inner_code >= 0:
+                if outer_code >= 0:
+                    self.database.write_configuration(self.ce_type, configuration,
+                                                      header_valid,
+                                                      payload_valid,
+                                                      goodput)
 
         if self.ce_type == "epsilon_greedy":
             ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon)
@@ -108,7 +111,6 @@ class DatabaseControl:
         self.rules_connection.close()
 
     def write_configuration(self, ce_type, configuration, total, success, throughput):
-        print "CE_Type = ", ce_type
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
         has_row = False
         for row in self.config_cursor:

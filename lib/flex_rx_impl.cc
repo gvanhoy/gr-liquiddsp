@@ -97,7 +97,7 @@ namespace gr {
           break;
         default:
           std::cout << "Unsupported FEC received defaulting to none." << std::endl;
-          d_rx_outer_code = 0;
+          d_rx_outer_code = -1;
       }
     }
 
@@ -127,7 +127,7 @@ namespace gr {
           break;
         default:
           std::cout << "Unsupported Received FEC Defaulting to none." << std::endl;
-          d_rx_inner_code = 0;
+          d_rx_inner_code = -1;
           break;
       }
     }
@@ -170,7 +170,7 @@ namespace gr {
           break;
         default:
           std::cout << "Unsupported Received Modulation Defaulting to BPSK." << std::endl;
-          d_rx_mod_scheme = 0;
+          d_rx_mod_scheme = -1;
           break;
       }
     }

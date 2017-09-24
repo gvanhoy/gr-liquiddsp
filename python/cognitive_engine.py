@@ -49,6 +49,8 @@ class cognitive_engine(gr.sync_block):
         self.message_port_register_out(pmt.intern('configuration'))
         self.num_packets = 0
         self.initial_epsilon = 0.5
+        self.TXperformance_matrix = np.zeros((1000, 3), dtype=np.float64)
+        self.RXperformance_matrix = np.zeros((1000, 3), dtype=np.float64)
 
     def handler(self, packet_info):
         self.num_packets += 1
@@ -63,6 +65,13 @@ class cognitive_engine(gr.sync_block):
         config_id = modulation*7*8 + inner_code*8 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
+        self.RXperformance_matrix[self.num_packets, 0] = self.num_packets
+        self.RXperformance_matrix[self.num_packets, 1] = config_id
+        self.RXperformance_matrix[self.num_packets, 2] = goodput
+        with open('RXperformance.csv', 'w') as file:
+            for x in self.RXperformance_matrix[self.num_packets]:
+                file.write(str(x) + ',')
+            file.write('\n')
         # print "****************************************************"
         # print "Received packet info to the CE"
         # print "header_valid =", header_valid
@@ -96,6 +105,13 @@ class cognitive_engine(gr.sync_block):
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("inner_code"), pmt.from_long(new_ce_configuration.inner_code))
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("outer_code"), pmt.from_long(new_ce_configuration.outer_code))
             self.message_port_pub(pmt.intern('configuration'), new_configuration)
+            TXconfig_id = new_ce_configuration.modulation * 7 * 8 + new_ce_configuration.inner_code * 8 + new_ce_configuration.outer_code + 1
+            self.TXperformance_matrix[self.num_packets, 0] = self.num_packets
+            self.TXperformance_matrix[self.num_packets, 1] = TXconfig_id
+            with open('TXperformance.csv', 'w') as file:
+                for x in self.TXperformance_matrix[self.num_packets]:
+                    file.write(str(x) + ',')
+                file.write('\n')
 
 
 class DatabaseControl:

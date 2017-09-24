@@ -79,7 +79,7 @@ class cognitive_engine(gr.sync_block):
             ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon)
         elif self.ce_type == "gittins":
             ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor)
-        elif self.ce_type = "annealing_epsilon_greedy":
+        elif self.ce_type == "annealing_epsilon_greedy":
             ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, Initial_epsilon)
             Initial_epsilon -= 0.05
         if ce_configuration is not None:

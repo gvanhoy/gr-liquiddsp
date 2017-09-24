@@ -65,13 +65,7 @@ class cognitive_engine(gr.sync_block):
         config_id = modulation*7*8 + inner_code*8 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
-        self.RXperformance_matrix[self.num_packets, 0] = self.num_packets
-        self.RXperformance_matrix[self.num_packets, 1] = config_id
-        self.RXperformance_matrix[self.num_packets, 2] = goodput
-        with open('RXperformance.csv', 'w') as file:
-            for x in self.RXperformance_matrix[self.num_packets]:
-                file.write(str(x) + ',')
-            file.write('\n')
+        self.database.write_RX_result(configuration, self.num_packets, goodput)
         # print "****************************************************"
         # print "Received packet info to the CE"
         # print "header_valid =", header_valid
@@ -105,13 +99,8 @@ class cognitive_engine(gr.sync_block):
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("inner_code"), pmt.from_long(new_ce_configuration.inner_code))
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("outer_code"), pmt.from_long(new_ce_configuration.outer_code))
             self.message_port_pub(pmt.intern('configuration'), new_configuration)
-            TXconfig_id = new_ce_configuration.modulation * 7 * 8 + new_ce_configuration.inner_code * 8 + new_ce_configuration.outer_code + 1
-            self.TXperformance_matrix[self.num_packets, 0] = self.num_packets
-            self.TXperformance_matrix[self.num_packets, 1] = TXconfig_id
-            with open('TXperformance.csv', 'w') as file:
-                for x in self.TXperformance_matrix[self.num_packets]:
-                    file.write(str(x) + ',')
-                file.write('\n')
+            self.database.write_TX_result(new_configuration, self.num_packets)
+
 
 
 class DatabaseControl:
@@ -124,6 +113,14 @@ class DatabaseControl:
     def __del__(self):
         self.config_connection.close()
         self.rules_connection.close()
+
+    def write_RX_result(self, configuration, num_packets, throughput):
+        self.config_cursor.execute('INSERT INTO rx (num_packets, config_id, throughput) VALUES (?,?,?)', (num_packets, configuration.conf_id, throughput))
+        self.config_connection.commit()
+
+    def write_TX_result(self, configuration, num_packets):
+        self.config_cursor.execute('INSERT INTO tx (num_packets, config_id) VALUES (?,?)', (num_packets, configuration.conf_id))
+        self.config_connection.commit()
 
     def write_configuration(self, ce_type, configuration, total, success, throughput):
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
@@ -304,6 +301,20 @@ class DatabaseControl:
             self.config_cursor.execute('INSERT INTO UCB (ID,TrialNumber,Mean,Ind) VALUES (?,?,?,?)', (j, 1, Mean, ind))
 
         self.config_connection.commit()
+
+        # Decision Sequences
+        self.config_cursor.execute('drop table if exists tx')
+        self.config_connection.commit()
+        sql = 'create table if not exists tx (num_packets integer primary key, config_id integer default 0)'
+        self.config_cursor.execute(sql)
+        self.config_connection.commit()
+
+        self.config_cursor.execute('drop table if exists rx')
+        self.config_connection.commit()
+        sql = 'create table if not exists rx (num_packets integer primary key, config_id integer default 0, throughput float default 0)'
+        self.config_cursor.execute(sql)
+        self.config_connection.commit()
+
 
     def reset_config_tables(self):
         ######################################################################

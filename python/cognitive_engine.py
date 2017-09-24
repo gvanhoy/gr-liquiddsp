@@ -29,6 +29,8 @@ import random
 CONFIDENCE = 0.9
 PSR_Threshold = 0.8
 DiscountFactor = 0.9
+epsilon = 0.1
+Initial_epsilon = 0.5
 
 
 class cognitive_engine(gr.sync_block):
@@ -60,20 +62,26 @@ class cognitive_engine(gr.sync_block):
         config_id = modulation*7*8 + inner_code*8 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
-        print "****************************************************"
-        print "Received packet info to the CE"
-        print "header_valid =", header_valid
-        print "payload_valid =", payload_valid
-        print "received mod=", modulation
-        print "inner code=", inner_code
-        print "outer code=", outer_code
-        print "********************************************************"
+        # print "****************************************************"
+        # print "Received packet info to the CE"
+        # print "header_valid =", header_valid
+        # print "payload_valid =", payload_valid
+        # print "received mod=", modulation
+        # print "inner code=", inner_code
+        # print "outer code=", outer_code
+        # print "********************************************************"
         self.database.write_configuration(self.ce_type, configuration,
                                           header_valid,
                                           payload_valid,
                                           goodput)
 
-        ce_configuration = self.engine.epsilon_greedy(self.num_packets, .1)
+        if self.ce_type == "epsilon_greedy":
+            ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon)
+        elif self.ce_type == "gittins":
+            ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor)
+        elif self.ce_type = "annealing_epsilon_greedy":
+            ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, Initial_epsilon)
+            Initial_epsilon -= 0.05
         if ce_configuration is not None:
             new_configuration = pmt.make_dict()
             new_ce_configuration = ce_configuration[0]
@@ -145,6 +153,21 @@ class DatabaseControl:
                     self.config_cursor.execute(
                         'UPDATE gittins set TrialNumber=? ,Mean=? ,stdv=? ,indexx=? WHERE ID=?',
                         [newTrialN, mean, stdv, index, configuration.conf_id])
+            elif ce_type == "annealing_epsilon_greedy":
+                if newTrialN == 1:
+                    self.config_cursor.execute('UPDATE annealing_egreedy set TrialNumber=?, Mean=? WHERE ID=?',
+                                               [newTrialN, mean, configuration.conf_id])
+                    if newTrialN > 1:
+                        config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+                        maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+                            float(config_map.innercodingrate))
+                        RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
+                        lower = RCI[0]
+                        upper = RCI[1]
+                        self.config_cursor.execute(
+                            'UPDATE annealing_egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
+                            [newTrialN, mean, lower, upper, configuration.conf_id])
+
             self.config_connection.commit()
 
 
@@ -491,57 +514,49 @@ class CognitiveEngine:
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
 
-        if num_trial <= 2 * num_configs:
-            temp = int(np.floor(num_trial/num_configs))
-            index_no = num_trial - (temp * num_configs)
-            if index_no == 0:
-                index_no = 616
-            if index_no > 616:
-                index_no = 1
-            print "num trial =", num_trial
-            print "index_no = ", index_no
-
-            # index_no = int(np.floor(num_trial/10))+1
-            # if index_no == 0:
-            #     index_no = 1
-            # if index_no > 616:
-            #     index_no = 616
-            # print "num trial =", num_trial
-            # print "index_no = ", index_no
-
-            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [index_no])
-            for row in self.config_cursor:
-                Modulation = row[1]
-                InnerCode = row[2]
-                OuterCode = row[3]
-            config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-            if self.training_mode:
-                "Training all configurations..."
-                self.training_mode = False
-            print "Training phase"
-            print "Configuration is="
-            print "Modulation is ", config_map.constellationN, config_map.modulationtype
-            print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
-            print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
-            print "###############################\n\n"
-            return config_map, config_map
+        # # Training Phase
+        # if num_trial <= 2 * num_configs:
+        #     temp = int(np.floor(num_trial/num_configs))
+        #     index_no = num_trial - (temp * num_configs)
+        #     if index_no == 0:
+        #         index_no = 616
+        #     if index_no > 616:
+        #         index_no = 1
+        #     print "num trial =", num_trial
+        #     print "index_no = ", index_no
+        #
+        #     self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [index_no])
+        #     for row in self.config_cursor:
+        #         Modulation = row[1]
+        #         InnerCode = row[2]
+        #         OuterCode = row[3]
+        #     config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+        #     if self.training_mode:
+        #         "Training all configurations..."
+        #         self.training_mode = False
+        #     print "Training phase"
+        #     print "Configuration is="
+        #     print "Modulation is ", config_map.constellationN, config_map.modulationtype
+        #     print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+        #     print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+        #     print "###############################\n\n"
+        #     return config_map, config_map
 
         self.config_cursor.execute('SELECT MAX(Mean) FROM Egreedy')
         muBest = self.config_cursor.fetchone()[0]
-        print "muBest = ", muBest
+        # print "muBest = ", muBest
         for j in xrange(1, num_configs + 1):
             self.config_cursor.execute('SELECT Upper FROM Egreedy WHERE ID=?', [j])
             upper = self.config_cursor.fetchone()[0]
             if upper < muBest:
-                # FAST FIX! change 0 for quick fix to 1, makes all methods eligable
                 self.config_cursor.execute('UPDATE Egreedy set Eligibility=? WHERE ID=?', [0, j])
             else:
                 self.config_cursor.execute('UPDATE Egreedy set Eligibility=? WHERE ID=?', [1, j])
         self.config_connection.commit()
 
         self.config_cursor.execute('SELECT count(*) FROM Egreedy WHERE Mean=?', [muBest])
-        NO = self.config_cursor.fetchone()[0]
-        nn = random.randrange(1, NO + 1)
+        no = self.config_cursor.fetchone()[0]
+        nn = random.randrange(1, no + 1)
         self.config_cursor.execute('SELECT ID FROM Egreedy WHERE Mean=?', [muBest])
         j = 0
         for row in self.config_cursor:
@@ -589,3 +604,101 @@ class CognitiveEngine:
                 print "###############################\n\n"
 
         return NextConf1, NextConf2
+
+    def annealing_epsilon_greedy(self, num_trial, epsilon):
+        self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
+        num_configs = self.config_cursor.fetchone()[0]
+
+        self.config_cursor.execute('SELECT MAX(Mean) FROM annealing_Egreedy')
+        muBest = self.config_cursor.fetchone()[0]
+        # print "muBest = ", muBest
+        for j in xrange(1, num_configs + 1):
+            self.config_cursor.execute('SELECT Upper FROM annealing_Egreedy WHERE ID=?', [j])
+            upper = self.config_cursor.fetchone()[0]
+            if upper < muBest:
+                self.config_cursor.execute('UPDATE annealing_Egreedy set Eligibility=? WHERE ID=?', [0, j])
+            else:
+                self.config_cursor.execute('UPDATE annealing_Egreedy set Eligibility=? WHERE ID=?', [1, j])
+        self.config_connection.commit()
+
+        self.config_cursor.execute('SELECT count(*) FROM annealing_Egreedy WHERE Mean=?', [muBest])
+        no = self.config_cursor.fetchone()[0]
+        nn = random.randrange(1, no + 1)
+        self.config_cursor.execute('SELECT ID FROM annealing_Egreedy WHERE Mean=?', [muBest])
+        j = 0
+        for row in self.config_cursor:
+            j = j + 1
+            if j == nn:
+                configN = row[0]
+                self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+                for row1 in self.config_cursor:
+                    NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
+                    print "Configuration is"
+                    config_map = ConfigurationMap(NextConf2.modulation, NextConf2.inner_code, NextConf2.outer_code)
+                    print "Modulation is ", config_map.constellationN, config_map.modulationtype
+                    print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+                    print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+                    print "###############################\n\n"
+                break
+
+        if random.random() > epsilon:
+            print "***Exploitation***\n"
+            print "num trial =", num_trial
+            NextConf1 = NextConf2
+
+        else:
+            print "***Exploration***\n"
+            print "num trial =", num_trial
+            self.config_cursor.execute('SELECT count(*) FROM annealing_Egreedy WHERE Eligibility=?', [1])
+            no = self.config_cursor.fetchone()[0]
+            nn = random.randrange(1, no + 1)
+            self.config_cursor.execute('SELECT ID FROM annealing_Egreedy WHERE Eligibility=?', [1])
+            j = 0
+            for row in self.config_cursor:
+                j = j + 1
+                if j == nn:
+                    configN = row[0]
+                    break
+
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+            for row in self.config_cursor:
+                NextConf1 = ConfigurationMap(row[1], row[2], row[3], row[0])
+                print "Configuration is"
+                config_map = ConfigurationMap(NextConf1.modulation, NextConf1.inner_code, NextConf1.outer_code)
+                print "Modulation is ", config_map.constellationN, config_map.modulationtype
+                print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+                print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+                print "###############################\n\n"
+
+        return NextConf1, NextConf2
+
+    def Gittins(self, num_trial, DiscountFactor):
+        self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
+        num_configs = self.config_cursor.fetchone()[0]
+        self.config_cursor.execute('SELECT MAX(indexx) FROM gittins')
+        highest_idx = self.config_cursor.fetchone()[0]
+
+        self.config_cursor.execute('SELECT count(*) FROM gittins WHERE indexx=?', [highest_idx])
+        no = self.config_cursor.fetchone()[0]
+        nn = random.randrange(1, no + 1)
+        self.config_cursor.execute('SELECT ID FROM gittins WHERE indexx=?', [highest_idx])
+        j = 0
+        for row in self.config_cursor:
+            j = j + 1
+            if j == nn:
+                configN = row[0]
+                self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+                for row1 in self.config_cursor:
+                    NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
+                    print "Configuration is"
+                    config_map = ConfigurationMap(NextConf2.modulation, NextConf2.inner_code, NextConf2.outer_code)
+                    print "Modulation is ", config_map.constellationN, config_map.modulationtype
+                    print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+                    print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+                    print "###############################\n\n"
+                break
+        NextConf1 = NextConf2
+        return NextConf1, NextConf2
+
+
+

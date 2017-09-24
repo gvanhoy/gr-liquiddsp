@@ -86,7 +86,7 @@ class cognitive_engine(gr.sync_block):
             if self.initial_epsilon > 0.05:
                 self.initial_epsilon -= 0.0005
 
-        print "CE_Type = ", self.ce_type
+
         if ce_configuration is not None:
             new_configuration = pmt.make_dict()
             new_ce_configuration = ce_configuration[0]
@@ -108,6 +108,7 @@ class DatabaseControl:
         self.rules_connection.close()
 
     def write_configuration(self, ce_type, configuration, total, success, throughput):
+        print "CE_Type = ", ce_type
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
         has_row = False
         for row in self.config_cursor:

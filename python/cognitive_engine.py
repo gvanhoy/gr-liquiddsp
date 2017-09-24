@@ -165,16 +165,16 @@ class DatabaseControl:
                 if newTrialN == 1:
                     self.config_cursor.execute('UPDATE annealing_egreedy set TrialNumber=?, Mean=? WHERE ID=?',
                                                [newTrialN, mean, configuration.conf_id])
-                    if newTrialN > 1:
-                        config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-                        maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
-                            float(config_map.innercodingrate))
-                        RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
-                        lower = RCI[0]
-                        upper = RCI[1]
-                        self.config_cursor.execute(
-                            'UPDATE annealing_egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
-                            [newTrialN, mean, lower, upper, configuration.conf_id])
+                if newTrialN > 1:
+                    config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+                    maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+                        float(config_map.innercodingrate))
+                    RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
+                    lower = RCI[0]
+                    upper = RCI[1]
+                    self.config_cursor.execute(
+                        'UPDATE annealing_egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
+                        [newTrialN, mean, lower, upper, configuration.conf_id])
 
             self.config_connection.commit()
 

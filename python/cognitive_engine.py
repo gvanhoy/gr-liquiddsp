@@ -28,8 +28,6 @@ import random
 
 CONFIDENCE = 0.9
 PSR_Threshold = 0.8
-DiscountFactor = 0.9
-
 
 
 class cognitive_engine(gr.sync_block):
@@ -55,6 +53,7 @@ class cognitive_engine(gr.sync_block):
     def handler(self, packet_info):
         self.num_packets += 1
         epsilon = 0.1
+        DiscountFactor = 0.9
         # initial_epsilon = 0.5
         modulation = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("modulation"), pmt.PMT_NIL))
         inner_code = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("inner_code"), pmt.PMT_NIL))
@@ -680,7 +679,7 @@ class CognitiveEngine:
 
         return NextConf1, NextConf2
 
-    def Gittins(self, num_trial, DiscountFactor):
+    def gittins(self, num_trial, DiscountFactor):
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
         self.config_cursor.execute('SELECT MAX(indexx) FROM gittins')

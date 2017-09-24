@@ -100,7 +100,7 @@ class cognitive_engine(gr.sync_block):
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("outer_code"), pmt.from_long(new_ce_configuration.outer_code))
             self.message_port_pub(pmt.intern('configuration'), new_configuration)
             TXconfig_id = new_ce_configuration.modulation * 7 * 8 + new_ce_configuration.inner_code * 8 + new_ce_configuration.outer_code + 1
-            self.database.write_RX_result(TXconfig_id, self.num_packets)
+            self.database.write_TX_result(TXconfig_id, self.num_packets)
 
 
 

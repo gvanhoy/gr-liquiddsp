@@ -50,11 +50,12 @@ class cognitive_engine(gr.sync_block):
         self.set_msg_handler(pmt.intern('packet_info'), self.handler)
         self.message_port_register_out(pmt.intern('configuration'))
         self.num_packets = 0
-        self.epsilon = 0.1
         self.initial_epsilon = 0.5
 
     def handler(self, packet_info):
         self.num_packets += 1
+        epsilon = 0.1
+        # initial_epsilon = 0.5
         modulation = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("modulation"), pmt.PMT_NIL))
         inner_code = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("inner_code"), pmt.PMT_NIL))
         outer_code = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("outer_code"), pmt.PMT_NIL))
@@ -77,14 +78,15 @@ class cognitive_engine(gr.sync_block):
                                           goodput)
 
         if self.ce_type == "epsilon_greedy":
-            ce_configuration = self.engine.epsilon_greedy(self.num_packets, self.epsilon)
+            ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon)
         elif self.ce_type == "gittins":
             ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor)
         elif self.ce_type == "annealing_epsilon_greedy":
             ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, self.initial_epsilon)
             if self.initial_epsilon > 0.05:
                 self.initial_epsilon -= 0.05
-       if ce_configuration is not None:
+            
+        if ce_configuration is not None:
             new_configuration = pmt.make_dict()
             new_ce_configuration = ce_configuration[0]
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("modulation"), pmt.from_long(new_ce_configuration.modulation))

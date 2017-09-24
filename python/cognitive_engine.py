@@ -85,7 +85,8 @@ class cognitive_engine(gr.sync_block):
             ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, self.initial_epsilon)
             if self.initial_epsilon > 0.05:
                 self.initial_epsilon -= 0.05
-            
+
+        print "CE_Type = ", self.ce_type
         if ce_configuration is not None:
             new_configuration = pmt.make_dict()
             new_ce_configuration = ce_configuration[0]
@@ -518,33 +519,33 @@ class CognitiveEngine:
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
 
-        # # Training Phase
-        # if num_trial <= 2 * num_configs:
-        #     temp = int(np.floor(num_trial/num_configs))
-        #     index_no = num_trial - (temp * num_configs)
-        #     if index_no == 0:
-        #         index_no = 616
-        #     if index_no > 616:
-        #         index_no = 1
-        #     print "num trial =", num_trial
-        #     print "index_no = ", index_no
-        #
-        #     self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [index_no])
-        #     for row in self.config_cursor:
-        #         Modulation = row[1]
-        #         InnerCode = row[2]
-        #         OuterCode = row[3]
-        #     config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-        #     if self.training_mode:
-        #         "Training all configurations..."
-        #         self.training_mode = False
-        #     print "Training phase"
-        #     print "Configuration is="
-        #     print "Modulation is ", config_map.constellationN, config_map.modulationtype
-        #     print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
-        #     print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
-        #     print "###############################\n\n"
-        #     return config_map, config_map
+        # Training Phase
+        if num_trial <= 2 * num_configs:
+            temp = int(np.floor(num_trial/num_configs))
+            index_no = num_trial - (temp * num_configs)
+            if index_no == 0:
+                index_no = 616
+            if index_no > 616:
+                index_no = 1
+            print "num trial =", num_trial
+            print "index_no = ", index_no
+
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [index_no])
+            for row in self.config_cursor:
+                Modulation = row[1]
+                InnerCode = row[2]
+                OuterCode = row[3]
+            config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+            if self.training_mode:
+                "Training all configurations..."
+                self.training_mode = False
+            print "Training phase"
+            print "Configuration is="
+            print "Modulation is ", config_map.constellationN, config_map.modulationtype
+            print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+            print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+            print "###############################\n\n"
+            return config_map, config_map
 
         self.config_cursor.execute('SELECT MAX(Mean) FROM Egreedy')
         muBest = self.config_cursor.fetchone()[0]

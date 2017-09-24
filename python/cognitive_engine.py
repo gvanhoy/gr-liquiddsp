@@ -86,7 +86,7 @@ class cognitive_engine(gr.sync_block):
         elif self.ce_type == "annealing_epsilon_greedy":
             ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, self.initial_epsilon)
             if self.initial_epsilon > 0.05:
-                self.initial_epsilon -= 0.0005
+                self.initial_epsilon -= 0.001
 
 
         if ce_configuration is not None:

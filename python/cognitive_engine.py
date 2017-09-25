@@ -29,6 +29,7 @@ from scipy.stats import *
 
 CONFIDENCE = 0.9
 DiscountFactor = 0.9
+window_size = 30
 
 
 class cognitive_engine(gr.sync_block):
@@ -765,8 +766,6 @@ class CognitiveEngine:
         return NextConf1, NextConf2
 
     def gittins(self, num_trial, DiscountFactor):
-        self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
-        num_configs = self.config_cursor.fetchone()[0]
         self.config_cursor.execute('SELECT MAX(indexx) FROM gittins')
         highest_idx = self.config_cursor.fetchone()[0]
 
@@ -792,18 +791,104 @@ class CognitiveEngine:
         NextConf1 = NextConf2
         return NextConf1, NextConf2
 
-    # def RoTA(self, num_trial, Throughput_Treshhold, PSR_Threshold):
-    #     self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
-    #     num_configs = self.config_cursor.fetchone()[0]
-    #
-    #     for j in xrange(1, num_configs + 1):
-    #         self.config_cursor.execute('SELECT Upper FROM RoTA WHERE ID=?', [j])
-    #         upper = self.config_cursor.fetchone()[0]
-    #         if upper < muBest:
-    #             self.config_cursor.execute('UPDATE RoTA set Eligibility=? WHERE ID=?', [0, j])
-    #         else:
-    #             self.config_cursor.execute('UPDATE RoTA set Eligibility=? WHERE ID=?', [1, j])
-    #     self.config_connection.commit()
+    def RoTA(self, num_trial, Throughput_Treshhold, PSR_Threshold):
+        window = num_trial - window_size
+        self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
+        num_configs = self.config_cursor.fetchone()[0]
+        for j in xrange(1, num_configs + 1):
+            self.config_cursor.execute('SELECT UpperM, lowerM, upperP, lowerP FROM RoTA WHERE ID=?', [j])
+            for row in self.config_cursor:
+                upperM = row[0]
+                lowerM = row[1]
+                upperP = row[2]
+                lowerP = row[3]
+
+            if (upperM < Throughput_Treshhold) or (upperP < PSR_Threshold):
+                self.config_cursor.execute('UPDATE RoTA set Eligibility=? WHERE ID=?', [0, j])
+            elif (lowerM >= Throughput_Treshhold) and (lowerP >= PSR_Threshold):
+                self.config_cursor.execute('UPDATE RoTA set Eligibility=? WHERE ID=?', [2, j])
+            else:
+                self.config_cursor.execute('UPDATE RoTA set Eligibility=? WHERE ID=?', [1, j])
+        self.config_connection.commit()
+
+        self.config_cursor.execute('SELECT Count(*) FROM RoTA WHERE Eligibility=?', [2])
+        ofsseting_size = self.config_cursor.fetchone()[0]
+        self.config_cursor.execute('SELECT Count(*) FROM RoTA WHERE Eligibility=?', [1])
+        training_size = self.config_cursor.fetchone()[0]
+
+        if ofsseting_size == 0:
+            print "***Infant stage***\n"
+            print "num trial =", num_trial
+            nn = random.randrange(1, training_size + 1)
+            self.config_cursor.execute('SELECT ID FROM RoTA WHERE Eligibility=?', [1])
+            j = 0
+            for row in self.config_cursor:
+                j = j + 1
+                if j == nn:
+                    configN = row[0]
+                    break
+
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+            for row in self.config_cursor:
+                NextConf1 = ConfigurationMap(row[1], row[2], row[3], row[0])
+                print "Configuration is"
+                config_map = ConfigurationMap(NextConf1.modulation, NextConf1.inner_code, NextConf1.outer_code)
+                print "Modulation is ", config_map.constellationN, config_map.modulationtype
+                print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+                print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+                print "###############################\n\n"
+            NextConf1 = NextConf2
+            return NextConf1, NextConf2
+        else:
+            self.config_cursor.execute('SELECT Avg(Mean) FROM RoTA WHERE ID>?', [window])
+            throughput_window = self.config_cursor.fetchone()[0]
+            self.config_cursor.execute('SELECT Avg(PSR) FROM RoTA WHERE ID>?', [window])
+            psr_window = self.config_cursor.fetchone()[0]
+            if (throughput_window > Throughput_Treshhold) and (training_size > 0) and (psr_window > PSR_Threshold):
+                self.config_cursor.execute('SELECT MAX(indexx) FROM RoTA')
+                highest_idx = self.config_cursor.fetchone()[0]
+                self.config_cursor.execute('SELECT count(*) FROM RoTA WHERE indexx=?', [highest_idx])
+                no = self.config_cursor.fetchone()[0]
+                nn = random.randrange(1, no + 1)
+                self.config_cursor.execute('SELECT ID FROM RoTA WHERE indexx=?', [highest_idx])
+                j = 0
+                for row in self.config_cursor:
+                    j = j + 1
+                    if j == nn:
+                        configN = row[0]
+                        self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+                        for row1 in self.config_cursor:
+                            NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
+                            print "Configuration is"
+                            config_map = ConfigurationMap(NextConf2.modulation, NextConf2.inner_code,
+                                                          NextConf2.outer_code)
+                            print "Modulation is ", config_map.constellationN, config_map.modulationtype
+                            print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+                            print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+                            print "###############################\n\n"
+                        break
+                NextConf1 = NextConf2
+                return NextConf1, NextConf2
+            else:
+                self.config_cursor.execute('SELECT MAX(upperM) FROM RoTA WHERE Eligibility=?', [2])
+                max_upperM = self.config_cursor.fetchone()[0]
+                self.config_cursor.execute('SELECT ID FROM RoTA WHERE upperM=?', [max_upperM])
+                ID_max_upperM = self.config_cursor.fetchone()[0]
+                self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+                for row1 in self.config_cursor:
+                    NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
+                    print "Configuration is"
+                    config_map = ConfigurationMap(NextConf2.modulation, NextConf2.inner_code,
+                                                  NextConf2.outer_code)
+                    print "Modulation is ", config_map.constellationN, config_map.modulationtype
+                    print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+                    print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+                    print "###############################\n\n"
+                NextConf1 = NextConf2
+                return NextConf1, NextConf2
+            
+
+
 
 
 

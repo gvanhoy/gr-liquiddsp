@@ -881,7 +881,7 @@ class CognitiveEngine:
                 max_upperM = self.config_cursor.fetchone()[0]
                 self.config_cursor.execute('SELECT ID FROM RoTA WHERE upperM=?', [max_upperM])
                 ID_max_upperM = self.config_cursor.fetchone()[0]
-                self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+                self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [ID_max_upperM])
                 for row1 in self.config_cursor:
                     NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
                     print "Configuration is"

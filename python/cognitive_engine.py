@@ -344,7 +344,7 @@ class DatabaseControl:
                 config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
             upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
                 float(config_map.innercodingrate))
-            self.config_cursor.execute('INSERT INTO RoTA (ID,TrialNumber,Mean,lowerM,upperM,PSR,lowerP,upperP,Indexx,Eligibility) VALUES (?,?,?,?,?,?,?)',
+            self.config_cursor.execute('INSERT INTO RoTA (ID,TrialNumber,Mean,lowerM,upperM,PSR,lowerP,upperP,Indexx,Eligibility) VALUES (?,?,?,?,?,?,?,?,?,?)',
                                        (j, 0, 0.0, 0.0, upperbound, 1.0, 0.0, 1.0, upperbound, 1))
 
         self.config_connection.commit()
@@ -886,7 +886,7 @@ class CognitiveEngine:
                     print "###############################\n\n"
                 NextConf1 = NextConf2
                 return NextConf1, NextConf2
-            
+
 
 
 

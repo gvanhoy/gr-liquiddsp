@@ -53,7 +53,7 @@ class cognitive_engine(gr.sync_block):
         self.initial_epsilon = 0.5
         self.TXperformance_matrix = np.zeros((1000, 3), dtype=np.float64)
         self.RXperformance_matrix = np.zeros((1000, 3), dtype=np.float64)
-        self.PSR_Threshold = 0.8
+        self.PSR_Threshold = 0.6
         self.Throughput_Threshold = 3
 
     def handler(self, packet_info):
@@ -423,7 +423,7 @@ class DatabaseControl:
 
     def PSR_CI(self, success, unsuccess, confidence):
         #if ((success > 100) or (unsuccess > 100)) or ((success > 20) and (unsuccess > 20)):
-        [m, v] = beta.stats(success,unsuccess)
+        [m, v] = beta.stats(success+1, unsuccess+1)
         std = np.sqrt(v)
         z = norm.ppf(confidence, 0, 1)
         lb = m - (z * std)

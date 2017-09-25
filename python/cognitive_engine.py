@@ -816,6 +816,13 @@ class CognitiveEngine:
         self.config_cursor.execute('SELECT Count(*) FROM RoTA WHERE Eligibility=?', [1])
         training_size = self.config_cursor.fetchone()[0]
 
+        self.config_cursor.execute('SELECT Avg(Mean) FROM RoTA WHERE ID>?', [window])
+        throughput_window = self.config_cursor.fetchone()[0]
+        self.config_cursor.execute('SELECT Avg(PSR) FROM RoTA WHERE ID>?', [window])
+        psr_window = self.config_cursor.fetchone()[0]
+        print "throughput_window = ", throughput_window
+        print "psr_window = ", psr_window
+
         if ofsseting_size == 0:
             print "***Infant stage***\n"
             print "num trial =", num_trial

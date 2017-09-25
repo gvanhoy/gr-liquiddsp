@@ -25,9 +25,10 @@ import pmt
 from scipy.stats import *
 import numpy as np
 import random
+from scipy.stats import *
 
 CONFIDENCE = 0.9
-PSR_Threshold = 0.8
+DiscountFactor = 0.9
 
 
 class cognitive_engine(gr.sync_block):
@@ -51,6 +52,8 @@ class cognitive_engine(gr.sync_block):
         self.initial_epsilon = 0.5
         self.TXperformance_matrix = np.zeros((1000, 3), dtype=np.float64)
         self.RXperformance_matrix = np.zeros((1000, 3), dtype=np.float64)
+        self.PSR_Threshold = 0.8
+        self.Throughput_Threshold = 3
 
     def handler(self, packet_info):
         self.num_packets += 1
@@ -90,6 +93,8 @@ class cognitive_engine(gr.sync_block):
             ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, self.initial_epsilon)
             if self.initial_epsilon > 0.05:
                 self.initial_epsilon -= 0.001
+        elif self.ce_type == "RoTA":
+            ce_configuration = self.engine.RoTA(self.num_packets, self.Throughput_Threshold, self.PSR_Threshold)
 
 
         if ce_configuration is not None:
@@ -144,6 +149,7 @@ class DatabaseControl:
             new_aggregated_Throughput = old_throughput + throughput
             # newThroughput = throughput
             newSQTh = old_sqth + np.power(throughput, 2)
+            new_PSR = newSuccess / newTrialN
             self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
                            [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, configuration.conf_id])
             mean = new_aggregated_Throughput / newTrialN
@@ -188,6 +194,26 @@ class DatabaseControl:
                     self.config_cursor.execute(
                         'UPDATE annealing_egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
                         [newTrialN, mean, lower, upper, configuration.conf_id])
+            elif ce_type == "RoTA":
+                if newTrialN == 1:
+                    self.config_cursor.execute('UPDATE RoTA set TrialNumber=?, Mean=?, PSR=? WHERE ID=?',
+                                                       [newTrialN, mean, new_PSR, configuration.conf_id])
+                if newTrialN > 1:
+                    config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+                    maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+                        float(config_map.innercodingrate))
+                    RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
+                    lowerM = RCI[0]
+                    upperM = RCI[1]
+                    Unsuccess = newTotal-newSuccess
+                    PSRCI = self.PSR_CI(newSuccess, Unsuccess, CONFIDENCE)
+                    lowerP = PSRCI[0]
+                    upperP = PSRCI[1]
+                    stdv = np.sqrt(variance)
+                    index = mean + (stdv * self.GittinsIndexNormalUnitVar(newTrialN, DiscountFactor))
+                    self.config_cursor.execute(
+                        'UPDATE RoTA set TrialNumber=? ,Mean=? ,lowerM=?, upperM=?, PSR=?, lowerP=?, upperP=?, indexx=? WHERE ID=?',
+                        [newTrialN, mean, lowerM, upperM, new_PSR, lowerP, upperP, index, configuration.conf_id])
 
             self.config_connection.commit()
 
@@ -306,7 +332,7 @@ class DatabaseControl:
         # RoTA
         self.config_cursor.execute('drop table if exists RoTA')
         self.config_connection.commit()
-        sql = 'create table if not exists RoTA (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, Stdv real default 0.0, PSR real default 1.0, Indexx float default 0)'
+        sql = 'create table if not exists RoTA (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, LowerM real default 0.0, UpperM real default 0.0, PSR real default 1.0, LowerP real default 0.0, UpperP real default 0.0, Indexx float default 0, Eligibility int default 1)'
         self.config_cursor.execute(sql)
         for j in xrange(1, Allconfigs + 1):
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
@@ -317,8 +343,8 @@ class DatabaseControl:
                 config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
             upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
                 float(config_map.innercodingrate))
-            self.config_cursor.execute('INSERT INTO RoTA (ID,TrialNumber,Mean,Stdv,PSR,Indexx) VALUES (?,?,?,?,?,?)',
-                                       (j, 0, 0.0, 0.0, 1.0, upperbound))
+            self.config_cursor.execute('INSERT INTO RoTA (ID,TrialNumber,Mean,lowerM,upperM,PSR,lowerP,upperP,Indexx,Eligibility) VALUES (?,?,?,?,?,?,?)',
+                                       (j, 0, 0.0, 0.0, upperbound, 1.0, 0.0, 1.0, upperbound, 1))
 
         self.config_connection.commit()
 
@@ -393,6 +419,18 @@ class DatabaseControl:
 
         RCI = [RCIl, RCIu]
         return RCI
+
+    def PSR_CI(self, success, unsuccess, confidence):
+        #if ((success > 100) or (unsuccess > 100)) or ((success > 20) and (unsuccess > 20)):
+        [m, v] = beta.stats(success,unsuccess)
+        std = np.sqrt(v)
+        z = norm.ppf(confidence, 0, 1)
+        lb = m - (z * std)
+        ub = m + (z * std)
+        PSRCI = [lb, ub]
+        return PSRCI
+
+
 
     def GittinsIndexNormalUnitVar(self, No, Discount_F):
         Discount_F_index = np.array([0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 0.995])
@@ -753,6 +791,19 @@ class CognitiveEngine:
                 break
         NextConf1 = NextConf2
         return NextConf1, NextConf2
+
+    # def RoTA(self, num_trial, Throughput_Treshhold, PSR_Threshold):
+    #     self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
+    #     num_configs = self.config_cursor.fetchone()[0]
+    #
+    #     for j in xrange(1, num_configs + 1):
+    #         self.config_cursor.execute('SELECT Upper FROM RoTA WHERE ID=?', [j])
+    #         upper = self.config_cursor.fetchone()[0]
+    #         if upper < muBest:
+    #             self.config_cursor.execute('UPDATE RoTA set Eligibility=? WHERE ID=?', [0, j])
+    #         else:
+    #             self.config_cursor.execute('UPDATE RoTA set Eligibility=? WHERE ID=?', [1, j])
+    #     self.config_connection.commit()
 
 
 

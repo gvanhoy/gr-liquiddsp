@@ -303,6 +303,25 @@ class DatabaseControl:
 
         self.config_connection.commit()
 
+        # RoTA
+        self.config_cursor.execute('drop table if exists RoTA')
+        self.config_connection.commit()
+        sql = 'create table if not exists RoTA (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, Stdv real default 0.0, PSR real default 1.0, Indexx float default 0)'
+        self.config_cursor.execute(sql)
+        for j in xrange(1, Allconfigs + 1):
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
+            for row in self.config_cursor:
+                Modulation = row[1]
+                InnerCode = row[2]
+                OuterCode = row[3]
+                config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+            upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+                float(config_map.innercodingrate))
+            self.config_cursor.execute('INSERT INTO RoTA (ID,TrialNumber,Mean,Stdv,PSR,Indexx) VALUES (?,?,?,?,?,?)',
+                                       (j, 0, 0.0, 0.0, 1.0, upperbound))
+
+        self.config_connection.commit()
+
         # Decision Sequences
         self.config_cursor.execute('drop table if exists tx')
         self.config_connection.commit()

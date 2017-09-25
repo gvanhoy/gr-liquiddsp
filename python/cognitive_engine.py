@@ -69,7 +69,7 @@ class cognitive_engine(gr.sync_block):
         config_id = modulation*7*8 + inner_code*8 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
-        self.database.write_RX_result(config_id, self.num_packets, goodput)
+        self.database.write_RX_result(config_id, self.num_packets, goodput, payload_valid)
         # print "****************************************************"
         # print "Received packet info to the CE"
         # print "header_valid =", header_valid
@@ -121,8 +121,8 @@ class DatabaseControl:
         self.config_connection.close()
         self.rules_connection.close()
 
-    def write_RX_result(self, config_id, num_packets, throughput):
-        self.config_cursor.execute('INSERT INTO rx (num_packets, config_id, throughput) VALUES (?,?,?)', (num_packets, config_id, throughput))
+    def write_RX_result(self, config_id, num_packets, throughput, PSR):
+        self.config_cursor.execute('INSERT INTO rx (num_packets, config_id, throughput, PSR) VALUES (?,?,?,?)', (num_packets, config_id, throughput, PSR))
         self.config_connection.commit()
 
     def write_TX_result(self, config_id, num_packets):
@@ -358,7 +358,7 @@ class DatabaseControl:
 
         self.config_cursor.execute('drop table if exists rx')
         self.config_connection.commit()
-        sql = 'create table if not exists rx (num_packets integer primary key, config_id integer default 0, throughput float default 0)'
+        sql = 'create table if not exists rx (num_packets integer primary key, config_id integer default 0, throughput float default 0.0, PSR float default 0.0)'
         self.config_cursor.execute(sql)
         self.config_connection.commit()
 
@@ -816,9 +816,9 @@ class CognitiveEngine:
         self.config_cursor.execute('SELECT Count(*) FROM RoTA WHERE Eligibility=?', [1])
         training_size = self.config_cursor.fetchone()[0]
 
-        self.config_cursor.execute('SELECT Avg(Mean) FROM RoTA WHERE ID>?', [window])
+        self.config_cursor.execute('SELECT Avg(throughput) FROM rx WHERE ID>?', [window])
         throughput_window = self.config_cursor.fetchone()[0]
-        self.config_cursor.execute('SELECT Avg(PSR) FROM RoTA WHERE ID>?', [window])
+        self.config_cursor.execute('SELECT Avg(PSR) FROM rx WHERE ID>?', [window])
         psr_window = self.config_cursor.fetchone()[0]
         print "throughput_window = ", throughput_window
         print "psr_window = ", psr_window
@@ -847,9 +847,9 @@ class CognitiveEngine:
             NextConf2 = NextConf1
             return NextConf1, NextConf2
         else:
-            self.config_cursor.execute('SELECT Avg(Mean) FROM RoTA WHERE ID>?', [window])
+            self.config_cursor.execute('SELECT Avg(throughput) FROM rx WHERE ID>?', [window])
             throughput_window = self.config_cursor.fetchone()[0]
-            self.config_cursor.execute('SELECT Avg(PSR) FROM RoTA WHERE ID>?', [window])
+            self.config_cursor.execute('SELECT Avg(PSR) FROM rx WHERE ID>?', [window])
             psr_window = self.config_cursor.fetchone()[0]
             if (throughput_window > Throughput_Treshhold) and (training_size > 0) and (psr_window > PSR_Threshold):
                 self.config_cursor.execute('SELECT MAX(indexx) FROM RoTA')

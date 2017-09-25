@@ -837,7 +837,7 @@ class CognitiveEngine:
                 print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
                 print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
                 print "###############################\n\n"
-            NextConf1 = NextConf2
+            NextConf2 = NextConf1
             return NextConf1, NextConf2
         else:
             self.config_cursor.execute('SELECT Avg(Mean) FROM RoTA WHERE ID>?', [window])

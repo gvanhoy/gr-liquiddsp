@@ -21,6 +21,10 @@
       <name>Gittins</name>
       <key>gittins</key>
     </option>
+    <option>
+      <name>RoTA</name>
+      <key>RoTA</key>
+    </option>
   </param>
   <sink>
     <name>packet_info</name>

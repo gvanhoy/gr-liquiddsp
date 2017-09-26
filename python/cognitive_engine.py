@@ -30,6 +30,7 @@ from scipy.stats import *
 CONFIDENCE = 0.9
 DiscountFactor = 0.9
 window_size = 30
+delayed_strategy = "mean"
 
 class cognitive_engine(gr.sync_block):
     """
@@ -80,24 +81,30 @@ class cognitive_engine(gr.sync_block):
         # print "inner code=", inner_code
         # print "outer code=", outer_code
         # print "********************************************************"
-        if modulation >= 0:
-            if inner_code >= 0:
-                if outer_code >= 0:
-                    self.database.write_configuration(self.ce_type, configuration,
-                                                      header_valid,
-                                                      payload_valid,
-                                                      goodput)
+        if self.delayed_feedback == "False":
+            if modulation >= 0:
+                if inner_code >= 0:
+                    if outer_code >= 0:
+                        self.database.write_configuration(self.ce_type, configuration,
+                                                          header_valid,
+                                                          payload_valid,
+                                                          goodput)
+        elif self.delayed_feedback == "True":
+            if modulation >= 0:
+                if inner_code >= 0:
+                    if outer_code >= 0:
+                        print "It's delayed"
 
         if self.ce_type == "epsilon_greedy":
-            ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon)
+            ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback)
         elif self.ce_type == "gittins":
-            ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor)
+            ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor, self.delayed_feedback)
         elif self.ce_type == "annealing_epsilon_greedy":
-            ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, self.initial_epsilon)
+            ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, self.initial_epsilon, self.delayed_feedback)
             if self.initial_epsilon > 0.05:
                 self.initial_epsilon -= 0.001
         elif self.ce_type == "RoTA":
-            ce_configuration = self.engine.RoTA(self.num_packets, self.Throughput_Threshold, self.PSR_Threshold)
+            ce_configuration = self.engine.RoTA(self.num_packets, self.Throughput_Threshold, self.PSR_Threshold, self.delayed_feedback)
 
 
         if ce_configuration is not None:
@@ -270,25 +277,26 @@ class DatabaseControl:
 
         self.config_connection.commit()
 
-        self.config_cursor.execute('drop table if exists Boltzmann')
-        self.config_connection.commit()
-
-        sql = 'create table if not exists Boltzmann (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, Prob float default 1.0, Lower real default 0.0, Upper real default 0.0, Eligibility int default 1)'
-        self.config_cursor.execute(sql)
-        for j in xrange(1, Allconfigs + 1):
-            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
-            for row in self.config_cursor:
-                Modulation = row[1]
-                InnerCode = row[2]
-                OuterCode = row[3]
-                config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-            upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
-            float(config_map.innercodingrate))
-            self.config_cursor.execute(
-                'INSERT INTO Boltzmann (ID,TrialNumber,Mean,Prob,Lower,Upper,Eligibility) VALUES (?,?,?,?,?,?,?)',
-                (j, 0, 0, 1.0, 0, upperbound, 1))
-
-        self.config_connection.commit()
+        # # Boltzmann
+        # self.config_cursor.execute('drop table if exists Boltzmann')
+        # self.config_connection.commit()
+        #
+        # sql = 'create table if not exists Boltzmann (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, Prob float default 1.0, Lower real default 0.0, Upper real default 0.0, Eligibility int default 1)'
+        # self.config_cursor.execute(sql)
+        # for j in xrange(1, Allconfigs + 1):
+        #     self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
+        #     for row in self.config_cursor:
+        #         Modulation = row[1]
+        #         InnerCode = row[2]
+        #         OuterCode = row[3]
+        #         config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+        #     upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+        #     float(config_map.innercodingrate))
+        #     self.config_cursor.execute(
+        #         'INSERT INTO Boltzmann (ID,TrialNumber,Mean,Prob,Lower,Upper,Eligibility) VALUES (?,?,?,?,?,?,?)',
+        #         (j, 0, 0, 1.0, 0, upperbound, 1))
+        #
+        # self.config_connection.commit()
 
         # Gittins
         self.config_cursor.execute('drop table if exists Gittins')
@@ -309,28 +317,28 @@ class DatabaseControl:
 
         self.config_connection.commit()
 
-        # UCB
-        self.config_cursor.execute('drop table if exists UCB')
-        self.config_connection.commit()
-        sql = 'create table if not exists UCB (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, Ind float default 0)'
-        self.config_cursor.execute(sql)
-        M = 64
-        maxReward = np.log2(M)
-        for j in xrange(1, Allconfigs + 1):
-            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
-            for row in self.config_cursor:
-                Modulation = row[1]
-                InnerCode = row[2]
-                OuterCode = row[3]
-                config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-            upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
-            float(config_map.innercodingrate))
-            Mean = upperbound / maxReward
-            bonus = np.sqrt(2 * np.log10(Allconfigs))
-            ind = Mean + bonus
-            self.config_cursor.execute('INSERT INTO UCB (ID,TrialNumber,Mean,Ind) VALUES (?,?,?,?)', (j, 1, Mean, ind))
-
-        self.config_connection.commit()
+        # # UCB
+        # self.config_cursor.execute('drop table if exists UCB')
+        # self.config_connection.commit()
+        # sql = 'create table if not exists UCB (ID integer primary key, TrialNumber integer default 0, Mean real default 0.0, Ind float default 0)'
+        # self.config_cursor.execute(sql)
+        # M = 64
+        # maxReward = np.log2(M)
+        # for j in xrange(1, Allconfigs + 1):
+        #     self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [j])
+        #     for row in self.config_cursor:
+        #         Modulation = row[1]
+        #         InnerCode = row[2]
+        #         OuterCode = row[3]
+        #         config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
+        #     upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+        #     float(config_map.innercodingrate))
+        #     Mean = upperbound / maxReward
+        #     bonus = np.sqrt(2 * np.log10(Allconfigs))
+        #     ind = Mean + bonus
+        #     self.config_cursor.execute('INSERT INTO UCB (ID,TrialNumber,Mean,Ind) VALUES (?,?,?,?)', (j, 1, Mean, ind))
+        #
+        # self.config_connection.commit()
 
         # RoTA
         self.config_cursor.execute('drop table if exists RoTA')
@@ -599,13 +607,14 @@ class CognitiveEngine:
     def __init__(self):
         self.config_connection = sqlite3.connect('config.db', check_same_thread=False)
         self.config_cursor = self.config_connection.cursor()
-        self.training_mode = True
+        self.database = DatabaseControl()
+        # self.training_mode = True
 
     def __del__(self):
         self.config_connection.close()
         self.config_cursor.close()
 
-    def epsilon_greedy(self, num_trial, epsilon):
+    def epsilon_greedy(self, num_trial, epsilon, delayed_feedback):
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
 
@@ -649,31 +658,30 @@ class CognitiveEngine:
                 self.config_cursor.execute('UPDATE Egreedy set Eligibility=? WHERE ID=?', [1, j])
         self.config_connection.commit()
 
-        self.config_cursor.execute('SELECT count(*) FROM Egreedy WHERE Mean=?', [muBest])
-        no = self.config_cursor.fetchone()[0]
-        nn = random.randrange(1, no + 1)
-        self.config_cursor.execute('SELECT ID FROM Egreedy WHERE Mean=?', [muBest])
-        j = 0
-        for row in self.config_cursor:
-            j = j + 1
-            if j == nn:
-                configN = row[0]
-                self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
-                for row1 in self.config_cursor:
-                    NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
-                    print "Configuration is"
-                    config_map = ConfigurationMap(NextConf2.modulation, NextConf2.inner_code, NextConf2.outer_code)
-                    print "Modulation is ", config_map.constellationN, config_map.modulationtype
-                    print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
-                    print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
-                    print "###############################\n\n"
-                break
 
         if random.random() > epsilon:
             print "***Exploitation***\n"
             print "num trial =", num_trial
+            self.config_cursor.execute('SELECT count(*) FROM Egreedy WHERE Mean=?', [muBest])
+            no = self.config_cursor.fetchone()[0]
+            nn = random.randrange(1, no + 1)
+            self.config_cursor.execute('SELECT ID FROM Egreedy WHERE Mean=?', [muBest])
+            j = 0
+            for row in self.config_cursor:
+                j = j + 1
+                if j == nn:
+                    configN = row[0]
+                    self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+                    for row1 in self.config_cursor:
+                        NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
+                        print "Configuration is"
+                        config_map = ConfigurationMap(NextConf2.modulation, NextConf2.inner_code, NextConf2.outer_code)
+                        print "Modulation is ", config_map.constellationN, config_map.modulationtype
+                        print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+                        print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+                        print "###############################\n\n"
+                    break
             NextConf1 = NextConf2
-
         else:
             print "***Exploration***\n"
             print "num trial =", num_trial
@@ -697,10 +705,19 @@ class CognitiveEngine:
                 print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
                 print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
                 print "###############################\n\n"
-
+        if delayed_feedback == "True":
+            self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
+            for row in self.config_cursor:
+                if delayed_strategy == "mean":
+                    substitude_value = row[2]
+                elif delayed_strategy == "lower":
+                    substitude_value = row[3]
+                elif delayed_strategy == "upper":
+                    substitude_value = row[4]
+            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value)
         return NextConf1, NextConf2
 
-    def annealing_epsilon_greedy(self, num_trial, epsilon):
+    def annealing_epsilon_greedy(self, num_trial, epsilon, delayed_feedback):
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
 
@@ -715,32 +732,29 @@ class CognitiveEngine:
             else:
                 self.config_cursor.execute('UPDATE annealing_Egreedy set Eligibility=? WHERE ID=?', [1, j])
         self.config_connection.commit()
-
-        self.config_cursor.execute('SELECT count(*) FROM annealing_Egreedy WHERE Mean=?', [muBest])
-        no = self.config_cursor.fetchone()[0]
-        nn = random.randrange(1, no + 1)
-        self.config_cursor.execute('SELECT ID FROM annealing_Egreedy WHERE Mean=?', [muBest])
-        j = 0
-        for row in self.config_cursor:
-            j = j + 1
-            if j == nn:
-                configN = row[0]
-                self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
-                for row1 in self.config_cursor:
-                    NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
-                    print "Configuration is"
-                    config_map = ConfigurationMap(NextConf2.modulation, NextConf2.inner_code, NextConf2.outer_code)
-                    print "Modulation is ", config_map.constellationN, config_map.modulationtype
-                    print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
-                    print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
-                    print "###############################\n\n"
-                break
-
         if random.random() > epsilon:
             print "***Exploitation***\n"
             print "num trial =", num_trial
+            self.config_cursor.execute('SELECT count(*) FROM annealing_Egreedy WHERE Mean=?', [muBest])
+            no = self.config_cursor.fetchone()[0]
+            nn = random.randrange(1, no + 1)
+            self.config_cursor.execute('SELECT ID FROM annealing_Egreedy WHERE Mean=?', [muBest])
+            j = 0
+            for row in self.config_cursor:
+                j = j + 1
+                if j == nn:
+                    configN = row[0]
+                    self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+                    for row1 in self.config_cursor:
+                        NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
+                        print "Configuration is"
+                        config_map = ConfigurationMap(NextConf2.modulation, NextConf2.inner_code, NextConf2.outer_code)
+                        print "Modulation is ", config_map.constellationN, config_map.modulationtype
+                        print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+                        print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+                        print "###############################\n\n"
+                    break
             NextConf1 = NextConf2
-
         else:
             print "***Exploration***\n"
             print "num trial =", num_trial
@@ -764,10 +778,19 @@ class CognitiveEngine:
                 print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
                 print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
                 print "###############################\n\n"
-
+        if delayed_feedback == "True":
+            self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
+            for row in self.config_cursor:
+                if delayed_strategy == "mean":
+                    substitude_value = row[2]
+                elif delayed_strategy == "lower":
+                    substitude_value = row[3]
+                elif delayed_strategy == "upper":
+                    substitude_value = row[4]
+            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value)
         return NextConf1, NextConf2
 
-    def gittins(self, num_trial, DiscountFactor):
+    def gittins(self, num_trial, DiscountFactor, delayed_feedback):
         print "num trial =", num_trial
         self.config_cursor.execute('SELECT MAX(indexx) FROM gittins')
         highest_idx = self.config_cursor.fetchone()[0]
@@ -792,9 +815,19 @@ class CognitiveEngine:
                     print "###############################\n\n"
                 break
         NextConf1 = NextConf2
+        if delayed_feedback == "True":
+            self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
+            for row in self.config_cursor:
+                if delayed_strategy == "mean":
+                    substitude_value = row[2]
+                elif delayed_strategy == "lower":
+                    substitude_value = row[3]
+                elif delayed_strategy == "upper":
+                    substitude_value = row[4]
+            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value)
         return NextConf1, NextConf2
 
-    def RoTA(self, num_trial, Throughput_Treshhold, PSR_Threshold):
+    def RoTA(self, num_trial, Throughput_Treshhold, PSR_Threshold, delayed_feedback):
         window = num_trial - window_size
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
@@ -848,7 +881,6 @@ class CognitiveEngine:
                 print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
                 print "###############################\n\n"
             NextConf2 = NextConf1
-            return NextConf1, NextConf2
         else:
             self.config_cursor.execute('SELECT Avg(throughput) FROM rx WHERE num_packets>?', [window])
             throughput_window = self.config_cursor.fetchone()[0]
@@ -878,7 +910,6 @@ class CognitiveEngine:
                             print "###############################\n\n"
                         break
                 NextConf1 = NextConf2
-                return NextConf1, NextConf2
             else:
                 self.config_cursor.execute('SELECT MAX(upperM) FROM RoTA WHERE Eligibility=?', [2])
                 max_upperM = self.config_cursor.fetchone()[0]
@@ -895,7 +926,17 @@ class CognitiveEngine:
                     print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
                     print "###############################\n\n"
                 NextConf1 = NextConf2
-                return NextConf1, NextConf2
+        if delayed_feedback == "True":
+            self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
+            for row in self.config_cursor:
+                if delayed_strategy == "mean":
+                    substitude_value = row[2]
+                elif delayed_strategy == "lower":
+                    substitude_value = row[3]
+                elif delayed_strategy == "upper":
+                    substitude_value = row[4]
+            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value)
+        return NextConf1, NextConf2
 
 
 

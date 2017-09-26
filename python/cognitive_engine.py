@@ -175,6 +175,7 @@ class DatabaseControl:
                 RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
                 lowerM = RCI[0]
                 upperM = RCI[1]
+                print " lb , ub ", lowerM, upperM
                 self.config_cursor.execute(
                     'UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? ,UB_Throughput=? ,PSR=? ,LB_PSR=? ,UB_PSR=? WHERE ID=?',
                     [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, lowerM, upperM, new_PSR, lowerP, upperP, configuration.conf_id])
@@ -446,7 +447,7 @@ class DatabaseControl:
         coefficient = t.ppf(C, N - 1)
         RCIl = mean - (coefficient * (std / np.sqrt(N)))
         if RCIl < 0:
-            RCIl = 0
+            RCIl = 0.0
 
         RCIu = mean + (coefficient * (std / np.sqrt(N)))
         if RCIu > maxp:
@@ -462,10 +463,10 @@ class DatabaseControl:
         z = norm.ppf(confidence, 0, 1)
         lb = m - (z * std)
         if lb < 0:
-            lb = 0
+            lb = 0.0
         ub = m + (z * std)
-        if ub > 1:
-            ub = 1
+        if ub > 1.0:
+            ub = 1.0
         PSRCI = [lb, ub]
         return PSRCI
 

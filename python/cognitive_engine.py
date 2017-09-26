@@ -170,6 +170,8 @@ class DatabaseControl:
             elif newTrialN > 1:
                 mean = new_aggregated_Throughput / newTrialN
                 variance = (newSQTh / newTrialN) - (np.power(mean, 2))
+                if variance < 0:
+                    variance = 0
                 maxp = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (
                     float(configuration.innercodingrate))
                 RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)

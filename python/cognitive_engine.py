@@ -35,12 +35,13 @@ class cognitive_engine(gr.sync_block):
     """
     docstring for block cognitive_engine
     """
-    def __init__(self, ce_type=""):
+    def __init__(self, ce_type="", delayed_feedback=""):
         gr.sync_block.__init__(self,
             name="cognitive_engine",
             in_sig=[],
             out_sig=[])
         self.ce_type = ce_type
+        self.delayed_feedback = delayed_feedback
         self.database = DatabaseControl()
 
         self.database.reset_config_tables()

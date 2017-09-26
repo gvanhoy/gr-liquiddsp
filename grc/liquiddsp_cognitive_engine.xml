@@ -1,38 +1,51 @@
 <?xml version="1.0"?>
 <block>
-  <name>Cognitive Engine</name>
-  <key>liquiddsp_cognitive_engine</key>
-  <category>[liquiddsp]</category>
-  <import>import liquiddsp</import>
-  <make>liquiddsp.cognitive_engine($ce_type)</make>
-  <param>
-   <name>Algorithm</name>
-    <key>ce_type</key>
-    <type>string</type>
-    <option>
-      <name>Epsilon Greedy</name>
-      <key>epsilon_greedy</key>
-    </option>
-    <option>
-      <name>Annealing Epsilon Greedy</name>
-      <key>annealing_epsilon_greedy</key>
-    </option>
-    <option>
-      <name>Gittins</name>
-      <key>gittins</key>
-    </option>
-    <option>
-      <name>RoTA</name>
-      <key>RoTA</key>
-    </option>
-  </param>
-  <sink>
-    <name>packet_info</name>
-    <type>message</type>
-  </sink>
-  <source>
-    <name>configuration</name>
-    <type>message</type>
-    <optional>1</optional>
-  </source>
+    <name>Cognitive Engine</name>
+    <key>liquiddsp_cognitive_engine</key>
+    <category>[liquiddsp]</category>
+    <import>import liquiddsp</import>
+    <make>liquiddsp.cognitive_engine($ce_type)</make>
+    <param>
+        <name>Algorithm</name>
+        <key>ce_type</key>
+        <type>string</type>
+        <option>
+            <name>Epsilon Greedy</name>
+            <key>epsilon_greedy</key>
+        </option>
+        <option>
+            <name>Annealing Epsilon Greedy</name>
+            <key>annealing_epsilon_greedy</key>
+        </option>
+        <option>
+            <name>Gittins</name>
+            <key>gittins</key>
+        </option>
+        <option>
+            <name>RoTA</name>
+            <key>RoTA</key>
+        </option>
+    </param>
+    <param>
+        <name>Delay</name>
+        <key>delayed_feedback</key>
+        <type>string</type>
+        <option>
+            <name>Delayed feedback</name>
+            <key>True</key>
+        </option>
+        <option>
+            <name>No Delay</name>
+            <key>False</key>
+        </option>
+    </param>
+    <sink>
+        <name>packet_info</name>
+        <type>message</type>
+    </sink>
+    <source>
+        <name>configuration</name>
+        <type>message</type>
+        <optional>1</optional>
+    </source>
 </block>

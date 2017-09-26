@@ -31,12 +31,12 @@
         <key>delayed_feedback</key>
         <type>string</type>
         <option>
-            <name>Delayed feedback</name>
-            <key>True</key>
-        </option>
-        <option>
             <name>No Delay</name>
             <key>False</key>
+        </option>
+        <option>
+            <name>Delayed feedback</name>
+            <key>True</key>
         </option>
     </param>
     <sink>

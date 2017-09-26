@@ -55,7 +55,7 @@ class cognitive_engine(gr.sync_block):
         self.TXperformance_matrix = np.zeros((1000, 3), dtype=np.float64)
         self.RXperformance_matrix = np.zeros((1000, 3), dtype=np.float64)
         self.PSR_Threshold = 0.6
-        self.Throughput_Threshold = 1.4
+        self.Throughput_Threshold = 1.5
 
     def handler(self, packet_info):
         self.num_packets += 1

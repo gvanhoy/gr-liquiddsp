@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # 
-# Copyright 2017 <+YOU OR YOUR COMPANY+>.
+# Copyright 2017 <Hamed Asadi, Garrett Vanhoy, University of Arizona>.
 # 
 # This is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@ CONFIDENCE = 0.9
 DiscountFactor = 0.9
 window_size = 30
 
-
 class cognitive_engine(gr.sync_block):
     """
     docstring for block cognitive_engine
@@ -43,8 +42,10 @@ class cognitive_engine(gr.sync_block):
             out_sig=[])
         self.ce_type = ce_type
         self.database = DatabaseControl()
+
         self.database.reset_config_tables()
         self.database.reset_cognitive_engine_tables()
+
         self.engine = CognitiveEngine()
         self.message_port_register_in(pmt.intern('packet_info'))
         self.set_msg_handler(pmt.intern('packet_info'), self.handler)
@@ -766,6 +767,7 @@ class CognitiveEngine:
         return NextConf1, NextConf2
 
     def gittins(self, num_trial, DiscountFactor):
+        print "num trial =", num_trial
         self.config_cursor.execute('SELECT MAX(indexx) FROM gittins')
         highest_idx = self.config_cursor.fetchone()[0]
 
@@ -820,12 +822,12 @@ class CognitiveEngine:
         throughput_window = self.config_cursor.fetchone()[0]
         self.config_cursor.execute('SELECT Avg(PSR) FROM rx WHERE num_packets>?', [window])
         psr_window = self.config_cursor.fetchone()[0]
+        print "num trial =", num_trial
         print "throughput_window = ", throughput_window
         print "psr_window = ", psr_window
 
         if ofsseting_size == 0:
             print "***Infant stage***\n"
-            print "num trial =", num_trial
             nn = random.randrange(1, training_size + 1)
             self.config_cursor.execute('SELECT ID FROM RoTA WHERE Eligibility=?', [1])
             j = 0

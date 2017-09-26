@@ -119,6 +119,7 @@ class cognitive_engine(gr.sync_block):
 
 
 
+
 class DatabaseControl:
     def __init__(self):
         self.config_connection = sqlite3.connect('config.db', check_same_thread=False)
@@ -190,15 +191,9 @@ class DatabaseControl:
                     self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?',
                                                        [newTrialN, mean, configuration.conf_id])
                 if newTrialN > 1:
-                    config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-                    maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
-                        float(config_map.innercodingrate))
-                    RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
-                    lower = RCI[0]
-                    upper = RCI[1]
                     self.config_cursor.execute(
                         'UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
-                        [newTrialN, mean, lower, upper, configuration.conf_id])
+                        [newTrialN, mean, lowerM, upperM, configuration.conf_id])
             elif ce_type == "gittins":
                 if newTrialN == 1:
                     self.config_cursor.execute('UPDATE gittins set TrialNumber=?, Mean=? WHERE ID=?',
@@ -214,30 +209,14 @@ class DatabaseControl:
                     self.config_cursor.execute('UPDATE annealing_egreedy set TrialNumber=?, Mean=? WHERE ID=?',
                                                [newTrialN, mean, configuration.conf_id])
                 if newTrialN > 1:
-                    config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-                    maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
-                        float(config_map.innercodingrate))
-                    RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
-                    lower = RCI[0]
-                    upper = RCI[1]
                     self.config_cursor.execute(
                         'UPDATE annealing_egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
-                        [newTrialN, mean, lower, upper, configuration.conf_id])
+                        [newTrialN, mean, lowerM, upperM, configuration.conf_id])
             elif ce_type == "RoTA":
                 if newTrialN == 1:
                     self.config_cursor.execute('UPDATE RoTA set TrialNumber=?, Mean=?, PSR=? WHERE ID=?',
                                                        [newTrialN, mean, new_PSR, configuration.conf_id])
                 if newTrialN > 1:
-                    config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-                    maxp = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
-                        float(config_map.innercodingrate))
-                    RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
-                    lowerM = RCI[0]
-                    upperM = RCI[1]
-                    Unsuccess = newTotal-newSuccess
-                    PSRCI = self.PSR_CI(newSuccess, Unsuccess, CONFIDENCE)
-                    lowerP = PSRCI[0]
-                    upperP = PSRCI[1]
                     stdv = np.sqrt(variance)
                     index = mean + (stdv * self.GittinsIndexNormalUnitVar(newTrialN, DiscountFactor))
                     self.config_cursor.execute(
@@ -381,7 +360,7 @@ class DatabaseControl:
         # Decision Sequences
         self.config_cursor.execute('drop table if exists tx')
         self.config_connection.commit()
-        sql = 'create table if not exists tx (num_packets integer primary key, config_id integer default 0)'
+        sql = 'create table if not exists tx (num_packets integer primary key, config_id integer default 0, sub_value real default -1.0, over_write bit 0)'
         self.config_cursor.execute(sql)
         self.config_connection.commit()
 

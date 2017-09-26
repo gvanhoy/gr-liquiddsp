@@ -159,9 +159,21 @@ class DatabaseControl:
             new_aggregated_Throughput = old_throughput + throughput
             # newThroughput = throughput
             newSQTh = old_sqth + np.power(throughput, 2)
-            new_PSR = newSuccess / newTrialN
-            self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
-                           [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, configuration.conf_id])
+            new_PSR = (newSuccess+1) / (newTrialN + 2)
+            Unsuccess = newTrialN - newSuccess
+            PSRCI = self.PSR_CI(newSuccess, Unsuccess, CONFIDENCE)
+            if newTrialN == 1:
+                self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? , PSR=? ,LB_PSR=? ,UB_PSR=? , WHERE ID=?',
+                               [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, 0.0, new_PSR, PSRCI[0], PSRCI[1],  configuration.conf_id])
+            elif newTrialN > 1:
+                mean = new_aggregated_Throughput / newTrialN
+                variance = (newSQTh / newTrialN) - (np.power(mean, 2))
+                maxp = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (
+                    float(configuration.innercodingrate))
+                RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
+                self.config_cursor.execute(
+                    'UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? ,UB_Throughput=? ,PSR=? ,LB_PSR=? ,UB_PSR=? , WHERE ID=?',
+                    [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, RCI[0], RCI[1], new_PSR, PSRCI[0], PSRCI[1], configuration.conf_id])
             mean = new_aggregated_Throughput / newTrialN
             variance = (newSQTh / newTrialN) - (np.power(mean, 2))
             if variance < 0:
@@ -386,14 +398,22 @@ class DatabaseControl:
             Total            INT        NOT NULL,
             Success          INT        NOT NULL,
             Throughput       REAL       NOT NULL,
-            SQTh             REAL       NOT NULL);''')
+            SQTh             REAL       NOT NULL,
+            LB_Throughput    REAL       NOT NULL,
+            UB_Throughput    REAL       NOT NULL,
+            PSR              REAL       NOT NULL,
+            LB_PSR           REAL       NOT NULL,
+            UB_PSR           REAL       NOT NULL);''')
         print "Table created successfully"
         conf_id = 1
         for m in xrange(0, 11):
             for i in xrange(0, 7):
                 for o in xrange(0, 8):
-                    self.config_connection.execute('INSERT INTO CONFIG (ID,MODULATION,Innercode,Outercode,TrialN,Total,Success,Throughput,SQTh) \
-                              VALUES (?, ?, ?, ?, 0, 0, 0, 0.0, 0.0)', (conf_id, m, i, o))
+                    config_map = ConfigurationMap(m, i, o)
+                    upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+                        float(config_map.innercodingrate))
+                    self.config_connection.execute('INSERT INTO CONFIG (ID,MODULATION,Innercode,Outercode,TrialN,Total,Success,Throughput,SQTh,LB_Throughput,UB_Throughput,PSR,LB_PSR,UB_PSR) \
+                              VALUES (?, ?, ?, ?, 0, 0, 0, 0.0, 0.0, 0.0, ?, 1.0, 0.0, 1.0)', (conf_id, m, i, o, upperbound))
                     conf_id += 1
         self.config_connection.commit()
 
@@ -437,7 +457,11 @@ class DatabaseControl:
         std = np.sqrt(v)
         z = norm.ppf(confidence, 0, 1)
         lb = m - (z * std)
+        if lb < 0:
+            lb = 0
         ub = m + (z * std)
+        if ub > 1:
+            ub = 1
         PSRCI = [lb, ub]
         return PSRCI
 

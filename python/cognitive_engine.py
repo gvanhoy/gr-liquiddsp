@@ -141,6 +141,7 @@ class DatabaseControl:
     def write_configuration(self, ce_type, configuration, total, success, throughput):
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
         has_row = False
+        print "configuration.id = ", configuration.conf_id
         for row in self.config_cursor:
             Modulation = row[1]
             InnerCode = row[2]

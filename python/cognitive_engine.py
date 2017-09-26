@@ -729,6 +729,7 @@ class CognitiveEngine:
                 print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
                 print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
                 print "###############################\n\n"
+            NextConf2 = NextConf1
         if delayed_feedback == "True":
             self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
             for row in self.config_cursor:
@@ -802,6 +803,7 @@ class CognitiveEngine:
                 print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
                 print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
                 print "###############################\n\n"
+            NextConf2 = NextConf1
         if delayed_feedback == "True":
             self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
             for row in self.config_cursor:

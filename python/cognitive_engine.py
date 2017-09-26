@@ -172,7 +172,7 @@ class DatabaseControl:
                     self.config_cursor.execute(
                         'UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
                         [newTrialN, mean, lower, upper, configuration.conf_id])
-            elif ce_type == "Gittins":
+            elif ce_type == "gittins":
                 if newTrialN == 1:
                     self.config_cursor.execute('UPDATE gittins set TrialNumber=?, Mean=? WHERE ID=?',
                                                        [newTrialN, mean, configuration.conf_id])

@@ -43,6 +43,7 @@ class cognitive_engine(gr.sync_block):
             out_sig=[])
         self.ce_type = ce_type
         self.delayed_feedback = delayed_feedback
+        print "ce_type =", self.ce_type
         print "delayed_feedback=", self.delayed_feedback
         self.database = DatabaseControl()
 

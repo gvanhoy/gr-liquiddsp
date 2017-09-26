@@ -43,7 +43,7 @@ class cognitive_engine(gr.sync_block):
             out_sig=[])
         self.ce_type = ce_type
         self.delayed_feedback = delayed_feedback
-        print "delayed_feedback", self.delayed_feedback
+        print "delayed_feedback=", self.delayed_feedback
         self.database = DatabaseControl()
 
         self.database.reset_config_tables()
@@ -82,7 +82,7 @@ class cognitive_engine(gr.sync_block):
         # print "inner code=", inner_code
         # print "outer code=", outer_code
         # print "********************************************************"
-        if self.delayed_feedback == "False":
+        if self.delayed_feedback == "no_delay":
             if modulation >= 0:
                 if inner_code >= 0:
                     if outer_code >= 0:
@@ -90,7 +90,7 @@ class cognitive_engine(gr.sync_block):
                                                           header_valid,
                                                           payload_valid,
                                                           goodput)
-        elif self.delayed_feedback == "True":
+        elif self.delayed_feedback == "delay":
             if modulation >= 0:
                 if inner_code >= 0:
                     if outer_code >= 0:
@@ -731,7 +731,7 @@ class CognitiveEngine:
                 print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
                 print "###############################\n\n"
             NextConf2 = NextConf1
-        if delayed_feedback == "True":
+        if delayed_feedback == "delay":
             self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
             for row in self.config_cursor:
                 if delayed_strategy == "mean":
@@ -805,7 +805,7 @@ class CognitiveEngine:
                 print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
                 print "###############################\n\n"
             NextConf2 = NextConf1
-        if delayed_feedback == "True":
+        if delayed_feedback == "delay":
             self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
             for row in self.config_cursor:
                 if delayed_strategy == "mean":
@@ -842,7 +842,7 @@ class CognitiveEngine:
                     print "###############################\n\n"
                 break
         NextConf1 = NextConf2
-        if delayed_feedback == "True":
+        if delayed_feedback == "delay":
             self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
             for row in self.config_cursor:
                 if delayed_strategy == "mean":
@@ -953,7 +953,7 @@ class CognitiveEngine:
                     print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
                     print "###############################\n\n"
                 NextConf1 = NextConf2
-        if delayed_feedback == "True":
+        if delayed_feedback == "delay":
             self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
             for row in self.config_cursor:
                 if delayed_strategy == "mean":

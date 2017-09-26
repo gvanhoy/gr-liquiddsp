@@ -32,11 +32,11 @@
         <type>string</type>
         <option>
             <name>No Delay</name>
-            <key>False</key>
+            <key>no_delay</key>
         </option>
         <option>
             <name>Delayed feedback</name>
-            <key>True</key>
+            <key>delay</key>
         </option>
     </param>
     <sink>

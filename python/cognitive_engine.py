@@ -141,7 +141,6 @@ class DatabaseControl:
     def write_configuration(self, ce_type, configuration, total, success, throughput):
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
         has_row = False
-        print "configuration.id = ", configuration.conf_id
         for row in self.config_cursor:
             Modulation = row[1]
             InnerCode = row[2]
@@ -166,7 +165,7 @@ class DatabaseControl:
             lowerP = PSRCI[0]
             upperP = PSRCI[1]
             if newTrialN == 1:
-                self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? , PSR=? ,LB_PSR=? ,UB_PSR=? , WHERE ID=?',
+                self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? , PSR=? ,LB_PSR=? ,UB_PSR=? WHERE ID=?',
                                [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, 0.0, new_PSR, lowerP, upperP,  configuration.conf_id])
             elif newTrialN > 1:
                 mean = new_aggregated_Throughput / newTrialN
@@ -177,7 +176,7 @@ class DatabaseControl:
                 lowerM = RCI[0]
                 upperM = RCI[1]
                 self.config_cursor.execute(
-                    'UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? ,UB_Throughput=? ,PSR=? ,LB_PSR=? ,UB_PSR=? , WHERE ID=?',
+                    'UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? ,UB_Throughput=? ,PSR=? ,LB_PSR=? ,UB_PSR=? WHERE ID=?',
                     [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, lowerM, upperM, new_PSR, lowerP, upperP, configuration.conf_id])
             mean = new_aggregated_Throughput / newTrialN
             variance = (newSQTh / newTrialN) - (np.power(mean, 2))

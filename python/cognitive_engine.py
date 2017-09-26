@@ -360,7 +360,7 @@ class DatabaseControl:
         # Decision Sequences
         self.config_cursor.execute('drop table if exists tx')
         self.config_connection.commit()
-        sql = 'create table if not exists tx (num_packets integer primary key, config_id integer default 0, sub_value real default -1.0, over_write bit 0)'
+        sql = 'create table if not exists tx (num_packets integer primary key, config_id integer default 0, sub_value real default -1.0, over_write bit default 0)'
         self.config_cursor.execute(sql)
         self.config_connection.commit()
 

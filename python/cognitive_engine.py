@@ -144,7 +144,7 @@ class DatabaseControl:
                     sub_value = row[3]
                 elif delayed_strategy == "upper":
                     sub_value = row[4]
-        self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, sub_value, over_write) VALUES (?,?)', (num_packets, configuration.conf_id, sub_value, 0))
+        self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, sub_value, over_write) VALUES (?,?,?,?)', (num_packets, configuration.conf_id, sub_value, 0))
         self.config_connection.commit()
         self.database.write_configuration(ce_type, configuration,
                                           1,

@@ -147,7 +147,7 @@ class DatabaseControl:
                     sub_value = row[10]
                 PSR = row[11]
             self.write_configuration(ce_type, configuration, 1, PSR, sub_value)
-        self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, PSR, sub_value, over_write) VALUES (?,?,?,?)', (num_packets, configuration.conf_id, PSR, sub_value, 0))
+        self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, PSR, sub_value, over_write) VALUES (?,?,?,?,?)', (num_packets, configuration.conf_id, PSR, sub_value, 0))
         self.config_connection.commit()
 
     def write_delayed_feedback(self, ce_type, configuration, header_valid, payload_valid, goodput):
@@ -249,7 +249,6 @@ class DatabaseControl:
                         [newTrialN, mean, lowerM, upperM, new_PSR, lowerP, upperP, index, configuration.conf_id])
 
             self.config_connection.commit()
-
 
     def reset_cognitive_engine_tables(self):
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
@@ -385,7 +384,7 @@ class DatabaseControl:
         # Decision Sequences
         self.config_cursor.execute('drop table if exists tx')
         self.config_connection.commit()
-        sql = 'create table if not exists tx (num_packets integer primary key, config_id integer default 0, sub_value real default -1.0, over_write bit default 0)'
+        sql = 'create table if not exists tx (num_packets integer primary key, config_id integer default 0, PSR real default -1.0, sub_value real default -1.0, over_write bit default 0)'
         self.config_cursor.execute(sql)
         self.config_connection.commit()
 
@@ -394,7 +393,6 @@ class DatabaseControl:
         sql = 'create table if not exists rx (num_packets integer primary key, config_id integer default 0, throughput float default 0.0, PSR float default 0.0)'
         self.config_cursor.execute(sql)
         self.config_connection.commit()
-
 
     def reset_config_tables(self):
         ######################################################################

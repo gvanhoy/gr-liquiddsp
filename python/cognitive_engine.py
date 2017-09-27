@@ -172,7 +172,7 @@ class DatabaseControl:
             new_aggregated_Throughput = old_throughput + throughput
             # newThroughput = throughput
             newSQTh = old_sqth + np.power(throughput, 2)
-            new_PSR = (newSuccess + 1) / (newTotal + 2)
+            new_PSR = float(newSuccess + 1.0) / (newTotal + 2.0)
             print "new_Success = ", newSuccess
             print "new_Total = ",newTotal
             print "new_PSR = ", new_PSR

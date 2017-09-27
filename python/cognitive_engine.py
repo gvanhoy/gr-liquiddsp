@@ -173,6 +173,8 @@ class DatabaseControl:
             # newThroughput = throughput
             newSQTh = old_sqth + np.power(throughput, 2)
             new_PSR = (newSuccess + 1) / (newTotal + 2)
+            print "new_Success = ", newSuccess
+            print "new_Total = ",newTotal
             print "new_PSR = ", new_PSR
             Unsuccess = newTrialN - newSuccess
             PSRCI = self.PSR_CI(newSuccess, Unsuccess, CONFIDENCE)

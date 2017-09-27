@@ -115,10 +115,7 @@ class cognitive_engine(gr.sync_block):
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("outer_code"), pmt.from_long(new_ce_configuration.outer_code))
             self.message_port_pub(pmt.intern('configuration'), new_configuration)
             TXconfig_id = new_ce_configuration.modulation * 7 * 8 + new_ce_configuration.inner_code * 8 + new_ce_configuration.outer_code + 1
-            self.database.write_TX_result(TXconfig_id, self.num_packets)
-
-
-
+            self.database.write_TX_result(self.ce_type, new_ce_configuration, self.num_packets, self.delayed_feedback)
 
 class DatabaseControl:
     def __init__(self):
@@ -135,9 +132,24 @@ class DatabaseControl:
         self.config_cursor.execute('INSERT INTO rx (num_packets, config_id, throughput, PSR) VALUES (?,?,?,?)', (num_packets, config_id, throughput, PSR))
         self.config_connection.commit()
 
-    def write_TX_result(self, config_id, num_packets):
-        self.config_cursor.execute('INSERT INTO tx (num_packets, config_id) VALUES (?,?)', (num_packets, config_id))
+    def write_TX_result(self, ce_type, configuration, num_packets, delayed_feedback):
+        if delayed_feedback == "no_delay":
+            sub_value = -1
+        else:
+            self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [configuration.conf_id])
+            for row in self.config_cursor:
+                if delayed_strategy == "mean":
+                    sub_value = row[2]
+                elif delayed_strategy == "lower":
+                    sub_value = row[3]
+                elif delayed_strategy == "upper":
+                    sub_value = row[4]
+        self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, sub_value, over_write) VALUES (?,?)', (num_packets, configuration.conf_id, sub_value, 0))
         self.config_connection.commit()
+        self.database.write_configuration(ce_type, configuration,
+                                          1,
+                                          1,
+                                          sub_value)
 
     def write_configuration(self, ce_type, configuration, total, success, throughput):
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
@@ -160,7 +172,8 @@ class DatabaseControl:
             new_aggregated_Throughput = old_throughput + throughput
             # newThroughput = throughput
             newSQTh = old_sqth + np.power(throughput, 2)
-            new_PSR = (newSuccess+1) / (newTrialN + 2)
+            new_PSR = (newSuccess + 1) / (newTotal + 2)
+            print "new_PSR = ", new_PSR
             Unsuccess = newTrialN - newSuccess
             PSRCI = self.PSR_CI(newSuccess, Unsuccess, CONFIDENCE)
             lowerP = PSRCI[0]
@@ -178,7 +191,6 @@ class DatabaseControl:
                 RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
                 lowerM = RCI[0]
                 upperM = RCI[1]
-                print " lb , ub ", lowerM, upperM
                 self.config_cursor.execute(
                     'UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? ,UB_Throughput=? ,PSR=? ,LB_PSR=? ,UB_PSR=? WHERE ID=?',
                     [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, lowerM, upperM, new_PSR, lowerP, upperP, configuration.conf_id])
@@ -451,8 +463,6 @@ class DatabaseControl:
         PSRCI = [lb, ub]
         return PSRCI
 
-
-
     def GittinsIndexNormalUnitVar(self, No, Discount_F):
         Discount_F_index = np.array([0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 0.995])
         No_index = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90,
@@ -667,8 +677,6 @@ class CognitiveEngine:
             else:
                 self.config_cursor.execute('UPDATE Egreedy set Eligibility=? WHERE ID=?', [1, j])
         self.config_connection.commit()
-
-
         if random.random() > epsilon:
             print "***Exploitation***\n"
             print "num trial =", num_trial
@@ -705,7 +713,6 @@ class CognitiveEngine:
                 if j == nn:
                     configN = row[0]
                     break
-
             self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
             for row in self.config_cursor:
                 NextConf1 = ConfigurationMap(row[1], row[2], row[3], row[0])

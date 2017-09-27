@@ -151,7 +151,7 @@ class DatabaseControl:
         self.config_connection.commit()
 
     def write_delayed_feedback(self, ce_type, configuration, header_valid, payload_valid, goodput):
-        self.config_cursor.execute('SELECT * FROM tx WHERE config_id=?', [configuration.conf_id])
+        self.config_cursor.execute('SELECT * FROM tx WHERE config_id=? AND over_write=?', [configuration.conf_id, 0])
         print "row.count = ", self.config_cursor.rowcount
         print self.config_cursor
         print "config_id = ", configuration.conf_id

@@ -110,12 +110,12 @@ class cognitive_engine(gr.sync_block):
         if ce_configuration is not None:
             new_configuration = pmt.make_dict()
             new_ce_configuration = ce_configuration[0]
+            self.database.write_TX_result(self.ce_type, new_ce_configuration, self.num_packets, self.delayed_feedback)
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("modulation"), pmt.from_long(new_ce_configuration.modulation))
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("inner_code"), pmt.from_long(new_ce_configuration.inner_code))
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("outer_code"), pmt.from_long(new_ce_configuration.outer_code))
             self.message_port_pub(pmt.intern('configuration'), new_configuration)
-            TXconfig_id = new_ce_configuration.modulation * 7 * 8 + new_ce_configuration.inner_code * 8 + new_ce_configuration.outer_code + 1
-            self.database.write_TX_result(self.ce_type, new_ce_configuration, self.num_packets, self.delayed_feedback)
+
 
 class DatabaseControl:
     def __init__(self):

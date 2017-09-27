@@ -153,6 +153,7 @@ class DatabaseControl:
     def write_delayed_feedback(self, ce_type, configuration, header_valid, payload_valid, goodput):
         self.config_cursor.execute('SELECT * FROM tx WHERE config_id=? AND over_write=?' , (configuration.conf_id, 0))
         if self.config_cursor.rowcount > 0:
+            print "row.count = ", self.config_cursor.rowcount
             for row in self.config_cursor:
                 sub_value = row[3]
                 sub_PSR = row[2]
@@ -163,6 +164,7 @@ class DatabaseControl:
             self.config_connection.commit()
             self.write_configuration(ce_type, configuration, 0, d_PSR, d_goodput)
         else:
+            print "else"
             self.write_configuration(ce_type, configuration, header_valid, payload_valid, goodput)
 
     def write_configuration(self, ce_type, configuration, total, success, throughput):

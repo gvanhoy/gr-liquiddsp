@@ -93,7 +93,7 @@ class cognitive_engine(gr.sync_block):
             if modulation >= 0:
                 if inner_code >= 0:
                     if outer_code >= 0:
-                        print "It's delayed"
+                        self.database.write_delayed_feedback(self.ce_type, configuration, header_valid, payload_valid, goodput)
 
         if self.ce_type == "epsilon_greedy":
             ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback)
@@ -135,21 +135,35 @@ class DatabaseControl:
     def write_TX_result(self, ce_type, configuration, num_packets, delayed_feedback):
         if delayed_feedback == "no_delay":
             sub_value = -1
+            PSR = -1
         else:
-            self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [configuration.conf_id])
+            self.config_cursor.execute('SELECT * FROM config WHERE ID=?', [configuration.conf_id])
             for row in self.config_cursor:
                 if delayed_strategy == "mean":
-                    sub_value = row[2]
+                    sub_value = float(row[7]) / row[4]
                 elif delayed_strategy == "lower":
-                    sub_value = row[3]
+                    sub_value = row[9]
                 elif delayed_strategy == "upper":
-                    sub_value = row[4]
-        self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, sub_value, over_write) VALUES (?,?,?,?)', (num_packets, configuration.conf_id, sub_value, 0))
+                    sub_value = row[10]
+                PSR = row[11]
+            self.write_configuration(ce_type, configuration, 1, PSR, sub_value)
+        self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, PSR, sub_value, over_write) VALUES (?,?,?,?)', (num_packets, configuration.conf_id, PSR, sub_value, 0))
         self.config_connection.commit()
-        self.write_configuration(ce_type, configuration,
-                                          1,
-                                          1,
-                                          sub_value)
+
+    def write_delayed_feedback(self, ce_type, configuration, header_valid, payload_valid, goodput):
+        self.config_cursor.execute('SELECT * FROM tx WHERE config_id=? AND over_write=?' , (configuration.conf_id, 0))
+        if self.config_cursor.rowcount > 0:
+            for row in self.config_cursor:
+                sub_value = row[3]
+                sub_PSR = row[2]
+                no = row[0]
+            d_PSR = payload_valid - sub_PSR
+            d_goodput = goodput - sub_value
+            self.config_cursor.execute('UPDATE tx SET over_write=? WHERE num_packets=?', (1, no))
+            self.config_connection.commit()
+            self.write_configuration(ce_type, configuration, 0, d_PSR, d_goodput)
+        else:
+            self.write_configuration(ce_type, configuration, header_valid, payload_valid, goodput)
 
     def write_configuration(self, ce_type, configuration, total, success, throughput):
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
@@ -173,9 +187,6 @@ class DatabaseControl:
             # newThroughput = throughput
             newSQTh = old_sqth + np.power(throughput, 2)
             new_PSR = float(newSuccess + 1.0) / (newTotal + 2.0)
-            print "new_Success = ", newSuccess
-            print "new_Total = ",newTotal
-            print "new_PSR = ", new_PSR
             Unsuccess = newTrialN - newSuccess
             PSRCI = self.PSR_CI(newSuccess, Unsuccess, CONFIDENCE)
             lowerP = PSRCI[0]

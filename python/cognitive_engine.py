@@ -36,7 +36,7 @@ class cognitive_engine(gr.sync_block):
     """
     docstring for block cognitive_engine
     """
-    def __init__(self, ce_type="", delayed_feedback="delay"):
+    def __init__(self, ce_type="", delayed_feedback="no_delay"):
         gr.sync_block.__init__(self,
             name="cognitive_engine",
             in_sig=[],

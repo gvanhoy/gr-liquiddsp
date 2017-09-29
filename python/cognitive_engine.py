@@ -53,7 +53,7 @@ class cognitive_engine(gr.sync_block):
         self.set_msg_handler(pmt.intern('packet_info'), self.handler)
         self.message_port_register_out(pmt.intern('configuration'))
         self.num_packets = 0
-        self.initial_epsilon = 0.5
+        self.initial_epsilon = 0.4
         self.TXperformance_matrix = np.zeros((1000, 3), dtype=np.float64)
         self.RXperformance_matrix = np.zeros((1000, 3), dtype=np.float64)
         self.PSR_Threshold = 0.6

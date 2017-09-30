@@ -25,6 +25,10 @@
             <name>RoTA</name>
             <key>RoTA</key>
         </option>
+        <option>
+            <name>Meta-CE</name>
+            <key>meta</key>
+        </option>
     </param>
     <param>
         <name>Delay</name>

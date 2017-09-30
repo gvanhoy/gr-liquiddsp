@@ -109,14 +109,16 @@ class cognitive_engine(gr.sync_block):
         elif self.ce_type == "RoTA":
             ce_configuration = self.engine.RoTA(self.num_packets, self.Throughput_Threshold, self.PSR_Threshold, self.delayed_feedback)
         elif self.ce_type == "meta":
-            SNratio = 10 * np.log10(np.power(0.05/(2*self.noise), 2))
-            if SNratio < 12:
-                ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback)
-            elif SNratio < 18:
-                ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, self.initial_epsilon, self.delayed_feedback)
+            if self.noise > 0:
+                SNratio = 10 * np.log10(np.power(0.05/(2*self.noise), 2))
+                if SNratio < 12:
+                    ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback)
+                elif SNratio < 18:
+                    ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, self.initial_epsilon, self.delayed_feedback)
+                else:
+                    ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor, self.delayed_feedback)
             else:
                 ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor, self.delayed_feedback)
-
 
         if ce_configuration is not None:
             new_configuration = pmt.make_dict()

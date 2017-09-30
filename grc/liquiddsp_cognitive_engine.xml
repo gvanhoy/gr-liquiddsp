@@ -39,6 +39,12 @@
             <key>delay</key>
         </option>
     </param>
+    <param>
+		<name>Noise Amplitude</name>
+		<key>noise</key>
+		<value>0</value>
+		<type>real</type>
+	</param>
     <sink>
         <name>packet_info</name>
         <type>message</type>

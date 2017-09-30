@@ -36,13 +36,14 @@ class cognitive_engine(gr.sync_block):
     """
     docstring for block cognitive_engine
     """
-    def __init__(self, ce_type="", delayed_feedback="no_delay"):
+    def __init__(self, ce_type="", delayed_feedback="no_delay", noise=0):
         gr.sync_block.__init__(self,
             name="cognitive_engine",
             in_sig=[],
             out_sig=[])
         self.ce_type = ce_type
         self.delayed_feedback = delayed_feedback
+        self.noise = noise
         self.database = DatabaseControl()
 
         self.database.reset_config_tables()
@@ -64,6 +65,7 @@ class cognitive_engine(gr.sync_block):
         epsilon = 0.1
         DiscountFactor = 0.9
         # initial_epsilon = 0.5
+        print "noise = ", self.noise
         modulation = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("modulation"), pmt.PMT_NIL))
         inner_code = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("inner_code"), pmt.PMT_NIL))
         outer_code = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("outer_code"), pmt.PMT_NIL))

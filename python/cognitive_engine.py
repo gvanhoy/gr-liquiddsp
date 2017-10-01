@@ -465,7 +465,7 @@ class DatabaseControl:
         if RCIl < 0:
             RCIl = 0.0
 
-        RCIu = mean + (coefficient * (std / np.sqrt(N)))
+        RCIu = mean + (coefficient * (std / np.sqrt(N))) + 0.0001
         if RCIu > maxp:
             RCIu = maxp
 
@@ -480,7 +480,7 @@ class DatabaseControl:
         lb = m - (z * std)
         if lb < 0:
             lb = 0.0
-        ub = m + (z * std)
+        ub = m + (z * std) + 0.0001
         if ub > 1.0:
             ub = 1.0
         PSRCI = [lb, ub]

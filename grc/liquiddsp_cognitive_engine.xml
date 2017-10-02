@@ -48,7 +48,7 @@
         <key>delayed_strategy</key>
         <type>string</type>
         <option>
-            <name>Nothing</name>
+            <name>No Delay</name>
             <key></key>
         </option>
         <option>

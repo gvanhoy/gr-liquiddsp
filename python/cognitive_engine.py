@@ -185,10 +185,6 @@ class DatabaseControl:
             self.write_configuration(ce_type, configuration, header_valid, payload_valid, goodput)
 
     def write_configuration(self, ce_type, configuration, total, success, throughput, channel):
-
-        print "channel in write_configuration = ",channel
-        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
-        
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
         has_row = False
         for row in self.config_cursor:
@@ -215,6 +211,8 @@ class DatabaseControl:
             lowerP = PSRCI[0]
             upperP = PSRCI[1]
             if newTrialN == 1:
+                mean = new_aggregated_Throughput / newTrialN
+                variance = (newSQTh / newTrialN) - (np.power(mean, 2))
                 self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? , PSR=? ,LB_PSR=? ,UB_PSR=? WHERE ID=?',
                                [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, 0.0, new_PSR, lowerP, upperP,  configuration.conf_id])
             elif newTrialN > 1:

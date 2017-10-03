@@ -86,7 +86,7 @@ class cognitive_engine(gr.sync_block):
             if modulation >= 0:
                 if inner_code >= 0:
                     if outer_code >= 0:
-                        self.database.write_delayed_feedback(self.ce_type, configuration, header_valid, payload_valid, goodput)
+                        self.database.write_delayed_feedback(self.ce_type, configuration, header_valid, payload_valid, goodput, self.channel)
         self.database.write_RX_result(config_id, self.num_packets, goodput, payload_valid)
 
         if self.ce_type == "epsilon_greedy":
@@ -168,7 +168,7 @@ class DatabaseControl:
         self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, PSR, sub_value, over_write, known_mean, known_PSR) VALUES (?,?,?,?,?,?,?)', (num_packets, configuration.conf_id, PSR, sub_value, 0, mean, known_PSR))
         self.config_connection.commit()
 
-    def write_delayed_feedback(self, ce_type, configuration, header_valid, payload_valid, goodput):
+    def write_delayed_feedback(self, ce_type, configuration, header_valid, payload_valid, goodput, channel):
         self.config_cursor.execute('SELECT Count(*) FROM tx WHERE config_id=? AND over_write=?', [configuration.conf_id, 0])
         row_count = self.config_cursor.fetchone()[0]
         if row_count > 0:
@@ -181,9 +181,9 @@ class DatabaseControl:
             d_goodput = goodput - sub_value
             self.config_cursor.execute('UPDATE tx SET over_write=? WHERE num_packets=?', (1, no))
             self.config_connection.commit()
-            self.write_configuration(ce_type, configuration, 0, d_PSR, d_goodput)
+            self.write_configuration(ce_type, configuration, 0, d_PSR, d_goodput, channel)
         else:
-            self.write_configuration(ce_type, configuration, header_valid, payload_valid, goodput)
+            self.write_configuration(ce_type, configuration, header_valid, payload_valid, goodput, channel)
 
     def write_configuration(self, ce_type, configuration, total, success, throughput, channel):
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])

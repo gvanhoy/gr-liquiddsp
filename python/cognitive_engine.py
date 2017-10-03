@@ -838,7 +838,7 @@ class CognitiveEngine:
                 print "###############################\n\n"
             NextConf2 = NextConf1
         if delayed_feedback == "delay":
-            self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
+            self.config_cursor.execute('SELECT * FROM annealing_Egreedy WHERE ID=?', [NextConf1.conf_id])
             for row in self.config_cursor:
                 if delayed_strategy == "mean":
                     substitude_value = row[2]
@@ -846,7 +846,7 @@ class CognitiveEngine:
                     substitude_value = row[3]
                 elif delayed_strategy == "upper":
                     substitude_value = row[4]
-            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value, channel)
+            self.database.write_configuration("annealing_Egreedy",NextConf1, 1, 1, substitude_value, channel)
         return NextConf1, NextConf2
 
     def gittins(self, num_trial, DiscountFactor, delayed_feedback, delayed_strategy, channel):
@@ -875,15 +875,18 @@ class CognitiveEngine:
                 break
         NextConf1 = NextConf2
         if delayed_feedback == "delay":
-            self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
+            self.config_cursor.execute('SELECT * FROM config WHERE ID=?', [NextConf1.conf_id])
             for row in self.config_cursor:
                 if delayed_strategy == "mean":
-                    substitude_value = row[2]
+                    if row[4] > 0:
+                        substitude_value = float(row[7]) / row[4]
+                    else:
+                        substitude_value = 0
                 elif delayed_strategy == "lower":
-                    substitude_value = row[3]
+                    substitude_value = row[9]
                 elif delayed_strategy == "upper":
-                    substitude_value = row[4]
-            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value, channel)
+                    substitude_value = row[10]
+            self.database.write_configuration("gittins",NextConf1, 1, 1, substitude_value, channel)
         return NextConf1, NextConf2
 
     def RoTA(self, num_trial, Throughput_Treshhold, PSR_Threshold, delayed_feedback, delayed_strategy, channel):
@@ -986,7 +989,7 @@ class CognitiveEngine:
                     print "###############################\n\n"
                 NextConf1 = NextConf2
         if delayed_feedback == "delay":
-            self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
+            self.config_cursor.execute('SELECT * FROM rota WHERE ID=?', [NextConf1.conf_id])
             for row in self.config_cursor:
                 if delayed_strategy == "mean":
                     substitude_value = row[2]
@@ -994,7 +997,7 @@ class CognitiveEngine:
                     substitude_value = row[3]
                 elif delayed_strategy == "upper":
                     substitude_value = row[4]
-            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value, channel)
+            self.database.write_configuration("rota",NextConf1, 1, 1, substitude_value, channel)
         return NextConf1, NextConf2
 
 

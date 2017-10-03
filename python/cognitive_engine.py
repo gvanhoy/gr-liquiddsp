@@ -948,7 +948,7 @@ class CognitiveEngine:
                 print "***None of the Configurations are Qualified***\n"
                 self.config_cursor.execute('SELECT max(mean) FROM rota')
                 maximum_potential = self.config_cursor.fetchone()[0]
-                self.config_cursor.execute('SELECT ID FROM config WHERE Mean=?' [maximum_potential])
+                self.config_cursor.execute('SELECT ID FROM rota WHERE Mean=?' [maximum_potential])
                 greedy_choice = self.config_cursor.fetchone()[0]
                 self.config_cursor.execute('SELECT * FROM config WHERE ID=?', [greedy_choice])
                 for row in self.config_cursor:

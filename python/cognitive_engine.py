@@ -215,6 +215,7 @@ class DatabaseControl:
                                [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, 0.0, new_PSR, lowerP, upperP,  configuration.conf_id])
             elif newTrialN > 1:
                 if channel == "stationary":
+                    print "I am here **************************"
                     mean = new_aggregated_Throughput / newTrialN
                     variance = (newSQTh / newTrialN) - (np.power(mean, 2))
                 elif channel == "nonstationary":

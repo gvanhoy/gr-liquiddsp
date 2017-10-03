@@ -30,6 +30,7 @@ from scipy.stats import *
 CONFIDENCE = 0.9
 DiscountFactor = 0.9
 window_size = 30
+alpha = 0.2
 
 class cognitive_engine(gr.sync_block):
     """
@@ -94,7 +95,7 @@ class cognitive_engine(gr.sync_block):
                         self.database.write_configuration(self.ce_type, configuration,
                                                           header_valid,
                                                           payload_valid,
-                                                          goodput)
+                                                          goodput, self.channel)
         elif self.delayed_feedback == "delay":
             if modulation >= 0:
                 if inner_code >= 0:
@@ -102,31 +103,31 @@ class cognitive_engine(gr.sync_block):
                         self.database.write_delayed_feedback(self.ce_type, configuration, header_valid, payload_valid, goodput)
 
         if self.ce_type == "epsilon_greedy":
-            ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback)
+            ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback, self.delayed_strategy, self.channel)
         elif self.ce_type == "gittins":
-            ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor, self.delayed_feedback)
+            ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor, self.delayed_feedback, self.delayed_strategy, self.channel)
         elif self.ce_type == "annealing_epsilon_greedy":
-            ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, self.initial_epsilon, self.delayed_feedback)
+            ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, self.initial_epsilon, self.delayed_feedback, self.delayed_strategy, self.channel)
             if self.initial_epsilon > 0.05:
                 self.initial_epsilon -= 0.001
         elif self.ce_type == "RoTA":
-            ce_configuration = self.engine.RoTA(self.num_packets, self.Throughput_Threshold, self.PSR_Threshold, self.delayed_feedback)
+            ce_configuration = self.engine.RoTA(self.num_packets, self.Throughput_Threshold, self.PSR_Threshold, self.delayed_feedback, self.delayed_strategy, self.channel)
         elif self.ce_type == "meta":
             if self.noise > 0:
                 SNratio = 10 * np.log10(np.power(0.05/(2*self.noise), 2))
                 if SNratio < 12:
-                    ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback)
+                    ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback, self.delayed_strategy, self.channel)
                 elif SNratio < 18:
-                    ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, self.initial_epsilon, self.delayed_feedback)
+                    ce_configuration = self.engine.annealing_epsilon_greedy(self.num_packets, self.initial_epsilon, self.delayed_feedback, self.delayed_strategy, self.channel)
                 else:
-                    ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor, self.delayed_feedback)
+                    ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor, self.delayed_feedback, self.delayed_strategy, self.channel)
             else:
-                ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor, self.delayed_feedback)
+                ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor, self.delayed_feedback, self.delayed_strategy, self.channel)
 
         if ce_configuration is not None:
             new_configuration = pmt.make_dict()
             new_ce_configuration = ce_configuration[0]
-            self.database.write_TX_result(self.ce_type, new_ce_configuration, self.num_packets, self.delayed_feedback)
+            self.database.write_TX_result(self.ce_type, new_ce_configuration, self.num_packets, self.delayed_feedback, self.delayed_strategy, self.channel)
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("modulation"), pmt.from_long(new_ce_configuration.modulation))
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("inner_code"), pmt.from_long(new_ce_configuration.inner_code))
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("outer_code"), pmt.from_long(new_ce_configuration.outer_code))
@@ -148,7 +149,7 @@ class DatabaseControl:
         self.config_cursor.execute('INSERT INTO rx (num_packets, config_id, throughput, PSR) VALUES (?,?,?,?)', (num_packets, config_id, throughput, PSR))
         self.config_connection.commit()
 
-    def write_TX_result(self, ce_type, configuration, num_packets, delayed_feedback):
+    def write_TX_result(self, ce_type, configuration, num_packets, delayed_feedback, delayed_strategy, channel):
         if delayed_feedback == "no_delay":
             sub_value = -1
             PSR = -1
@@ -162,7 +163,7 @@ class DatabaseControl:
                 elif delayed_strategy == "upper":
                     sub_value = row[10]
                 PSR = row[11]
-            self.write_configuration(ce_type, configuration, 1, PSR, sub_value)
+            self.write_configuration(ce_type, configuration, 1, PSR, sub_value, channel)
         self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, PSR, sub_value, over_write) VALUES (?,?,?,?,?)', (num_packets, configuration.conf_id, PSR, sub_value, 0))
         self.config_connection.commit()
 
@@ -183,7 +184,7 @@ class DatabaseControl:
         else:
             self.write_configuration(ce_type, configuration, header_valid, payload_valid, goodput)
 
-    def write_configuration(self, ce_type, configuration, total, success, throughput):
+    def write_configuration(self, ce_type, configuration, total, success, throughput, channel):
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
         has_row = False
         for row in self.config_cursor:
@@ -213,8 +214,19 @@ class DatabaseControl:
                 self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? , PSR=? ,LB_PSR=? ,UB_PSR=? WHERE ID=?',
                                [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, 0.0, new_PSR, lowerP, upperP,  configuration.conf_id])
             elif newTrialN > 1:
-                mean = new_aggregated_Throughput / newTrialN
-                variance = (newSQTh / newTrialN) - (np.power(mean, 2))
+                if channel == "stationary":
+                    mean = new_aggregated_Throughput / newTrialN
+                    variance = (newSQTh / newTrialN) - (np.power(mean, 2))
+                elif channel == "nonstationary":
+                    if newTrialN > (1/alpha):
+                        old_mean = old_throughput / num_trial
+                        diff = throughput - old_mean
+                        mean = old_mean + (alpha * diff)
+                        old_variance = (old_sqth/num_trial) - (np.power(old_mean, 2))
+                        variance = (1-alpha) * (old_variance + (alpha * np.power(diff, 2)))
+                    else:
+                        mean = new_aggregated_Throughput / newTrialN
+                        variance = (newSQTh / newTrialN) - (np.power(mean, 2))
                 if variance < 0:
                     variance = 0
                 maxp = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (
@@ -225,10 +237,6 @@ class DatabaseControl:
                 self.config_cursor.execute(
                     'UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? ,UB_Throughput=? ,PSR=? ,LB_PSR=? ,UB_PSR=? WHERE ID=?',
                     [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, lowerM, upperM, new_PSR, lowerP, upperP, configuration.conf_id])
-            mean = new_aggregated_Throughput / newTrialN
-            variance = (newSQTh / newTrialN) - (np.power(mean, 2))
-            if variance < 0:
-                variance = 0
             if ce_type == "epsilon_greedy":
                 if newTrialN == 1:
                     self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?',
@@ -663,7 +671,7 @@ class CognitiveEngine:
         self.config_connection.close()
         self.config_cursor.close()
 
-    def epsilon_greedy(self, num_trial, epsilon, delayed_feedback):
+    def epsilon_greedy(self, num_trial, epsilon, delayed_feedback, delayed_strategy, channel):
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
 
@@ -761,10 +769,10 @@ class CognitiveEngine:
                     substitude_value = row[3]
                 elif delayed_strategy == "upper":
                     substitude_value = row[4]
-            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value)
+            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value, channel)
         return NextConf1, NextConf2
 
-    def annealing_epsilon_greedy(self, num_trial, epsilon, delayed_feedback):
+    def annealing_epsilon_greedy(self, num_trial, epsilon, delayed_feedback, delayed_strategy, channel):
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
 
@@ -835,10 +843,10 @@ class CognitiveEngine:
                     substitude_value = row[3]
                 elif delayed_strategy == "upper":
                     substitude_value = row[4]
-            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value)
+            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value, channel)
         return NextConf1, NextConf2
 
-    def gittins(self, num_trial, DiscountFactor, delayed_feedback):
+    def gittins(self, num_trial, DiscountFactor, delayed_feedback, delayed_strategy, channel):
         print "num trial =", num_trial
         self.config_cursor.execute('SELECT MAX(indexx) FROM gittins')
         highest_idx = self.config_cursor.fetchone()[0]
@@ -872,10 +880,10 @@ class CognitiveEngine:
                     substitude_value = row[3]
                 elif delayed_strategy == "upper":
                     substitude_value = row[4]
-            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value)
+            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value, channel)
         return NextConf1, NextConf2
 
-    def RoTA(self, num_trial, Throughput_Treshhold, PSR_Threshold, delayed_feedback):
+    def RoTA(self, num_trial, Throughput_Treshhold, PSR_Threshold, delayed_feedback, delayed_strategy, channel):
         window = num_trial - window_size
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
@@ -983,7 +991,7 @@ class CognitiveEngine:
                     substitude_value = row[3]
                 elif delayed_strategy == "upper":
                     substitude_value = row[4]
-            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value)
+            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value, channel)
         return NextConf1, NextConf2
 
 

@@ -66,11 +66,6 @@ class cognitive_engine(gr.sync_block):
         self.num_packets += 1
         epsilon = 0.1
         DiscountFactor = 0.9
-        print "ce_type = ", self.ce_type
-        print "delayed_feedback = ", self.delayed_feedback
-        print "delayed_strategy = ", self.delayed_strategy
-        print "channel condition = ", self.channel
-        print "Noise = ", self.noise
         modulation = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("modulation"), pmt.PMT_NIL))
         inner_code = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("inner_code"), pmt.PMT_NIL))
         outer_code = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("outer_code"), pmt.PMT_NIL))
@@ -80,14 +75,6 @@ class cognitive_engine(gr.sync_block):
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
         self.database.write_RX_result(config_id, self.num_packets, goodput, payload_valid)
-        # print "****************************************************"
-        # print "Received packet info to the CE"
-        # print "header_valid =", header_valid
-        # print "payload_valid =", payload_valid
-        # print "received mod=", modulation
-        # print "inner code=", inner_code
-        # print "outer code=", outer_code
-        # print "********************************************************"
         if self.delayed_feedback == "no_delay":
             if modulation >= 0:
                 if inner_code >= 0:
@@ -217,7 +204,6 @@ class DatabaseControl:
                                [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, 0.0, new_PSR, lowerP, upperP,  configuration.conf_id])
             elif newTrialN > 1:
                 if channel == "stationary":
-                    print "I am here **************************"
                     mean = new_aggregated_Throughput / newTrialN
                     variance = (newSQTh / newTrialN) - (np.power(mean, 2))
                 elif channel == "nonstationary":

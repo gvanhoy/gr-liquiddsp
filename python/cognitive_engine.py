@@ -949,6 +949,7 @@ class CognitiveEngine:
                 self.config_cursor.execute('SELECT max(mean) FROM rota')
                 maximum_potential = self.config_cursor.fetchone()[0]
                 maximum_potential = maximum_potential - 0.0001
+                print "max_potential = ", maximum_potential
                 self.config_cursor.execute('SELECT ID FROM rota WHERE Mean>?' [maximum_potential])
                 greedy_choice = self.config_cursor.fetchone()[0]
                 self.config_cursor.execute('SELECT * FROM config WHERE ID=?', [greedy_choice])

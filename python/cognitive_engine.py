@@ -74,7 +74,6 @@ class cognitive_engine(gr.sync_block):
         config_id = modulation*7*8 + inner_code*8 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
-        self.database.write_RX_result(config_id, self.num_packets, goodput, payload_valid)
         if self.delayed_feedback == "no_delay":
             if modulation >= 0:
                 if inner_code >= 0:
@@ -88,6 +87,7 @@ class cognitive_engine(gr.sync_block):
                 if inner_code >= 0:
                     if outer_code >= 0:
                         self.database.write_delayed_feedback(self.ce_type, configuration, header_valid, payload_valid, goodput)
+        self.database.write_RX_result(config_id, self.num_packets, goodput, payload_valid)
 
         if self.ce_type == "epsilon_greedy":
             ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback, self.delayed_strategy, self.channel)
@@ -134,6 +134,11 @@ class DatabaseControl:
 
     def write_RX_result(self, config_id, num_packets, throughput, PSR):
         self.config_cursor.execute('INSERT INTO rx (num_packets, config_id, throughput, PSR) VALUES (?,?,?,?)', (num_packets, config_id, throughput, PSR))
+        self.config_cursor.execute('SELECT * FROM config WHERE ID=?', [config_id])
+        for row in self.config_cursor:
+            mean = float(row[7]) / row[4]
+            PSR = row[11]
+        self.config_cursor.execute('UPDATE tx SET known_mean=?, known_PSR=? WHERE config_id=?', [mean, PSR, config_id])
         self.config_connection.commit()
 
     def write_TX_result(self, ce_type, configuration, num_packets, delayed_feedback, delayed_strategy, channel):

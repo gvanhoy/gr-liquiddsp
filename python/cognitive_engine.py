@@ -160,7 +160,7 @@ class DatabaseControl:
         else:
             self.write_configuration(ce_type, configuration, 1, PSR, sub_value, channel)
 
-        self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, PSR, sub_value, over_write, known_mean, known_PSR) VALUES (?,?,?,?,?)', (num_packets, configuration.conf_id, PSR, sub_value, 0, mean, known_PSR))
+        self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, PSR, sub_value, over_write, known_mean, known_PSR) VALUES (?,?,?,?,?,?,?)', (num_packets, configuration.conf_id, PSR, sub_value, 0, mean, known_PSR))
         self.config_connection.commit()
 
     def write_delayed_feedback(self, ce_type, configuration, header_valid, payload_valid, goodput):

@@ -185,6 +185,10 @@ class DatabaseControl:
             self.write_configuration(ce_type, configuration, header_valid, payload_valid, goodput)
 
     def write_configuration(self, ce_type, configuration, total, success, throughput, channel):
+
+        print "channel in write_configuration = ",channel
+        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
+        
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
         has_row = False
         for row in self.config_cursor:

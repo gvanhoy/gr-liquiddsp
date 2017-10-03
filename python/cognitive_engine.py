@@ -137,21 +137,24 @@ class DatabaseControl:
         self.config_connection.commit()
 
     def write_TX_result(self, ce_type, configuration, num_packets, delayed_feedback, delayed_strategy, channel):
+        self.config_cursor.execute('SELECT * FROM config WHERE ID=?', [configuration.conf_id])
+        for row in self.config_cursor:
+            if delayed_strategy == "mean":
+                sub_value = float(row[7]) / row[4]
+            elif delayed_strategy == "lower":
+                sub_value = row[9]
+            elif delayed_strategy == "upper":
+                sub_value = row[10]
+            PSR = row[11]
+            known_PSR = PSR
+            mean = float(row[7]) / row[4]
         if delayed_feedback == "no_delay":
             sub_value = -1
             PSR = -1
         else:
-            self.config_cursor.execute('SELECT * FROM config WHERE ID=?', [configuration.conf_id])
-            for row in self.config_cursor:
-                if delayed_strategy == "mean":
-                    sub_value = float(row[7]) / row[4]
-                elif delayed_strategy == "lower":
-                    sub_value = row[9]
-                elif delayed_strategy == "upper":
-                    sub_value = row[10]
-                PSR = row[11]
             self.write_configuration(ce_type, configuration, 1, PSR, sub_value, channel)
-        self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, PSR, sub_value, over_write) VALUES (?,?,?,?,?)', (num_packets, configuration.conf_id, PSR, sub_value, 0))
+
+        self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, PSR, sub_value, over_write, known_mean, known_PSR) VALUES (?,?,?,?,?)', (num_packets, configuration.conf_id, PSR, sub_value, 0, mean, known_PSR))
         self.config_connection.commit()
 
     def write_delayed_feedback(self, ce_type, configuration, header_valid, payload_valid, goodput):
@@ -399,7 +402,7 @@ class DatabaseControl:
         # Decision Sequences
         self.config_cursor.execute('drop table if exists tx')
         self.config_connection.commit()
-        sql = 'create table if not exists tx (num_packets integer primary key, config_id integer default 0, PSR real default -1.0, sub_value real default -1.0, over_write bit default 0)'
+        sql = 'create table if not exists tx (num_packets integer primary key, config_id integer default 0, PSR real default -1.0, sub_value real default -1.0, over_write bit default 0, known_mean real default 0.0, known_PSR real default 0.0)'
         self.config_cursor.execute(sql)
         self.config_connection.commit()
 
@@ -927,11 +930,11 @@ class CognitiveEngine:
                 print "###############################\n\n"
             NextConf2 = NextConf1
         else:
-            self.config_cursor.execute('SELECT Avg(throughput) FROM rx WHERE num_packets>?', [window])
-            throughput_window = self.config_cursor.fetchone()[0]
-            self.config_cursor.execute('SELECT Avg(PSR) FROM rx WHERE num_packets>?', [window])
-            psr_window = self.config_cursor.fetchone()[0]
-            if (throughput_window > Throughput_Treshhold) and (training_size > 0) and (psr_window > PSR_Threshold):
+            self.config_cursor.execute('SELECT Avg(known_mean) FROM tx WHERE num_packets>?', [window])
+            known_throughput_window = self.config_cursor.fetchone()[0]
+            self.config_cursor.execute('SELECT Avg(known_PSR) FROM tx WHERE num_packets>?', [window])
+            known_psr_window = self.config_cursor.fetchone()[0]
+            if (known_throughput_window > Throughput_Treshhold) and (training_size > 0) and (known_psr_window > PSR_Threshold):
                 self.config_cursor.execute('SELECT MAX(indexx) FROM RoTA')
                 highest_idx = self.config_cursor.fetchone()[0]
                 self.config_cursor.execute('SELECT count(*) FROM RoTA WHERE indexx=?', [highest_idx])

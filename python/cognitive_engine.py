@@ -923,26 +923,43 @@ class CognitiveEngine:
         print "psr_window = ", psr_window
 
         if ofsseting_size == 0:
-            print "***Infant stage***\n"
-            nn = random.randrange(1, training_size + 1)
-            self.config_cursor.execute('SELECT ID FROM RoTA WHERE Eligibility=?', [1])
-            j = 0
-            for row in self.config_cursor:
-                j = j + 1
-                if j == nn:
-                    configN = row[0]
-                    break
+            if training_size > 0:
+                print "***Infant stage***\n"
+                nn = random.randrange(1, training_size + 1)
+                self.config_cursor.execute('SELECT ID FROM RoTA WHERE Eligibility=?', [1])
+                j = 0
+                for row in self.config_cursor:
+                    j = j + 1
+                    if j == nn:
+                        configN = row[0]
+                        break
 
-            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
-            for row in self.config_cursor:
-                NextConf1 = ConfigurationMap(row[1], row[2], row[3], row[0])
-                print "Configuration is"
-                config_map = ConfigurationMap(NextConf1.modulation, NextConf1.inner_code, NextConf1.outer_code)
-                print "Modulation is ", config_map.constellationN, config_map.modulationtype
-                print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
-                print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
-                print "###############################\n\n"
-            NextConf2 = NextConf1
+                self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+                for row in self.config_cursor:
+                    NextConf1 = ConfigurationMap(row[1], row[2], row[3], row[0])
+                    print "Configuration is"
+                    config_map = ConfigurationMap(NextConf1.modulation, NextConf1.inner_code, NextConf1.outer_code)
+                    print "Modulation is ", config_map.constellationN, config_map.modulationtype
+                    print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+                    print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+                    print "###############################\n\n"
+                NextConf2 = NextConf1
+            else:
+                print "***None of the Configurations are Qualified***\n"
+                self.config_cursor.execute('SELECT max(mean) FROM rota')
+                maximum_potential = self.config_cursor.fetchone()[0]
+                self.config_cursor.execute('SELECT ID FROM config WHERE Mean=?' [maximum_potential])
+                greedy_choice = self.config_cursor.fetchone()[0]
+                self.config_cursor.execute('SELECT * FROM config WHERE ID=?', [greedy_choice])
+                for row in self.config_cursor:
+                    NextConf1 = ConfigurationMap(row[1], row[2], row[3], row[0])
+                    print "Configuration is"
+                    config_map = ConfigurationMap(NextConf1.modulation, NextConf1.inner_code, NextConf1.outer_code)
+                    print "Modulation is ", config_map.constellationN, config_map.modulationtype
+                    print "Inner Code is ", config_map.innercodingtype, ", and coding rate is ", config_map.innercodingrate
+                    print "Outer Code is ", config_map.outercodingtype, ", and coding rate is ", config_map.outercodingrate
+                    print "###############################\n\n"
+                NextConf2 = NextConf1
         else:
             self.config_cursor.execute('SELECT Avg(known_mean) FROM tx WHERE num_packets>?', [window])
             known_throughput_window = self.config_cursor.fetchone()[0]

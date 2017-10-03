@@ -140,14 +140,20 @@ class DatabaseControl:
         self.config_cursor.execute('SELECT * FROM config WHERE ID=?', [configuration.conf_id])
         for row in self.config_cursor:
             if delayed_strategy == "mean":
-                sub_value = float(row[7]) / row[4]
+                if row[4] > 0:
+                    sub_value = float(row[7]) / row[4]
+                else:
+                    sub_value = 0
             elif delayed_strategy == "lower":
                 sub_value = row[9]
             elif delayed_strategy == "upper":
                 sub_value = row[10]
             PSR = row[11]
             known_PSR = PSR
-            mean = float(row[7]) / row[4]
+            if row[4] > 0:
+                mean = float(row[7]) / row[4]
+            else:
+                mean = 0
         if delayed_feedback == "no_delay":
             sub_value = -1
             PSR = -1

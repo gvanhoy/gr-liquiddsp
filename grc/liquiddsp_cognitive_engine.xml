@@ -4,7 +4,7 @@
     <key>liquiddsp_cognitive_engine</key>
     <category>[liquiddsp]</category>
     <import>import liquiddsp</import>
-    <make>liquiddsp.cognitive_engine($ce_type, $delayed_feedback, $delayed_strategy, $channel, $noise)</make>
+    <make>liquiddsp.cognitive_engine($ce_type, $delayed_feedback, $delayed_strategy, $channel, $kindicator, $noise)</make>
     <param>
         <name>Algorithm</name>
         <key>ce_type</key>
@@ -75,6 +75,19 @@
         <option>
             <name>Non-Stationary</name>
             <key>nonstationary</key>
+        </option>
+    </param>
+    <param>
+        <name>Knowledge Indicator</name>
+        <key>kindicator</key>
+        <type>string</type>
+        <option>
+            <name>OFF</name>
+            <key>off</key>
+        </option>
+        <option>
+            <name>ON</name>
+            <key>on</key>
         </option>
     </param>
     <param>

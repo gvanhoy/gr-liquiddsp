@@ -36,7 +36,7 @@ class cognitive_engine(gr.sync_block):
     """
     docstring for block cognitive_engine
     """
-    def __init__(self, ce_type="", delayed_feedback="", delayed_strategy="", channel="", noise=0):
+    def __init__(self, ce_type="", delayed_feedback="", delayed_strategy="", channel="", kindicator="", noise=0):
         gr.sync_block.__init__(self,
             name="cognitive_engine",
             in_sig=[],
@@ -45,6 +45,7 @@ class cognitive_engine(gr.sync_block):
         self.delayed_feedback = delayed_feedback
         self.delayed_strategy = delayed_strategy
         self.channel = channel
+        self.kindicator = kindicator
         self.noise = noise
         self.database = DatabaseControl()
 
@@ -52,6 +53,7 @@ class cognitive_engine(gr.sync_block):
         self.database.reset_cognitive_engine_tables()
 
         self.engine = CognitiveEngine()
+        self.knowledge = KnowledgeIndicator()
         self.message_port_register_in(pmt.intern('packet_info'))
         self.set_msg_handler(pmt.intern('packet_info'), self.handler)
         self.message_port_register_out(pmt.intern('configuration'))
@@ -88,6 +90,8 @@ class cognitive_engine(gr.sync_block):
                     if outer_code >= 0:
                         self.database.write_delayed_feedback(self.ce_type, configuration, header_valid, payload_valid, goodput, self.channel)
         self.database.write_RX_result(config_id, self.num_packets, goodput, payload_valid)
+        if self.kindicator == "on":
+            self.knowledge.Knowledge_Indicators(self.num_packets)
 
         if self.ce_type == "epsilon_greedy":
             ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback, self.delayed_strategy, self.channel)

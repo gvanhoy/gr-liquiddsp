@@ -214,8 +214,8 @@ class DatabaseControl:
             if newTrialN == 1:
                 mean = new_aggregated_Throughput / newTrialN
                 variance = (newSQTh / newTrialN) - (np.power(mean, 2))
-                self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? , PSR=? ,LB_PSR=? ,UB_PSR=? WHERE ID=?',
-                               [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, 0.0, new_PSR, lowerP, upperP,  configuration.conf_id])
+                self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? , PSR=? ,LB_PSR=? ,UB_PSR=?, Mean_Throughput=? WHERE ID=?',
+                               [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, 0.0, new_PSR, lowerP, upperP, mean,  configuration.conf_id])
             elif newTrialN > 1:
                 if channel == "stationary":
                     mean = new_aggregated_Throughput / newTrialN
@@ -238,8 +238,8 @@ class DatabaseControl:
                 lowerM = RCI[0]
                 upperM = RCI[1]
                 self.config_cursor.execute(
-                    'UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? ,UB_Throughput=? ,PSR=? ,LB_PSR=? ,UB_PSR=? WHERE ID=?',
-                    [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, lowerM, upperM, new_PSR, lowerP, upperP, configuration.conf_id])
+                    'UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? ,UB_Throughput=? ,PSR=? ,LB_PSR=? ,UB_PSR=?, Mean_Throughput=? WHERE ID=?',
+                    [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, lowerM, upperM, new_PSR, lowerP, upperP, mean, configuration.conf_id])
             if ce_type == "epsilon_greedy":
                 if newTrialN == 1:
                     self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?',
@@ -284,8 +284,8 @@ class DatabaseControl:
         Allconfigs = self.config_cursor.fetchone()[0]
 
         for i in xrange(1, Allconfigs + 1):
-            self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? WHERE ID=?',
-                           [0, 0, 0, 0.0, 0.0, i])
+            self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=?, Mean_Throughput=? WHERE ID=?',
+                           [0, 0, 0, 0.0, 0.0, 0.0, i])
         self.config_connection.commit()
 
         # Egreedy
@@ -423,6 +423,13 @@ class DatabaseControl:
         self.config_cursor.execute(sql)
         self.config_connection.commit()
 
+        # Knowledge Indicators
+        self.config_cursor.execute('drop table if exists KI')
+        self.config_connection.commit()
+        sql = 'create table if not exists KI (num_packets integer primary key, LBI real default 0.0, RBI real default 0.0, CCI real default 0.0, CI real default 0.0)'
+        self.config_cursor.execute(sql)
+        self.config_connection.commit()
+
     def reset_config_tables(self):
         ######################################################################
         self.config_connection.execute('''drop table if exists config;''')
@@ -441,7 +448,8 @@ class DatabaseControl:
             UB_Throughput    REAL       NOT NULL,
             PSR              REAL       NOT NULL,
             LB_PSR           REAL       NOT NULL,
-            UB_PSR           REAL       NOT NULL);''')
+            UB_PSR           REAL       NOT NULL,
+            Mean_Throughput  REAL       NOT NULL,);''')
         print "Table created successfully"
         conf_id = 1
         for m in xrange(0, 11):
@@ -450,8 +458,8 @@ class DatabaseControl:
                     config_map = ConfigurationMap(m, i, o)
                     upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
                         float(config_map.innercodingrate))
-                    self.config_connection.execute('INSERT INTO CONFIG (ID,MODULATION,Innercode,Outercode,TrialN,Total,Success,Throughput,SQTh,LB_Throughput,UB_Throughput,PSR,LB_PSR,UB_PSR) \
-                              VALUES (?, ?, ?, ?, 0, 0, 0, 0.0, 0.0, 0.0, ?, 1.0, 0.0, 1.0)', (conf_id, m, i, o, upperbound))
+                    self.config_connection.execute('INSERT INTO CONFIG (ID,MODULATION,Innercode,Outercode,TrialN,Total,Success,Throughput,SQTh,LB_Throughput,UB_Throughput,PSR,LB_PSR,UB_PSR,Mean_Throughput) \
+                              VALUES (?, ?, ?, ?, 0, 0, 0, 0.0, 0.0, 0.0, ?, 1.0, 0.0, 1.0, 0.0)', (conf_id, m, i, o, upperbound))
                     conf_id += 1
         self.config_connection.commit()
 
@@ -1018,6 +1026,50 @@ class CognitiveEngine:
                     substitude_value = row[4]
             self.database.write_configuration("rota",NextConf1, 1, 1, substitude_value, channel)
         return NextConf1, NextConf2
+
+
+class KnowledgeIndicator:
+    def __init__(self):
+        self.config_connection = sqlite3.connect('config.db', check_same_thread=False)
+        self.config_cursor = self.config_connection.cursor()
+        self.database = DatabaseControl()
+        # self.training_mode = True
+
+    def __del__(self):
+        self.config_connection.close()
+        self.config_cursor.close()
+
+    def Knowledge_Indicators(self, num_trial):
+        self.config_cursor.execute('SELECT MAX(ID),MAX(Mean_Throughput),MAX(UB_Throughput) FROM CONFIG')
+        for row in self.config_cursor:
+            num_configs = row[0]
+            muBest = row[1]
+            upperMAX = row[2]
+        Nk = num_configs
+        Ne = 0
+        CCI_nominator = 0.0
+        CCI_denominator = 0.0
+        entropi = 0
+        for j in xrange(1, num_configs + 1):
+            self.config_cursor.execute('SELECT LB_Throughput,UB_Throughput FROM config WHERE ID=?', [j])
+            for row in self.config_cursor:
+                lowerR = row[0]
+                upperR = row[1]
+                CCI_denominator = CCI_denominator + (upperR - lowerR)
+            if upperR > muBest:
+                Ne = Ne + 1
+                CCI_nominator = CCI_nominator + (upperR - muBest)
+                entropi = entropi + np.log(upperR - lowerR)
+
+        LBI = float((Nk - Ne)) / (Nk - 1)
+        RBI = muBest / upperMAX
+        CCI = CCI_nominator / CCI_denominator
+        CI = 1 - entropi
+
+        self.config_cursor.execute('INSERT INTO KI (num_packets, LBI, RBI, CCI, CI) VALUES (?,?,?,?,?)', (num_trial, LBI, RBI, CCI, CI))
+        self.config_connection.commit()
+
+
 
 
 

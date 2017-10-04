@@ -32,6 +32,7 @@ DiscountFactor = 0.9
 window_size = 30
 alpha = 0.2
 initial_entropi = 0.0
+BW = 100
 
 class cognitive_engine(gr.sync_block):
     """
@@ -440,7 +441,7 @@ class DatabaseControl:
             for row in self.config_cursor:
                 lowerR = row[0]
                 upperR = row[1]
-            ent = ent + np.log(upperR - lowerR)
+            ent = ent + np.log(BW *(upperR - lowerR))
         global initial_entropi
         initial_entropi = ent
 
@@ -1074,7 +1075,7 @@ class KnowledgeIndicator:
             if upperR > muBest:
                 Ne = Ne + 1
                 CCI_nominator = CCI_nominator + (upperR - muBest)
-                entropi = entropi + np.log(upperR - lowerR)
+                entropi = entropi + np.log(BW * (upperR - lowerR))
 
         LBI = float((Nk - Ne)) / (Nk - 1)
         RBI = muBest / upperMAX

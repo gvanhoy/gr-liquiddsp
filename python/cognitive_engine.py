@@ -31,6 +31,7 @@ CONFIDENCE = 0.9
 DiscountFactor = 0.9
 window_size = 30
 alpha = 0.2
+initial_entropi = 0.0
 
 class cognitive_engine(gr.sync_block):
     """
@@ -91,7 +92,7 @@ class cognitive_engine(gr.sync_block):
                         self.database.write_delayed_feedback(self.ce_type, configuration, header_valid, payload_valid, goodput, self.channel)
         self.database.write_RX_result(config_id, self.num_packets, goodput, payload_valid)
         if self.kindicator == "on":
-            self.knowledge.Knowledge_Indicators(self.num_packets)
+            self.knowledge.Knowledge_Indicators(self.num_packets, initial_entropi)
 
         if self.ce_type == "epsilon_greedy":
             ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback, self.delayed_strategy, self.channel)
@@ -433,6 +434,15 @@ class DatabaseControl:
         sql = 'create table if not exists KI (num_packets integer primary key, LBI real default 0.0, RBI real default 0.0, CCI real default 0.0, CI real default 0.0)'
         self.config_cursor.execute(sql)
         self.config_connection.commit()
+        ent = 0
+        for j in xrange(1, Allconfigs + 1):
+            self.config_cursor.execute('SELECT LB_Throughput,UB_Throughput FROM config WHERE ID=?', [j])
+            for row in self.config_cursor:
+                lowerR = row[0]
+                upperR = row[1]
+            ent = ent + np.log(upperR - lowerR)
+        global initial_entropi
+        initial_entropi = ent
 
     def reset_config_tables(self):
         ######################################################################
@@ -1043,7 +1053,7 @@ class KnowledgeIndicator:
         self.config_connection.close()
         self.config_cursor.close()
 
-    def Knowledge_Indicators(self, num_trial):
+    def Knowledge_Indicators(self, num_trial, i_entropi):
         self.config_cursor.execute('SELECT MAX(ID),MAX(Mean_Throughput),MAX(UB_Throughput) FROM CONFIG')
         for row in self.config_cursor:
             num_configs = row[0]
@@ -1067,8 +1077,8 @@ class KnowledgeIndicator:
 
         LBI = float((Nk - Ne)) / (Nk - 1)
         RBI = muBest / upperMAX
-        CCI = CCI_nominator / CCI_denominator
-        CI = 1 - entropi
+        CCI = 1 - (CCI_nominator / CCI_denominator)
+        CI = 1 - (entropi / i_entropi)
 
         self.config_cursor.execute('INSERT INTO KI (num_packets, LBI, RBI, CCI, CI) VALUES (?,?,?,?,?)', (num_trial, LBI, RBI, CCI, CI))
         self.config_connection.commit()

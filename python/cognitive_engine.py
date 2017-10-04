@@ -453,7 +453,7 @@ class DatabaseControl:
             PSR              REAL       NOT NULL,
             LB_PSR           REAL       NOT NULL,
             UB_PSR           REAL       NOT NULL,
-            Mean_Throughput  REAL       NOT NULL,);''')
+            Mean_Throughput  REAL       NOT NULL);''')
         print "Table created successfully"
         conf_id = 1
         for m in xrange(0, 11):

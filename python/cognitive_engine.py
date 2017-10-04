@@ -1055,7 +1055,6 @@ class KnowledgeIndicator:
         self.config_cursor.close()
 
     def Knowledge_Indicators(self, num_trial, i_entropi):
-        print "initial_entropi = ", i_entropi
         self.config_cursor.execute('SELECT MAX(ID),MAX(Mean_Throughput),MAX(UB_Throughput) FROM CONFIG')
         for row in self.config_cursor:
             num_configs = row[0]

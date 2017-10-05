@@ -730,7 +730,6 @@ class CognitiveEngine:
 
         self.config_cursor.execute('SELECT MAX(Mean) FROM Egreedy')
         muBest = self.config_cursor.fetchone()[0]
-        # print "muBest = ", muBest
         for j in xrange(1, num_configs + 1):
             self.config_cursor.execute('SELECT Upper FROM Egreedy WHERE ID=?', [j])
             upper = self.config_cursor.fetchone()[0]
@@ -765,10 +764,10 @@ class CognitiveEngine:
         else:
             print "***Exploration***\n"
             print "num trial =", num_trial
-            self.config_cursor.execute('SELECT count(*) FROM Egreedy')
+            self.config_cursor.execute('SELECT count(*) FROM Egreedy WHERE Eligibility=?', [1])
             NO = self.config_cursor.fetchone()[0]
             nn = random.randrange(1, NO + 1)
-            self.config_cursor.execute('SELECT ID FROM Egreedy')
+            self.config_cursor.execute('SELECT ID FROM Egreedy WHERE Eligibility=?', [1])
             j = 0
             for row in self.config_cursor:
                 j = j + 1
@@ -985,9 +984,9 @@ class CognitiveEngine:
                     print "###############################\n\n"
                 NextConf2 = NextConf1
         else:
-            self.config_cursor.execute('SELECT Avg(known_mean) FROM tx WHERE num_packets>?', [window])
+            self.config_cursor.execute('SELECT Avg(known_mean) FROM tx WHERE num_packets>?', [window + 1])
             known_throughput_window = self.config_cursor.fetchone()[0]
-            self.config_cursor.execute('SELECT Avg(known_PSR) FROM tx WHERE num_packets>?', [window])
+            self.config_cursor.execute('SELECT Avg(known_PSR) FROM tx WHERE num_packets>?', [window + 1])
             known_psr_window = self.config_cursor.fetchone()[0]
             if (known_throughput_window > Throughput_Treshhold) and (training_size > 0) and (known_psr_window > PSR_Threshold):
                 self.config_cursor.execute('SELECT MAX(indexx) FROM RoTA')

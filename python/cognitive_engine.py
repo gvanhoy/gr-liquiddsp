@@ -1094,16 +1094,16 @@ class KnowledgeIndicator:
         if contextual_type != "none":
             if contextual_type == "context_lbi":
                 global c_epsilon
-                c_epsilon = LBI
+                c_epsilon = 1 - LBI
             elif contextual_type == "context_rbi":
                 global c_epsilon
-                c_epsilon = RBI
+                c_epsilon = 1 - RBI
             elif contextual_type == "context_cci":
                 global c_epsilon
-                c_epsilon = CCI
+                c_epsilon = 1 - CCI
             elif contextual_type == "context_ci":
                 global c_epsilon
-                c_epsilon = CI
+                c_epsilon = 1 - CI
 
         self.config_cursor.execute('INSERT INTO KI (num_packets, LBI, RBI, CCI, CI) VALUES (?,?,?,?,?)', (num_trial, LBI, RBI, CCI, CI))
         self.config_connection.commit()

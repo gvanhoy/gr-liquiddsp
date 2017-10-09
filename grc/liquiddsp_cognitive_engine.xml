@@ -4,7 +4,7 @@
     <key>liquiddsp_cognitive_engine</key>
     <category>[liquiddsp]</category>
     <import>import liquiddsp</import>
-    <make>liquiddsp.cognitive_engine($ce_type, $delayed_feedback, $delayed_strategy, $channel, $kindicator, $noise)</make>
+    <make>liquiddsp.cognitive_engine($ce_type, $delayed_feedback, $delayed_strategy, $channel, $kindicator, $contextual_type, $noise)</make>
     <param>
         <name>Algorithm</name>
         <key>ce_type</key>
@@ -26,7 +26,7 @@
             <key>RoTA</key>
         </option>
         <option>
-            <name>Meta-CE</name>
+            <name>Meta-CE (BCAC)</name>
             <key>meta</key>
         </option>
     </param>
@@ -88,6 +88,31 @@
         <option>
             <name>ON</name>
             <key>on</key>
+        </option>
+    </param>
+    <param>
+        <name>Contextual CE</name>
+        <key>contextual_type</key>
+        <type>string</type>
+        <option>
+            <name>None</name>
+            <key>none</key>
+        </option>
+        <option>
+            <name>LBI</name>
+            <key>context_lbi</key>
+        </option>
+        <option>
+            <name>RBI</name>
+            <key>context_rbi</key>
+        </option>
+        <option>
+            <name>CCI</name>
+            <key>context_cci</key>
+        </option>
+        <option>
+            <name>CI</name>
+            <key>context_ci</key>
         </option>
     </param>
     <param>

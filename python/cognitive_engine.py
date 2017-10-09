@@ -33,12 +33,13 @@ window_size = 30
 alpha = 0.2
 initial_entropi = 0.0
 BW = 100
+c_epsilon = 1.0
 
 class cognitive_engine(gr.sync_block):
     """
     docstring for block cognitive_engine
     """
-    def __init__(self, ce_type="", delayed_feedback="", delayed_strategy="", channel="", kindicator="", noise=0):
+    def __init__(self, ce_type="", delayed_feedback="", delayed_strategy="", channel="", kindicator="", contextual_type="", noise=0):
         gr.sync_block.__init__(self,
             name="cognitive_engine",
             in_sig=[],
@@ -48,6 +49,10 @@ class cognitive_engine(gr.sync_block):
         self.delayed_strategy = delayed_strategy
         self.channel = channel
         self.kindicator = kindicator
+        self.contextual_type = contextual_type
+        if self.contextual_type != "none":
+            self.kindicator = "on"
+            self.ce_type = "epsilon_greedy"
         self.noise = noise
         self.database = DatabaseControl()
 
@@ -90,13 +95,19 @@ class cognitive_engine(gr.sync_block):
             if modulation >= 0:
                 if inner_code >= 0:
                     if outer_code >= 0:
-                        self.database.write_delayed_feedback(self.ce_type, configuration, header_valid, payload_valid, goodput, self.channel)
+                        self.database.write_delayed_feedback(self.ce_type, configuration, header_valid, payload_valid,
+                                                             goodput, self.channel)
         self.database.write_RX_result(config_id, self.num_packets, goodput, payload_valid)
         if self.kindicator == "on":
-            self.knowledge.Knowledge_Indicators(self.num_packets, initial_entropi)
+            self.knowledge.Knowledge_Indicators(self.num_packets, self.contextual_type, initial_entropi)
 
         if self.ce_type == "epsilon_greedy":
-            ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback, self.delayed_strategy, self.channel)
+            if self.contextual_type == "none":
+                ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback,
+                                                              self.delayed_strategy, self.channel)
+            else:
+                ce_configuration = self.engine.epsilon_greedy(self.num_packets, c_epsilon, self.delayed_feedback,
+                                                              self.delayed_strategy, self.channel)
         elif self.ce_type == "gittins":
             ce_configuration = self.engine.gittins(self.num_packets, DiscountFactor, self.delayed_feedback, self.delayed_strategy, self.channel)
         elif self.ce_type == "annealing_epsilon_greedy":
@@ -1052,7 +1063,7 @@ class KnowledgeIndicator:
         self.config_connection.close()
         self.config_cursor.close()
 
-    def Knowledge_Indicators(self, num_trial, i_entropi):
+    def Knowledge_Indicators(self, num_trial, contextual_type, i_entropi):
         self.config_cursor.execute('SELECT MAX(ID),MAX(Mean_Throughput),MAX(UB_Throughput) FROM CONFIG')
         for row in self.config_cursor:
             num_configs = row[0]
@@ -1078,6 +1089,20 @@ class KnowledgeIndicator:
         RBI = muBest / upperMAX
         CCI = 1 - (CCI_nominator / CCI_denominator)
         CI = 1 - (entropi / i_entropi)
+
+        if contextual_type != "none":
+            if contextual_type == "context_lbi":
+                global c_epsilon
+                c_epsilon = LBI
+            elif contextual_type == "context_rbi":
+                global c_epsilon
+                c_epsilon = RBI
+            elif contextual_type == "context_cci":
+                global c_epsilon
+                c_epsilon = CCI
+            elif contextual_type == "context_ci":
+                global c_epsilon
+                c_epsilon = CI
 
         self.config_cursor.execute('INSERT INTO KI (num_packets, LBI, RBI, CCI, CI) VALUES (?,?,?,?,?)', (num_trial, LBI, RBI, CCI, CI))
         self.config_connection.commit()

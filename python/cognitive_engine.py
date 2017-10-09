@@ -106,6 +106,7 @@ class cognitive_engine(gr.sync_block):
                 ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback,
                                                               self.delayed_strategy, self.channel)
             else:
+                print "c_epsilon = ", c_epsilon
                 ce_configuration = self.engine.epsilon_greedy(self.num_packets, c_epsilon, self.delayed_feedback,
                                                               self.delayed_strategy, self.channel)
         elif self.ce_type == "gittins":

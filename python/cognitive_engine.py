@@ -800,7 +800,10 @@ class CognitiveEngine:
             self.config_cursor.execute('SELECT * FROM egreedy WHERE ID=?', [NextConf1.conf_id])
             for row in self.config_cursor:
                 if delayed_strategy == "mean":
-                    substitude_value = row[2]
+                    if row[1] == 0:
+                        substitude_value = (row[3] + row[4]) / 2.0
+                    else:
+                        substitude_value = row[2]
                 elif delayed_strategy == "lower":
                     substitude_value = row[3]
                 elif delayed_strategy == "upper":
@@ -874,7 +877,10 @@ class CognitiveEngine:
             self.config_cursor.execute('SELECT * FROM annealing_Egreedy WHERE ID=?', [NextConf1.conf_id])
             for row in self.config_cursor:
                 if delayed_strategy == "mean":
-                    substitude_value = row[2]
+                    if row[1] == 0:
+                        substitude_value = (row[3] + row[4]) / 2.0
+                    else:
+                        substitude_value = row[2]
                 elif delayed_strategy == "lower":
                     substitude_value = row[3]
                 elif delayed_strategy == "upper":
@@ -914,7 +920,7 @@ class CognitiveEngine:
                     if row[4] > 0:
                         substitude_value = float(row[7]) / row[4]
                     else:
-                        substitude_value = 0
+                        substitude_value = (row[9] + row[10]) / 2.0
                 elif delayed_strategy == "lower":
                     substitude_value = row[9]
                 elif delayed_strategy == "upper":
@@ -1044,7 +1050,10 @@ class CognitiveEngine:
             self.config_cursor.execute('SELECT * FROM rota WHERE ID=?', [NextConf1.conf_id])
             for row in self.config_cursor:
                 if delayed_strategy == "mean":
-                    substitude_value = row[2]
+                    if row[1] == 0:
+                        substitude_value = (row[3] + row[4]) / 2.0
+                    else:
+                        substitude_value = row[2]
                 elif delayed_strategy == "lower":
                     substitude_value = row[3]
                 elif delayed_strategy == "upper":

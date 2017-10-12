@@ -138,6 +138,9 @@ class cognitive_engine(gr.sync_block):
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("outer_code"), pmt.from_long(new_ce_configuration.outer_code))
             self.message_port_pub(pmt.intern('configuration'), new_configuration)
 
+    def get_number(self):
+        return self.num_packets
+
 
 class DatabaseControl:
     def __init__(self):

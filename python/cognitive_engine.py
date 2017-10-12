@@ -140,13 +140,13 @@ class cognitive_engine(gr.sync_block):
 
     def get_number(self):
         if self.channel == "nonstationary":
-            if self.num_packets < 500:
+            if self.num_packets < 50:
                 return 0.0
-            elif self.num_packets < 1000:
+            elif self.num_packets < 100:
                 return 0.006
-            elif self.num_packets < 1500:
+            elif self.num_packets < 150:
                 return 0.02
-            elif self.num_packets < 2000:
+            elif self.num_packets < 200:
                 return 0.01
             else:
                 return 0.0025

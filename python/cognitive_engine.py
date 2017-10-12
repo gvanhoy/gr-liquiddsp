@@ -34,6 +34,7 @@ alpha = 0.2
 initial_entropi = 0.0
 BW = 100
 c_epsilon = 1.0
+dynamic_noise = 0.0
 
 class cognitive_engine(gr.sync_block):
     """
@@ -53,7 +54,10 @@ class cognitive_engine(gr.sync_block):
         if self.contextual_type != "none":
             self.kindicator = "on"
             self.ce_type = "epsilon_greedy"
-        self.noise = noise
+        if self.channel == "stationary":
+            self.noise = noise
+        else:
+            self.noise = dynamic_noise
         self.database = DatabaseControl()
 
         self.database.reset_config_tables()
@@ -118,8 +122,8 @@ class cognitive_engine(gr.sync_block):
         elif self.ce_type == "RoTA":
             ce_configuration = self.engine.RoTA(self.num_packets, self.Throughput_Threshold, self.PSR_Threshold, self.delayed_feedback, self.delayed_strategy, self.channel)
         elif self.ce_type == "meta":
-            if self.noise > 0:
-                SNratio = 10 * np.log10(np.power(0.05/(2*self.noise), 2))
+            if dynamic_noise > 0:
+                SNratio = 10 * np.log10(np.power(0.05/(2*dynamic_noise), 2))
                 if SNratio < 12:
                     ce_configuration = self.engine.epsilon_greedy(self.num_packets, epsilon, self.delayed_feedback, self.delayed_strategy, self.channel)
                 elif SNratio < 18:
@@ -141,15 +145,25 @@ class cognitive_engine(gr.sync_block):
     def get_number(self):
         if self.channel == "nonstationary":
             if self.num_packets < 50:
-                return 0.0
+                global dynamic_noise
+                dynamic_noise = 0.0
+                return dynamic_noise
             elif self.num_packets < 100:
-                return 0.006
+                global dynamic_noise
+                dynamic_noise = 0.006
+                return dynamic_noise
             elif self.num_packets < 150:
-                return 0.02
+                global dynamic_noise
+                dynamic_noise = 0.02
+                return dynamic_noise
             elif self.num_packets < 200:
-                return 0.01
+                global dynamic_noise
+                dynamic_noise = 0.01
+                return dynamic_noise
             else:
-                return 0.0025
+                global dynamic_noise
+                dynamic_noise = 0.0025
+                return dynamic_noise
 
 class DatabaseControl:
     def __init__(self):

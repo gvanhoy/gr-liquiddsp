@@ -139,8 +139,17 @@ class cognitive_engine(gr.sync_block):
             self.message_port_pub(pmt.intern('configuration'), new_configuration)
 
     def get_number(self):
-        return self.num_packets
-
+        if self.channel == "nonstationary":
+            if self.num_packets < 500:
+                return 0.0
+            elif self.num_packets < 1000:
+                return 0.006
+            elif self.num_packets < 1500:
+                return 0.02
+            elif self.num_packets < 2000:
+                return 0.01
+            else:
+                return 0.0025
 
 class DatabaseControl:
     def __init__(self):

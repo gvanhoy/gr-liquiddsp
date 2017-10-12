@@ -73,6 +73,8 @@ class cognitive_engine(gr.sync_block):
 
     def handler(self, packet_info):
         self.num_packets += 1
+        global packetsN
+        packetsN = self.num_packets
         epsilon = 0.1
         DiscountFactor = 0.9
         modulation = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("modulation"), pmt.PMT_NIL))

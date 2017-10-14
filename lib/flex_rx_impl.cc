@@ -218,12 +218,14 @@ namespace gr {
 
                 message_port_pub(pmt::mp("constellation"), constellation_pdu);
 
-                pmt::pmt_t payload_pmt = pmt::init_u8vector(d_info->_payload_len, d_info->_payload);
-                pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
 
-                message_port_pub(pmt::mp("payload_data"), payload_pdu);
 
                 if(d_info->_header_valid){
+
+                    pmt::pmt_t payload_pmt = pmt::init_u8vector(d_info->_payload_len, d_info->_payload);
+                    pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
+
+                    message_port_pub(pmt::mp("payload_data"), payload_pdu);
 
                     // send packet information
                     get_mod_scheme(d_info->_stats.mod_scheme);

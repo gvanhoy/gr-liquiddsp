@@ -223,7 +223,9 @@ namespace gr {
                 if(d_info->_header_valid){
                     std::cout << "Payload len: " << d_info->_payload_len << std::endl;
 
-                    pmt::pmt_t payload_pmt = pmt::init_u8vector(d_info->_payload_len, d_info->_payload);
+                    std::vector<uint8_t> vec_pmt(d_info->_payload, d_info->_payload + d_info->_payload_len);
+
+                    pmt::pmt_t payload_pmt = pmt::init_u8vector(d_info->_payload_len, vec_pmt);
                     pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
 
                     std::cout << "Payload PDU: " << payload_pdu << std::endl;

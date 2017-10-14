@@ -223,12 +223,12 @@ namespace gr {
                 if(d_info->_header_valid){
                     std::cout << "Payload len: " << d_info->_payload_len << std::endl;
 
-                    pmt::pmt_t payload_pmt = pmt::init_u8vector(d_info->_payload_len, d_info->_payload);
-                    pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
+                    //pmt::pmt_t payload_pmt = pmt::init_u8vector(d_info->_payload_len, d_info->_payload);
+                    //pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
 
                     std::cout << "Payload PDU: " << payload_pdu << std::endl;
 
-                    message_port_pub(pmt::mp("payload_data"), payload_pdu);
+                    //message_port_pub(pmt::mp("payload_data"), payload_pdu);
 
                     // send packet information
                     get_mod_scheme(d_info->_stats.mod_scheme);

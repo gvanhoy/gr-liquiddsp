@@ -221,6 +221,7 @@ namespace gr {
                 message_port_pub(pmt::mp("constellation"), constellation_pdu);
 
                 if(d_info->_header_valid){
+                    std::cout << "Payload len: " << d_info->_payload_len << std::endl;
                     std::vector<uint8_t> vec_pmt(d_info->_payload, d_info->_payload + d_info->_payload_len);
 
                     pmt::pmt_t payload_pmt = pmt::init_u8vector(d_info->_payload_len, vec_pmt);

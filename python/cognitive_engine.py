@@ -54,7 +54,7 @@ class cognitive_engine(gr.sync_block):
         if self.contextual_type != "none":
             self.kindicator = "on"
             self.ce_type = "epsilon_greedy"
-        if self.channel == "istationary":
+        if self.channel == "stationary":
             self.noise = noise
         else:
             self.noise = dynamic_noise
@@ -145,7 +145,7 @@ class cognitive_engine(gr.sync_block):
             self.message_port_pub(pmt.intern('configuration'), new_configuration)
 
     def get_number(self):
-        if self.channel == "stationary":
+        if self.channel == "nonstationary":
             if self.num_packets < 200:
                 global dynamic_noise
                 dynamic_noise = 0.0

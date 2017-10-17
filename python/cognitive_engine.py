@@ -54,7 +54,7 @@ class cognitive_engine(gr.sync_block):
         if self.contextual_type != "none":
             self.kindicator = "on"
             self.ce_type = "epsilon_greedy"
-        if self.channel == "stationary":
+        if self.channel == "istationary":
             self.noise = noise
         else:
             self.noise = dynamic_noise
@@ -87,8 +87,8 @@ class cognitive_engine(gr.sync_block):
         config_id = modulation*7*8 + inner_code*8 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
-        # SNratio = 10 * np.log10(np.power(0.05 / (2 * dynamic_noise), 2))
-        # print "SNR = ", SNratio
+        SNratio = 10 * np.log10(np.power(0.05 / (2 * dynamic_noise), 2))
+        print "SNR = ", SNratio
         if self.delayed_feedback == "no_delay":
             if modulation >= 0:
                 if inner_code >= 0:

@@ -56,7 +56,10 @@ namespace gr {
                 }
             }
         }
+        d_info->_header_valid = 0;
+        d_info->_payload_valid = 0;
         message_port_register_out(pmt::mp("constellation"));
+        message_port_register_out(pmt::mp("payload_data"));
         message_port_register_out(pmt::mp("packet_info"));
     }
 
@@ -218,6 +221,12 @@ namespace gr {
                 message_port_pub(pmt::mp("constellation"), constellation_pdu);
 
                 if(d_info->_header_valid){
+                    std::vector<uint8_t> vec_pmt(d_info->_payload, d_info->_payload + d_info->_payload_len);
+
+                    pmt::pmt_t payload_pmt = pmt::init_u8vector(d_info->_payload_len, vec_pmt);
+                    pmt::pmt_t payload_pdu(pmt::cons(pmt::PMT_NIL, payload_pmt));
+
+                    message_port_pub(pmt::mp("payload_data"), payload_pdu);
 
                     // send packet information
                     get_mod_scheme(d_info->_stats.mod_scheme);

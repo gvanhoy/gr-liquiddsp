@@ -143,27 +143,26 @@ class cognitive_engine(gr.sync_block):
             self.message_port_pub(pmt.intern('configuration'), new_configuration)
 
     def get_number(self):
-        if self.channel == "nonstationary":
-            if self.num_packets < 200:
-                global dynamic_noise
-                dynamic_noise = 0.0
-                return dynamic_noise
-            elif self.num_packets < 400:
-                global dynamic_noise
-                dynamic_noise = 0.006
-                return dynamic_noise
-            elif self.num_packets < 600:
-                global dynamic_noise
-                dynamic_noise = 0.02
-                return dynamic_noise
-            elif self.num_packets < 800:
-                global dynamic_noise
-                dynamic_noise = 0.01
-                return dynamic_noise
-            else:
-                global dynamic_noise
-                dynamic_noise = 0.0025
-                return dynamic_noise
+        if self.num_packets < 200:
+            global dynamic_noise
+            dynamic_noise = 0.0
+            return dynamic_noise
+        elif self.num_packets < 400:
+            global dynamic_noise
+            dynamic_noise = 0.006
+            return dynamic_noise
+        elif self.num_packets < 600:
+            global dynamic_noise
+            dynamic_noise = 0.02
+            return dynamic_noise
+        elif self.num_packets < 800:
+            global dynamic_noise
+            dynamic_noise = 0.01
+            return dynamic_noise
+        else:
+            global dynamic_noise
+            dynamic_noise = 0.0025
+            return dynamic_noise
 
 class DatabaseControl:
     def __init__(self):

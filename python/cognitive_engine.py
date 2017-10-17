@@ -87,6 +87,8 @@ class cognitive_engine(gr.sync_block):
         config_id = modulation*7*8 + inner_code*8 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
+        SNratio = 10 * np.log10(np.power(0.05 / (2 * dynamic_noise), 2))
+        print "SNR = ", SNratio
         if self.delayed_feedback == "no_delay":
             if modulation >= 0:
                 if inner_code >= 0:
@@ -143,26 +145,26 @@ class cognitive_engine(gr.sync_block):
             self.message_port_pub(pmt.intern('configuration'), new_configuration)
 
     def get_number(self):
-        if self.num_packets < 200:
-            global dynamic_noise
-            dynamic_noise = 0.0
-            return dynamic_noise
-        elif self.num_packets < 400:
-            global dynamic_noise
-            dynamic_noise = 0.006
-            return dynamic_noise
-        elif self.num_packets < 600:
-            global dynamic_noise
-            dynamic_noise = 0.02
-            return dynamic_noise
-        elif self.num_packets < 800:
-            global dynamic_noise
-            dynamic_noise = 0.01
-            return dynamic_noise
-        else:
-            global dynamic_noise
-            dynamic_noise = 0.0025
-            return dynamic_noise
+            if self.num_packets < 200:
+                global dynamic_noise
+                dynamic_noise = 0.0
+                return dynamic_noise
+            elif self.num_packets < 400:
+                global dynamic_noise
+                dynamic_noise = 0.006
+                return dynamic_noise
+            elif self.num_packets < 600:
+                global dynamic_noise
+                dynamic_noise = 0.02
+                return dynamic_noise
+            elif self.num_packets < 800:
+                global dynamic_noise
+                dynamic_noise = 0.01
+                return dynamic_noise
+            else:
+                global dynamic_noise
+                dynamic_noise = 0.0025
+                return dynamic_noise
 
 class DatabaseControl:
     def __init__(self):

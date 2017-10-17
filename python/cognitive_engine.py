@@ -40,7 +40,7 @@ class cognitive_engine(gr.sync_block):
     """
     docstring for block cognitive_engine
     """
-    def __init__(self, ce_type="", delayed_feedback="", delayed_strategy="", channel="", kindicator="", contextual_type="", noise=0):
+    def __init__(self, ce_type="", delayed_feedback="", delayed_strategy="", channel="", kindicator="", contextual_type="", noise=0.0):
         gr.sync_block.__init__(self,
             name="cognitive_engine",
             in_sig=[],
@@ -76,6 +76,7 @@ class cognitive_engine(gr.sync_block):
         self.Throughput_Threshold = 1.5
 
     def handler(self, packet_info):
+        print "test test test test test test test"
         self.num_packets += 1
         epsilon = 0.1
         DiscountFactor = 0.9

@@ -89,9 +89,9 @@ class cognitive_engine(gr.sync_block):
         goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
         if dynamic_noise > 0:
             SNratio = 10 * np.log10(np.power(0.05 / (2 * dynamic_noise), 2))
-            print "SNR = ", SNratio
+            print "SNR = ", SNratio, " dB"
         else:
-            print "SNR = 0"
+            print "SNR = 34 dB"
         if self.delayed_feedback == "no_delay":
             if modulation >= 0:
                 if inner_code >= 0:

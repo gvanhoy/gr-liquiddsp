@@ -76,7 +76,6 @@ class cognitive_engine(gr.sync_block):
         self.Throughput_Threshold = 1.5
 
     def handler(self, packet_info):
-        print "test test test test test test test"
         self.num_packets += 1
         epsilon = 0.1
         DiscountFactor = 0.9

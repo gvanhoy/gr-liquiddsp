@@ -228,7 +228,6 @@ class DatabaseControl:
                 no = row[0]
                 d_PSR = payload_valid - 1
                 d_goodput = goodput - sub_value
-                print "d_goodput = ", d_goodput
                 self.config_cursor.execute('UPDATE tx SET over_write=? WHERE num_packets=?', (1, no))
                 self.config_connection.commit()
                 self.write_configuration(ce_type, configuration, 0, d_PSR, d_goodput, channel)
@@ -236,7 +235,6 @@ class DatabaseControl:
             self.write_configuration(ce_type, configuration, header_valid, payload_valid, goodput, channel)
 
     def write_configuration(self, ce_type, configuration, total, success, throughput, channel):
-        print "throughput = ", throughput
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
         has_row = False
         for row in self.config_cursor:

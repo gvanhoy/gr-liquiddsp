@@ -226,11 +226,11 @@ class DatabaseControl:
                 sub_value = row[3]
                 sub_PSR = row[2]
                 no = row[0]
-            d_PSR = payload_valid - 1
-            d_goodput = goodput - sub_value
-            self.config_cursor.execute('UPDATE tx SET over_write=? WHERE num_packets=?', (1, no))
-            self.config_connection.commit()
-            self.write_configuration(ce_type, configuration, 0, d_PSR, d_goodput, channel)
+                d_PSR = payload_valid - 1
+                d_goodput = goodput - sub_value
+                self.config_cursor.execute('UPDATE tx SET over_write=? WHERE num_packets=?', (1, no))
+                self.config_connection.commit()
+                self.write_configuration(ce_type, configuration, 0, d_PSR, d_goodput, channel)
         else:
             self.write_configuration(ce_type, configuration, header_valid, payload_valid, goodput, channel)
 

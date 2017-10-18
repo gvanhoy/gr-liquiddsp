@@ -549,8 +549,8 @@ class DatabaseControl:
             RCIl = 0.0
 
         RCIu = mean + (coefficient * (std / np.sqrt(N))) + 0.0000001
-        # if RCIu > maxp:
-        #     RCIu = maxp + 0.0000001
+        if RCIu > maxp:
+            RCIu = maxp + 0.0000001
         RCI = [RCIl, RCIu]
         return RCI
 

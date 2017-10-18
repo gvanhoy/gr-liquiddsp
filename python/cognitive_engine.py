@@ -220,8 +220,11 @@ class DatabaseControl:
         self.config_cursor.execute('SELECT Count(*) FROM tx WHERE config_id=? AND over_write=?', [configuration.conf_id, 0])
         row_count = self.config_cursor.fetchone()[0]
         if row_count > 0:
+            x = 0
             self.config_cursor.execute('SELECT * FROM tx WHERE config_id=? AND over_write=?', [configuration.conf_id, 0])
             for row in self.config_cursor:
+                x = x + 1
+                print "number of rows =", x
                 sub_value = row[3]
                 sub_PSR = row[2]
                 no = row[0]

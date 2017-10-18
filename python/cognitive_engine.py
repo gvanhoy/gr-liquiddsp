@@ -35,7 +35,6 @@ initial_entropi = 0.0
 BW = 100
 c_epsilon = 1.0
 dynamic_noise = 0.0
-BW = 100
 
 class cognitive_engine(gr.sync_block):
     """
@@ -87,7 +86,7 @@ class cognitive_engine(gr.sync_block):
         payload_valid = pmt.to_python(pmt.dict_ref(packet_info, pmt.intern("payload_valid"), pmt.PMT_NIL))
         config_id = modulation*7*8 + inner_code*8 + outer_code + 1
         configuration = ConfigurationMap(modulation, inner_code, outer_code, config_id)
-        goodput = BW * np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
+        goodput = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (float(configuration.innercodingrate)) * payload_valid
         if dynamic_noise > 0:
             SNratio = 10 * np.log10(np.power(0.05 / (2 * dynamic_noise), 2))
             print "SNR = ", SNratio, " dB"
@@ -206,7 +205,7 @@ class DatabaseControl:
             PSR = row[11]
             known_PSR = PSR
             if row[4] > 0:
-                mean = float(row[7]) / row[4]
+                mean = float(row[7]) / row[5]
             else:
                 mean = 0
         if delayed_feedback == "no_delay":
@@ -282,10 +281,10 @@ class DatabaseControl:
                         variance = (newSQTh / newTotal) - (np.power(mean, 2))
                 if variance < 0:
                     variance = 0
-                maxp = BW * np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (
+                maxp = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (
                     float(configuration.innercodingrate))
                 RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTotal)
-                print "mean = " , mean
+                print "mean = ", mean
                 print "variance = ", variance
                 lowerM = RCI[0]
                 upperM = RCI[1]
@@ -353,7 +352,7 @@ class DatabaseControl:
                 InnerCode = row[2]
                 OuterCode = row[3]
             config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-            upperbound = BW * np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+            upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
             float(config_map.innercodingrate))
             self.config_cursor.execute('INSERT INTO Egreedy (ID,TrialNumber,Mean,Lower,Upper,Eligibility) VALUES (?,?,?,?,?,?)',
                            (j, 0, 0, 0, upperbound, 1))
@@ -372,7 +371,7 @@ class DatabaseControl:
                 InnerCode = row[2]
                 OuterCode = row[3]
             config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-            upperbound = BW * np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+            upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
                 float(config_map.innercodingrate))
             self.config_cursor.execute(
                 'INSERT INTO Annealing_Egreedy (ID,TrialNumber,Mean,Lower,Upper,Eligibility) VALUES (?,?,?,?,?,?)',
@@ -413,7 +412,7 @@ class DatabaseControl:
                 InnerCode = row[2]
                 OuterCode = row[3]
                 config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-            upperbound = BW * np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+            upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
             float(config_map.innercodingrate))
             self.config_cursor.execute('INSERT INTO Gittins (ID,TrialNumber,Mean,Stdv,Indexx) VALUES (?,?,?,?,?)',
                            (j, 0, 0.0, 0.0, upperbound))
@@ -455,7 +454,7 @@ class DatabaseControl:
                 InnerCode = row[2]
                 OuterCode = row[3]
                 config_map = ConfigurationMap(Modulation, InnerCode, OuterCode)
-            upperbound = BW * np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+            upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
                 float(config_map.innercodingrate))
             self.config_cursor.execute('INSERT INTO RoTA (ID,TrialNumber,Mean,lowerM,upperM,PSR,lowerP,upperP,Indexx,Eligibility) VALUES (?,?,?,?,?,?,?,?,?,?)',
                                        (j, 0, 0.0, 0.0, upperbound, 1.0, 0.0, 1.0, upperbound, 1))
@@ -517,7 +516,7 @@ class DatabaseControl:
             for i in xrange(0, 7):
                 for o in xrange(0, 8):
                     config_map = ConfigurationMap(m, i, o)
-                    upperbound = BW * np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
+                    upperbound = np.log2(config_map.constellationN) * (float(config_map.outercodingrate)) * (
                         float(config_map.innercodingrate))
                     self.config_connection.execute('INSERT INTO CONFIG (ID,MODULATION,Innercode,Outercode,TrialN,Total,Success,Throughput,SQTh,LB_Throughput,UB_Throughput,PSR,LB_PSR,UB_PSR,Mean_Throughput) \
                               VALUES (?, ?, ?, ?, 0, 0, 0, 0.0, 0.0, 0.0, ?, 1.0, 0.0, 1.0, 0.0)', (conf_id, m, i, o, upperbound))

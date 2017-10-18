@@ -141,7 +141,8 @@ class cognitive_engine(gr.sync_block):
         if ce_configuration is not None:
             new_configuration = pmt.make_dict()
             new_ce_configuration = ce_configuration[0]
-            self.database.write_TX_result(self.ce_type, new_ce_configuration, self.num_packets, self.delayed_feedback, self.delayed_strategy, self.channel)
+            if self.delayed_feedback == "no_delay":
+                self.database.write_TX_result(self.ce_type, new_ce_configuration, self.num_packets, self.delayed_feedback, self.delayed_strategy, self.channel)
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("modulation"), pmt.from_long(new_ce_configuration.modulation))
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("inner_code"), pmt.from_long(new_ce_configuration.inner_code))
             new_configuration = pmt.dict_add(new_configuration, pmt.intern("outer_code"), pmt.from_long(new_ce_configuration.outer_code))
@@ -842,6 +843,8 @@ class CognitiveEngine:
                 elif delayed_strategy == "upper":
                     substitude_value = row[4]
             self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value, channel)
+            self.database.write_TX_result("epsilon_greedy",NextConf1,num_trial,delayed_feedback,delayed_strategy,channel)
+            write_TX_result(self, ce_type, configuration, num_packets, delayed_feedback, delayed_strategy, channel):
         return NextConf1, NextConf2
 
     def annealing_epsilon_greedy(self, num_trial, epsilon, delayed_feedback, delayed_strategy, channel):
@@ -919,6 +922,8 @@ class CognitiveEngine:
                 elif delayed_strategy == "upper":
                     substitude_value = row[4]
             self.database.write_configuration("annealing_Egreedy",NextConf1, 1, 1, substitude_value, channel)
+            self.database.write_TX_result("annealing_Egreedy", NextConf1, num_trial, delayed_feedback, delayed_strategy,
+                                          channel)
         return NextConf1, NextConf2
 
     def gittins(self, num_trial, DiscountFactor, delayed_feedback, delayed_strategy, channel):
@@ -959,6 +964,8 @@ class CognitiveEngine:
                 elif delayed_strategy == "upper":
                     substitude_value = row[10]
             self.database.write_configuration("gittins",NextConf1, 1, 1, substitude_value, channel)
+            self.database.write_TX_result("gittins", NextConf1, num_trial, delayed_feedback, delayed_strategy,
+                                          channel)
         return NextConf1, NextConf2
 
     def RoTA(self, num_trial, Throughput_Treshhold, PSR_Threshold, delayed_feedback, delayed_strategy, channel):
@@ -1092,6 +1099,8 @@ class CognitiveEngine:
                 elif delayed_strategy == "upper":
                     substitude_value = row[4]
             self.database.write_configuration("rota",NextConf1, 1, 1, substitude_value, channel)
+            self.database.write_TX_result("rota", NextConf1, num_trial, delayed_feedback, delayed_strategy,
+                                          channel)
         return NextConf1, NextConf2
 
 

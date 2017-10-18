@@ -213,7 +213,7 @@ class DatabaseControl:
             PSR = -1
         # else:
         #     self.write_configuration(ce_type, configuration, 1, PSR, sub_value, channel)
-
+        print "sub value_TX = ", sub_value
         self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, PSR, sub_value, over_write, known_mean, known_PSR) VALUES (?,?,?,?,?,?,?)', (num_packets, configuration.conf_id, PSR, sub_value, 0, mean, known_PSR))
         self.config_connection.commit()
 
@@ -793,7 +793,7 @@ class CognitiveEngine:
                 j = j + 1
                 if j == nn:
                     configN = row[0]
-                    self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+                    self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [498])
                     for row1 in self.config_cursor:
                         NextConf2 = ConfigurationMap(row1[1], row1[2], row1[3], row1[0])
                         print "Configuration is"
@@ -817,7 +817,7 @@ class CognitiveEngine:
                 if j == nn:
                     configN = row[0]
                     break
-            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configN])
+            self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [498])
             for row in self.config_cursor:
                 NextConf1 = ConfigurationMap(row[1], row[2], row[3], row[0])
                 print "Configuration is"
@@ -839,6 +839,7 @@ class CognitiveEngine:
                     substitude_value = row[3]
                 elif delayed_strategy == "upper":
                     substitude_value = row[4]
+            print "substitued value = ", substitude_value
             self.database.write_TX_result("epsilon_greedy", NextConf1, num_trial, delayed_feedback, delayed_strategy,
                                           channel)
             self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value, channel)

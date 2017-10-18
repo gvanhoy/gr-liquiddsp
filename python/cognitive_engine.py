@@ -210,8 +210,8 @@ class DatabaseControl:
         if delayed_feedback == "no_delay":
             sub_value = -1
             PSR = -1
-        else:
-            self.write_configuration(ce_type, configuration, 1, PSR, sub_value, channel)
+        # else:
+        #     self.write_configuration(ce_type, configuration, 1, PSR, sub_value, channel)
 
         self.config_cursor.execute('INSERT INTO tx (num_packets, config_id, PSR, sub_value, over_write, known_mean, known_PSR) VALUES (?,?,?,?,?,?,?)', (num_packets, configuration.conf_id, PSR, sub_value, 0, mean, known_PSR))
         self.config_connection.commit()
@@ -262,71 +262,71 @@ class DatabaseControl:
             PSRCI = self.PSR_CI(newSuccess, Unsuccess, CONFIDENCE)
             lowerP = PSRCI[0]
             upperP = PSRCI[1]
-            if newTrialN == 1:
-                mean = new_aggregated_Throughput / newTrialN
-                variance = (newSQTh / newTrialN) - (np.power(mean, 2))
+            if newTotal == 1:
+                mean = new_aggregated_Throughput / newTotal
+                variance = (newSQTh / newTotal) - (np.power(mean, 2))
                 self.config_cursor.execute('UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? , PSR=? ,LB_PSR=? ,UB_PSR=?, Mean_Throughput=? WHERE ID=?',
                                [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, 0.0, new_PSR, lowerP, upperP, mean,  configuration.conf_id])
-            elif newTrialN > 1:
+            elif newTotal > 1:
                 if channel == "stationary":
-                    mean = new_aggregated_Throughput / newTrialN
-                    variance = (newSQTh / newTrialN) - (np.power(mean, 2))
+                    mean = new_aggregated_Throughput / newTotal
+                    variance = (newSQTh / newTotal) - (np.power(mean, 2))
                 elif channel == "nonstationary":
-                    if newTrialN > (1/alpha):
+                    if newTotal > (1/alpha):
                         old_mean = old_throughput / num_trial
                         diff = throughput - old_mean
                         mean = old_mean + (alpha * diff)
                         old_variance = (old_sqth/num_trial) - (np.power(old_mean, 2))
                         variance = (1-alpha) * (old_variance + (alpha * np.power(diff, 2)))
                     else:
-                        mean = new_aggregated_Throughput / newTrialN
-                        variance = (newSQTh / newTrialN) - (np.power(mean, 2))
+                        mean = new_aggregated_Throughput / newTotal
+                        variance = (newSQTh / newTotal) - (np.power(mean, 2))
                 if variance < 0:
                     variance = 0
                 maxp = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (
                     float(configuration.innercodingrate))
-                RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTrialN)
+                RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTotal)
                 lowerM = RCI[0]
                 upperM = RCI[1]
                 self.config_cursor.execute(
                     'UPDATE CONFIG SET TrialN=? ,TOTAL=? ,SUCCESS=? ,THROUGHPUT=? ,SQTh=? ,LB_Throughput=? ,UB_Throughput=? ,PSR=? ,LB_PSR=? ,UB_PSR=?, Mean_Throughput=? WHERE ID=?',
                     [newTrialN, newTotal, newSuccess, new_aggregated_Throughput, newSQTh, lowerM, upperM, new_PSR, lowerP, upperP, mean, configuration.conf_id])
             if ce_type == "epsilon_greedy":
-                if newTrialN == 1:
+                if newTotal == 1:
                     self.config_cursor.execute('UPDATE egreedy set TrialNumber=?, Mean=? WHERE ID=?',
-                                                       [newTrialN, mean, configuration.conf_id])
-                if newTrialN > 1:
+                                                       [newTotal, mean, configuration.conf_id])
+                if newTotal > 1:
                     self.config_cursor.execute(
                         'UPDATE egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
-                        [newTrialN, mean, lowerM, upperM, configuration.conf_id])
+                        [newTotal, mean, lowerM, upperM, configuration.conf_id])
             elif ce_type == "gittins":
-                if newTrialN == 1:
+                if newTotal == 1:
                     self.config_cursor.execute('UPDATE gittins set TrialNumber=?, Mean=? WHERE ID=?',
-                                                       [newTrialN, mean, configuration.conf_id])
-                if newTrialN > 1:
+                                                       [newTotal, mean, configuration.conf_id])
+                if newTotal > 1:
                     stdv = np.sqrt(variance)
-                    index = mean + (stdv * self.GittinsIndexNormalUnitVar(newTrialN, DiscountFactor))
+                    index = mean + (stdv * self.GittinsIndexNormalUnitVar(newTotal, DiscountFactor))
                     self.config_cursor.execute(
                         'UPDATE gittins set TrialNumber=? ,Mean=? ,stdv=? ,indexx=? WHERE ID=?',
-                        [newTrialN, mean, stdv, index, configuration.conf_id])
+                        [newTotal, mean, stdv, index, configuration.conf_id])
             elif ce_type == "annealing_epsilon_greedy":
-                if newTrialN == 1:
+                if newTotal == 1:
                     self.config_cursor.execute('UPDATE annealing_egreedy set TrialNumber=?, Mean=? WHERE ID=?',
-                                               [newTrialN, mean, configuration.conf_id])
-                if newTrialN > 1:
+                                               [newTotal, mean, configuration.conf_id])
+                if newTotal > 1:
                     self.config_cursor.execute(
                         'UPDATE annealing_egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
-                        [newTrialN, mean, lowerM, upperM, configuration.conf_id])
+                        [newTotal, mean, lowerM, upperM, configuration.conf_id])
             elif ce_type == "RoTA":
-                if newTrialN == 1:
+                if newTotal == 1:
                     self.config_cursor.execute('UPDATE RoTA set TrialNumber=?, Mean=?, PSR=? WHERE ID=?',
-                                                       [newTrialN, mean, new_PSR, configuration.conf_id])
-                if newTrialN > 1:
+                                                       [newTotal, mean, new_PSR, configuration.conf_id])
+                if newTotal > 1:
                     stdv = np.sqrt(variance)
-                    index = mean + (stdv * self.GittinsIndexNormalUnitVar(newTrialN, DiscountFactor))
+                    index = mean + (stdv * self.GittinsIndexNormalUnitVar(newTotal, DiscountFactor))
                     self.config_cursor.execute(
                         'UPDATE RoTA set TrialNumber=? ,Mean=? ,lowerM=?, upperM=?, PSR=?, lowerP=?, upperP=?, indexx=? WHERE ID=?',
-                        [newTrialN, mean, lowerM, upperM, new_PSR, lowerP, upperP, index, configuration.conf_id])
+                        [newTotal, mean, lowerM, upperM, new_PSR, lowerP, upperP, index, configuration.conf_id])
 
             self.config_connection.commit()
 

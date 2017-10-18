@@ -185,7 +185,7 @@ class DatabaseControl:
         self.config_cursor.execute('INSERT INTO rx (num_packets, config_id, throughput, PSR) VALUES (?,?,?,?)', (num_packets, config_id, throughput, PSR))
         self.config_cursor.execute('SELECT * FROM config WHERE ID=?', [config_id])
         for row in self.config_cursor:
-            mean = float(row[7]) / row[4]
+            mean = float(row[7]) / row[5]
             PSR = row[11]
         self.config_cursor.execute('UPDATE tx SET known_mean=?, known_PSR=? WHERE config_id=?', [mean, PSR, config_id])
         self.config_connection.commit()
@@ -194,8 +194,8 @@ class DatabaseControl:
         self.config_cursor.execute('SELECT * FROM config WHERE ID=?', [configuration.conf_id])
         for row in self.config_cursor:
             if delayed_strategy == "mean":
-                if row[4] > 0:
-                    sub_value = float(row[7]) / row[4]
+                if row[5] > 0:
+                    sub_value = float(row[7]) / row[5]
                 else:
                     sub_value = 0
             elif delayed_strategy == "lower":
@@ -204,7 +204,7 @@ class DatabaseControl:
                 sub_value = row[10]
             PSR = row[11]
             known_PSR = PSR
-            if row[4] > 0:
+            if row[5] > 0:
                 mean = float(row[7]) / row[5]
             else:
                 mean = 0

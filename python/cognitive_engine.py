@@ -284,6 +284,8 @@ class DatabaseControl:
                 maxp = np.log2(configuration.constellationN) * (float(configuration.outercodingrate)) * (
                     float(configuration.innercodingrate))
                 RCI = self.CI(mean, variance, maxp, CONFIDENCE, newTotal)
+                print "mean = " , mean
+                print "variance = ", variance
                 lowerM = RCI[0]
                 upperM = RCI[1]
                 self.config_cursor.execute(

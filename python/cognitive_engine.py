@@ -843,8 +843,8 @@ class CognitiveEngine:
                 elif delayed_strategy == "upper":
                     substitude_value = row[4]
             self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value, channel)
-            self.database.write_TX_result("epsilon_greedy",NextConf1,num_trial,delayed_feedback,delayed_strategy,channel)
-            write_TX_result(self, ce_type, configuration, num_packets, delayed_feedback, delayed_strategy, channel):
+            self.database.write_TX_result("epsilon_greedy", NextConf1, num_trial, delayed_feedback, delayed_strategy,
+                                          channel)
         return NextConf1, NextConf2
 
     def annealing_epsilon_greedy(self, num_trial, epsilon, delayed_feedback, delayed_strategy, channel):

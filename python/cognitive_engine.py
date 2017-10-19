@@ -197,7 +197,7 @@ class DatabaseControl:
                 if row[5] > 0:
                     sub_value = float(row[7]) / row[5]
                 else:
-                    sub_value = 0
+                    sub_value = (row[9] + row[10]) / 2.0
             elif delayed_strategy == "lower":
                 sub_value = row[9]
             elif delayed_strategy == "upper":

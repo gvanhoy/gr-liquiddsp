@@ -1126,7 +1126,7 @@ class CognitiveEngine:
                     substitude_value = row[4]
             self.database.write_TX_result("rota", NextConf1, num_trial, delayed_feedback, delayed_strategy,
                                           channel)
-            self.database.write_configuration("rota",NextConf1, 1, 1, substitude_value, 0, channel)
+            self.database.write_configuration("rota", NextConf1, 1, 1, substitude_value, 0, channel)
         return NextConf1, NextConf2
 
 

@@ -99,7 +99,7 @@ class cognitive_engine(gr.sync_block):
                         self.database.write_configuration(self.ce_type, configuration,
                                                           header_valid,
                                                           payload_valid,
-                                                          goodput, self.channel)
+                                                          goodput, 0, self.channel)
         elif self.delayed_feedback == "delay":
             if modulation >= 0:
                 if inner_code >= 0:
@@ -230,11 +230,11 @@ class DatabaseControl:
                 d_goodput = goodput - sub_value
                 self.config_cursor.execute('UPDATE tx SET over_write=? WHERE num_packets=?', (1, no))
                 self.config_connection.commit()
-                self.write_configuration(ce_type, configuration, 0, d_PSR, d_goodput, channel)
+                self.write_configuration(ce_type, configuration, 0, d_PSR, d_goodput, sub_value, channel)
         else:
-            self.write_configuration(ce_type, configuration, header_valid, payload_valid, goodput, channel)
+            self.write_configuration(ce_type, configuration, header_valid, payload_valid, goodput, 0, channel)
 
-    def write_configuration(self, ce_type, configuration, total, success, throughput, channel):
+    def write_configuration(self, ce_type, configuration, total, success, throughput, sub_value, channel):
         self.config_cursor.execute('SELECT * FROM CONFIG WHERE ID=?', [configuration.conf_id])
         has_row = False
         for row in self.config_cursor:
@@ -253,8 +253,12 @@ class DatabaseControl:
             newTotal = total_packet + total
             newSuccess = success_packet + success
             new_aggregated_Throughput = old_throughput + throughput
-            # newThroughput = throughput
-            newSQTh = old_sqth + np.power(throughput, 2)
+            if throughput < 0:
+                old_sqth = old_sqth - np.power(sub_value, 2)
+                temp = sub_value + throughput
+                newSQTh = old_sqth + np.power(temp, 2)
+            else:
+                newSQTh = old_sqth + np.power(throughput, 2)
             new_PSR = float(newSuccess + 1.0) / (newTotal + 2.0)
             Unsuccess = newTrialN - newSuccess
             PSRCI = self.PSR_CI(newSuccess, Unsuccess, CONFIDENCE)
@@ -842,7 +846,7 @@ class CognitiveEngine:
             # print "substitued value = ", substitude_value
             self.database.write_TX_result("epsilon_greedy", NextConf1, num_trial, delayed_feedback, delayed_strategy,
                                           channel)
-            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value, channel)
+            self.database.write_configuration("epsilon_greedy",NextConf1, 1, 1, substitude_value, 0, channel)
         return NextConf1, NextConf2
 
     def annealing_epsilon_greedy(self, num_trial, epsilon, delayed_feedback, delayed_strategy, channel):
@@ -921,7 +925,7 @@ class CognitiveEngine:
                     substitude_value = row[4]
             self.database.write_TX_result("annealing_Egreedy", NextConf1, num_trial, delayed_feedback, delayed_strategy,
                                           channel)
-            self.database.write_configuration("annealing_Egreedy",NextConf1, 1, 1, substitude_value, channel)
+            self.database.write_configuration("annealing_Egreedy",NextConf1, 1, 1, substitude_value, 0, channel)
         return NextConf1, NextConf2
 
     def gittins(self, num_trial, DiscountFactor, delayed_feedback, delayed_strategy, channel):
@@ -963,7 +967,7 @@ class CognitiveEngine:
                     substitude_value = row[10]
             self.database.write_TX_result("gittins", NextConf1, num_trial, delayed_feedback, delayed_strategy,
                                           channel)
-            self.database.write_configuration("gittins",NextConf1, 1, 1, substitude_value, channel)
+            self.database.write_configuration("gittins",NextConf1, 1, 1, substitude_value, 0, channel)
         return NextConf1, NextConf2
 
     def RoTA(self, num_trial, Throughput_Treshhold, PSR_Threshold, delayed_feedback, delayed_strategy, channel):
@@ -1098,7 +1102,7 @@ class CognitiveEngine:
                     substitude_value = row[4]
             self.database.write_TX_result("rota", NextConf1, num_trial, delayed_feedback, delayed_strategy,
                                           channel)
-            self.database.write_configuration("rota",NextConf1, 1, 1, substitude_value, channel)
+            self.database.write_configuration("rota",NextConf1, 1, 1, substitude_value, 0, channel)
         return NextConf1, NextConf2
 
 

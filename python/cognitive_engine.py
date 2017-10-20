@@ -29,7 +29,7 @@ from scipy.stats import *
 
 CONFIDENCE = 0.9
 DiscountFactor = 0.9
-window_size = 30
+window_size = 50
 alpha = 0.2
 initial_entropi = 0.0
 BW = 100
@@ -982,9 +982,11 @@ class CognitiveEngine:
                 upperP = row[2]
                 lowerP = row[3]
 
-            if (upperM < Throughput_Treshhold) or (upperP < PSR_Threshold):
+            if (upperM < Throughput_Treshhold):
+                # or (upperP < PSR_Threshold):
                 self.config_cursor.execute('UPDATE RoTA set Eligibility=? WHERE ID=?', [0, j])
-            elif (lowerM >= Throughput_Treshhold) and (lowerP >= PSR_Threshold):
+            elif (lowerM >= Throughput_Treshhold):
+                # and (lowerP >= PSR_Threshold):
                 self.config_cursor.execute('UPDATE RoTA set Eligibility=? WHERE ID=?', [2, j])
             else:
                 self.config_cursor.execute('UPDATE RoTA set Eligibility=? WHERE ID=?', [1, j])

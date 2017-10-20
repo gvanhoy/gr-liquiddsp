@@ -29,7 +29,7 @@ from scipy.stats import *
 
 CONFIDENCE = 0.9
 DiscountFactor = 0.9
-window_size = 50
+window_size = 200
 alpha = 0.2
 initial_entropi = 0.0
 BW = 100
@@ -974,6 +974,8 @@ class CognitiveEngine:
         window = num_trial - window_size
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
+        self.config_cursor.execute('SELECT MAX(Mean) FROM rota')
+        muBest = self.config_cursor.fetchone()[0]
         for j in xrange(1, num_configs + 1):
             self.config_cursor.execute('SELECT UpperM, lowerM, upperP, lowerP FROM RoTA WHERE ID=?', [j])
             for row in self.config_cursor:
@@ -982,7 +984,7 @@ class CognitiveEngine:
                 upperP = row[2]
                 lowerP = row[3]
 
-            if (upperM < Throughput_Treshhold):
+            if (upperM < Throughput_Treshhold) or (upperM < muBest):
                 # or (upperP < PSR_Threshold):
                 self.config_cursor.execute('UPDATE RoTA set Eligibility=? WHERE ID=?', [0, j])
             elif (lowerM >= Throughput_Treshhold):
@@ -1046,11 +1048,12 @@ class CognitiveEngine:
                     print "###############################\n\n"
                 NextConf2 = NextConf1
         else:
-            self.config_cursor.execute('SELECT Avg(known_mean) FROM tx WHERE num_packets>?', [window + 1])
+            self.config_cursor.execute('SELECT Avg(known_mean) FROM tx WHERE num_packets>?', [window + 4])
             known_throughput_window = self.config_cursor.fetchone()[0]
-            self.config_cursor.execute('SELECT Avg(known_PSR) FROM tx WHERE num_packets>?', [window + 1])
+            self.config_cursor.execute('SELECT Avg(known_PSR) FROM tx WHERE num_packets>?', [window + 4])
             known_psr_window = self.config_cursor.fetchone()[0]
-            if (known_throughput_window > Throughput_Treshhold) and (training_size > 0) and (known_psr_window > PSR_Threshold):
+            if (known_throughput_window > Throughput_Treshhold) and (training_size > 0):
+                # and (known_psr_window > PSR_Threshold):
                 self.config_cursor.execute('SELECT MAX(indexx) FROM RoTA')
                 highest_idx = self.config_cursor.fetchone()[0]
                 self.config_cursor.execute('SELECT count(*) FROM RoTA WHERE indexx=?', [highest_idx])

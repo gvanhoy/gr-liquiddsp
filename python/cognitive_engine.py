@@ -320,6 +320,7 @@ class DatabaseControl:
                         'UPDATE annealing_egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
                         [newTotal, mean, lowerM, upperM, configuration.conf_id])
             elif ce_type == "RoTA":
+                print " HERE_HERE_HERE_HERE_HERE_HERE_HERE_HERE_HERE_HERE_HERE_HERE_HERE"
                 if newTotal == 1:
                     self.config_cursor.execute('UPDATE RoTA set TrialNumber=?, Mean=?, PSR=? WHERE ID=?',
                                                        [newTotal, mean, new_PSR, configuration.conf_id])
@@ -1124,9 +1125,9 @@ class CognitiveEngine:
                     substitude_value = row[3]
                 elif delayed_strategy == "upper":
                     substitude_value = row[4]
-            self.database.write_TX_result("rota", NextConf1, num_trial, delayed_feedback, delayed_strategy,
+            self.database.write_TX_result("RoTA", NextConf1, num_trial, delayed_feedback, delayed_strategy,
                                           channel)
-            self.database.write_configuration("rota", NextConf1, 1, 1, substitude_value, 0, channel)
+            self.database.write_configuration("RoTA", NextConf1, 1, 1, substitude_value, 0, channel)
         return NextConf1, NextConf2
 
 

@@ -320,7 +320,6 @@ class DatabaseControl:
                         'UPDATE annealing_egreedy set TrialNumber=? ,Mean=? ,Lower=? ,Upper=? WHERE ID=?',
                         [newTotal, mean, lowerM, upperM, configuration.conf_id])
             elif ce_type == "RoTA":
-                print " HERE_HERE_HERE_HERE_HERE_HERE_HERE_HERE_HERE_HERE_HERE_HERE_HERE"
                 if newTotal == 1:
                     self.config_cursor.execute('UPDATE RoTA set TrialNumber=?, Mean=?, PSR=? WHERE ID=?',
                                                        [newTotal, mean, new_PSR, configuration.conf_id])

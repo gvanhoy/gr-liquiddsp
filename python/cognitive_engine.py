@@ -1054,15 +1054,23 @@ class CognitiveEngine:
                 window_frame = window + 3*window_size/4
             else:
                 window_frame = window
-            self.config_cursor.execute('SELECT sum(known_mean) FROM tx WHERE num_packets>?', [window_frame])
-            sum_throughput_window = self.config_cursor.fetchone()[0]
-            size = num_trial - window_frame
-            print "window_frame ==", size
-            print "sum throughput window == ", sum_throughput_window
-            known_throughput_window = sum_throughput_window / size
-            self.config_cursor.execute('SELECT sum(known_PSR) FROM tx WHERE num_packets>?', [window_frame])
-            sum_psr_window = self.config_cursor.fetchone()[0]
-            known_psr_window = sum_psr_window / size
+
+            if delayed_feedback == "delay":
+                self.config_cursor.execute('SELECT sum(known_mean) FROM tx WHERE num_packets>?', [window_frame])
+                sum_throughput_window = self.config_cursor.fetchone()[0]
+                size = num_trial - window_frame
+                print "window_frame ==", size
+                print "sum throughput window == ", sum_throughput_window
+                known_throughput_window = sum_throughput_window / size
+                self.config_cursor.execute('SELECT sum(known_PSR) FROM tx WHERE num_packets>?', [window_frame])
+                sum_psr_window = self.config_cursor.fetchone()[0]
+                known_psr_window = sum_psr_window / size
+            elif delayed_feedback == "no_delay":
+                self.config_cursor.execute('SELECT Avg(throughput) FROM rx WHERE num_packets>?', [window])
+                known_throughput_window = self.config_cursor.fetchone()[0]
+                self.config_cursor.execute('SELECT Avg(psr) FROM rx WHERE num_packets>?', [window])
+                known_psr_window = self.config_cursor.fetchone()[0]
+            
             if (known_throughput_window > Throughput_Treshhold) and (training_size > 0):
                 # and (known_psr_window > PSR_Threshold):
                 self.config_cursor.execute('SELECT MAX(indexx) FROM RoTA')

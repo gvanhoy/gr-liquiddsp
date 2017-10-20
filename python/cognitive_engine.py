@@ -1050,15 +1050,19 @@ class CognitiveEngine:
                     print "###############################\n\n"
                 NextConf2 = NextConf1
         else:
-            self.config_cursor.execute('SELECT sum(known_mean) FROM tx WHERE num_packets>?', [window + 3*window_size/4])
+            if num_trial > window_size:
+                window_frame =  window + 3*window_size/4
+            else:
+                window_frame = window
+            self.config_cursor.execute('SELECT sum(known_mean) FROM tx WHERE num_packets>?', [window_frame])
             sum_throughput_window = self.config_cursor.fetchone()[0]
-            size = int(window + 3*window_size/4)
-            print "size ==", size
+
+            print "window_frame ==", window_frame
             print "sum throughput window == ", sum_throughput_window
-            known_throughput_window = float(sum_throughput_window) / size
-            self.config_cursor.execute('SELECT sum(known_PSR) FROM tx WHERE num_packets>?', [window + 3*window_size/4])
+            known_throughput_window = sum_throughput_window / window_frame
+            self.config_cursor.execute('SELECT sum(known_PSR) FROM tx WHERE num_packets>?', [window_frame])
             sum_psr_window = self.config_cursor.fetchone()[0]
-            known_psr_window = sum_psr_window / size
+            known_psr_window = sum_psr_window / window_frame
             if (known_throughput_window > Throughput_Treshhold) and (training_size > 0):
                 # and (known_psr_window > PSR_Threshold):
                 self.config_cursor.execute('SELECT MAX(indexx) FROM RoTA')

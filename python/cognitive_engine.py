@@ -1048,10 +1048,13 @@ class CognitiveEngine:
                     print "###############################\n\n"
                 NextConf2 = NextConf1
         else:
-            self.config_cursor.execute('SELECT Avg(known_mean) FROM tx WHERE num_packets>?', [window + 4])
-            known_throughput_window = self.config_cursor.fetchone()[0]
-            self.config_cursor.execute('SELECT Avg(known_PSR) FROM tx WHERE num_packets>?', [window + 4])
-            known_psr_window = self.config_cursor.fetchone()[0]
+            self.config_cursor.execute('SELECT sum(known_mean) FROM tx WHERE num_packets>?', [window + 3*window_size/4])
+            sum_throughput_window = self.config_cursor.fetchone()[0]
+            size = round(window + 3*window_size/4)
+            known_throughput_window = sum_throughput_window / size
+            self.config_cursor.execute('SELECT sum(known_PSR) FROM tx WHERE num_packets>?', [window + 3*window_size/4])
+            sum_psr_window = self.config_cursor.fetchone()[0]
+            known_psr_window = sum_psr_window / size
             if (known_throughput_window > Throughput_Treshhold) and (training_size > 0):
                 # and (known_psr_window > PSR_Threshold):
                 self.config_cursor.execute('SELECT MAX(indexx) FROM RoTA')

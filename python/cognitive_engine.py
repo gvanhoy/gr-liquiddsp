@@ -1054,7 +1054,8 @@ class CognitiveEngine:
             sum_throughput_window = self.config_cursor.fetchone()[0]
             size = int(window + 3*window_size/4)
             print "size ==", size
-            known_throughput_window = sum_throughput_window / size
+            print "sum throughput window == ", sum_throughput_window
+            known_throughput_window = float(sum_throughput_window) / size
             self.config_cursor.execute('SELECT sum(known_PSR) FROM tx WHERE num_packets>?', [window + 3*window_size/4])
             sum_psr_window = self.config_cursor.fetchone()[0]
             known_psr_window = sum_psr_window / size

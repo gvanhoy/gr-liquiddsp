@@ -972,6 +972,8 @@ class CognitiveEngine:
 
     def RoTA(self, num_trial, Throughput_Treshhold, PSR_Threshold, delayed_feedback, delayed_strategy, channel):
         window = num_trial - window_size
+        if window < 0:
+            window = 0
         self.config_cursor.execute('SELECT MAX(ID) FROM CONFIG')
         num_configs = self.config_cursor.fetchone()[0]
         self.config_cursor.execute('SELECT MAX(Mean) FROM rota')

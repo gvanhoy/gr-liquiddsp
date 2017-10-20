@@ -1053,6 +1053,7 @@ class CognitiveEngine:
             self.config_cursor.execute('SELECT sum(known_mean) FROM tx WHERE num_packets>?', [window + 3*window_size/4])
             sum_throughput_window = self.config_cursor.fetchone()[0]
             size = round(window + 3*window_size/4)
+            print "size ==" , size
             known_throughput_window = sum_throughput_window / size
             self.config_cursor.execute('SELECT sum(known_PSR) FROM tx WHERE num_packets>?', [window + 3*window_size/4])
             sum_psr_window = self.config_cursor.fetchone()[0]

@@ -1070,15 +1070,15 @@ class CognitiveEngine:
                 known_throughput_window = self.config_cursor.fetchone()[0]
                 self.config_cursor.execute('SELECT Avg(psr) FROM rx WHERE num_packets>?', [window])
                 known_psr_window = self.config_cursor.fetchone()[0]
-            
+
             if (known_throughput_window > Throughput_Treshhold) and (training_size > 0):
                 # and (known_psr_window > PSR_Threshold):
-                self.config_cursor.execute('SELECT MAX(indexx) FROM RoTA')
+                self.config_cursor.execute('SELECT MAX(indexx) FROM RoTA WHERE eligibility=?', [1])
                 highest_idx = self.config_cursor.fetchone()[0]
-                self.config_cursor.execute('SELECT count(*) FROM RoTA WHERE indexx=?', [highest_idx])
+                self.config_cursor.execute('SELECT count(*) FROM RoTA WHERE indexx=? AND Eligibility=?', [highest_idx, 1])
                 no = self.config_cursor.fetchone()[0]
                 nn = random.randrange(1, no + 1)
-                self.config_cursor.execute('SELECT ID FROM RoTA WHERE indexx=?', [highest_idx])
+                self.config_cursor.execute('SELECT ID FROM RoTA WHERE indexx=? AND Eligibility=?', [highest_idx, 1])
                 j = 0
                 for row in self.config_cursor:
                     j = j + 1

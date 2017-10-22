@@ -149,25 +149,21 @@ class cognitive_engine(gr.sync_block):
             self.message_port_pub(pmt.intern('configuration'), new_configuration)
 
     def get_number(self):
-        if self.num_packets < 1000:
-            global dynamic_noise
-            dynamic_noise = 0.0
-            return dynamic_noise
-        elif self.num_packets < 2000:
+        if self.num_packets < 500:
             global dynamic_noise
             dynamic_noise = 0.006
             return dynamic_noise
-        elif self.num_packets < 3000:
-            global dynamic_noise
-            dynamic_noise = 0.02
-            return dynamic_noise
-        elif self.num_packets < 4000:
+        elif self.num_packets < 1000:
             global dynamic_noise
             dynamic_noise = 0.01
             return dynamic_noise
-        else:
+        elif self.num_packets < 1500:
             global dynamic_noise
             dynamic_noise = 0.0025
+            return dynamic_noise
+        else:
+            global dynamic_noise
+            dynamic_noise = 0.008
             return dynamic_noise
 
 class DatabaseControl:

@@ -29,7 +29,7 @@ from scipy.stats import *
 
 CONFIDENCE = 0.9
 DiscountFactor = 0.9
-window_size = 200
+window_size = 100
 alpha = 0.2
 initial_entropi = 0.0
 BW = 100

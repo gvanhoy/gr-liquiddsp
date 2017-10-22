@@ -222,7 +222,7 @@ class DatabaseControl:
                 sub_value = row[3]
                 sub_PSR = row[2]
                 no = row[0]
-                d_PSR = payload_valid - 1
+                d_PSR = payload_valid - 2
                 d_goodput = goodput - sub_value
                 self.config_cursor.execute('UPDATE tx SET over_write=? WHERE num_packets=?', (1, no))
                 self.config_connection.commit()
@@ -247,7 +247,10 @@ class DatabaseControl:
         if has_row:
             newTrialN = num_trial + 1
             newTotal = total_packet + total
-            newSuccess = success_packet + success
+            if success < 0:
+                newSuccess = success_packet + success + 1
+            else:
+                newSuccess = success_packet + success
             new_aggregated_Throughput = old_throughput + throughput
             if throughput < 0:
                 old_sqth = old_sqth - np.power(sub_value, 2)
@@ -271,11 +274,20 @@ class DatabaseControl:
                     variance = (newSQTh / newTotal) - (np.power(mean, 2))
                 elif channel == "nonstationary":
                     if newTotal > (1/alpha):
-                        old_mean = old_throughput / num_trial
-                        diff = throughput - old_mean
-                        mean = old_mean + (alpha * diff)
-                        old_variance = (old_sqth/num_trial) - (np.power(old_mean, 2))
-                        variance = (1-alpha) * (old_variance + (alpha * np.power(diff, 2)))
+                        if success < 0:
+                            old_throughput = old_throughput - sub_value
+                            old_mean = old_throughput / num_trial
+                            diff = throughput + sub_value - old_mean
+                            old_sqth = old_sqth - np.power(sub_value, 2)
+                            mean = old_mean + (alpha * diff)
+                            old_variance = (old_sqth/num_trial) - (np.power(old_mean, 2))
+                            variance = (1-alpha) * (old_variance + (alpha * np.power(diff, 2)))
+                        else:
+                            old_mean = old_throughput / num_trial
+                            diff = throughput - old_mean
+                            mean = old_mean + (alpha * diff)
+                            old_variance = (old_sqth / num_trial) - (np.power(old_mean, 2))
+                            variance = (1 - alpha) * (old_variance + (alpha * np.power(diff, 2)))
                     else:
                         mean = new_aggregated_Throughput / newTotal
                         variance = (newSQTh / newTotal) - (np.power(mean, 2))

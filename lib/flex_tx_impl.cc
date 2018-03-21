@@ -54,10 +54,10 @@ namespace gr {
         set_outer_code(outer_code);      // outer FEC scheme
         set_modulation(modulation);
         d_fg = flexframegen_create(&d_fgprops);
-        message_port_register_out(PDU_PORT_ID);
+        message_port_register_out(pmt::mp("pdus"));
         d_header = (unsigned char *) malloc(14*sizeof(unsigned char));
         memset(d_header, 0, 14);
-        message_port_register_in(PDU_PORT_ID);
+        message_port_register_in(pmt::mp("pdus"));
         set_msg_handler(PDU_PORT_ID, boost::bind(&flex_tx_impl::send_pkt, this, _1));
 
         message_port_register_in(pmt::mp("configuration"));

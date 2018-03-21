@@ -58,7 +58,7 @@ namespace gr {
         d_header = (unsigned char *) malloc(14*sizeof(unsigned char));
         memset(d_header, 0, 14);
         message_port_register_in(pmt::mp("pdus"));
-        set_msg_handler(PDU_PORT_ID, boost::bind(&flex_tx_impl::send_pkt, this, _1));
+        set_msg_handler(pmt::mp("pdus"), boost::bind(&flex_tx_impl::send_pkt, this, _1));
 
         message_port_register_in(pmt::mp("configuration"));
         set_msg_handler(pmt::mp("configuration"), boost::bind(&flex_tx_impl::configure, this, _1));
@@ -203,7 +203,7 @@ namespace gr {
 
         // send the vector
         pmt::pmt_t out_pdu(pmt::cons(pmt::PMT_NIL, vecpmt));
-        message_port_pub(PDU_PORT_ID, out_pdu);
+        message_port_pub(pmt::mp("pdus"), out_pdu);
         d_num_frames++;
         // std::cout << "Sent " << d_num_frames << " frames" << std::endl;
     }
